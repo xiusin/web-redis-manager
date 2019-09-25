@@ -1,0 +1,7 @@
+{
+  "app_name": "RDM",
+  "icon_path_darwin": "resources/icon.icns",
+  "icon_path_windows": "resources/icon.ico",
+  "resources_path": "resources",
+  "output_path": "output"
+}
