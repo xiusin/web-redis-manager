@@ -1,4 +1,4 @@
-# redis_manager #
+# RedisManager #
 
 自用redis管理客户端,  基于[go-astilectron](https://github.com/asticode/go-astilectron.git) + vue 开发构建, 代码比较简陋. 没打算重构.
 
