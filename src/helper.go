@@ -33,7 +33,6 @@ var (
   CacheDir        string
   totalConnection = 0
   connectionList  []connection
-  clients         = map[int64]redisClient{}
   jsonFile        string
 )
 

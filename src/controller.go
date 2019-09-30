@@ -241,32 +241,26 @@ func getRedisClient(data map[string]interface{}, getSelectedIndexClient bool, ge
 		return nil, "", errors.New("参数错误")
 	}
 	config.ID = int64(id)
-	clientStruct, ok := clients[config.ID]
 	var client redis.Conn
 	var err error
-	if !ok {
-		for _, v := range connectionList {
-			if v.ID == config.ID {
-				config = v
-				break
-			}
+	for _, v := range connectionList {
+		if v.ID == config.ID {
+			config = v
+			break
 		}
-		if config.Title == "" {
-			return nil, "", errors.New("没有该连接项")
-		}
-		client, err = redis.Dial("tcp", config.Ip+":"+strconv.Itoa(config.Port))
+	}
+	if config.Title == "" {
+		return nil, "", errors.New("没有该连接项")
+	}
+	client, err = redis.Dial("tcp", config.Ip+":"+strconv.Itoa(config.Port))
+	if err != nil {
+		return nil, "", err
+	}
+	if config.Auth != "" {
+		_, err = client.Do("AUTH", config.Auth)
 		if err != nil {
 			return nil, "", err
 		}
-		if config.Auth != "" {
-			_, err = client.Do("AUTH", config.Auth)
-			if err != nil {
-				return nil, "", err
-			}
-		}
-		clients[config.ID] = redisClient{conn: client}
-	} else {
-		client = clientStruct.conn
 	}
 
 	if getSelectedIndexClient {
@@ -294,7 +288,10 @@ func RedisManagerConnectionServer(data map[string]interface{}) string {
 	switch action {
 	case "get_value":
 		index := int(data["index"].(float64))
-		_, _ = client.Do("SELECT", index) //选择数据库
+		_, err = client.Do("SELECT", index) //选择数据库
+		if err != nil {
+			return JSON(ResponseData{5000, "选择数据库失败", nil})
+		}
 		key := data["key"].(string)
 		if key == "" {
 			return JSON(ResponseData{5000, "请选择key", nil})
@@ -307,7 +304,7 @@ func RedisManagerConnectionServer(data map[string]interface{}) string {
 		switch typeStr {
 		case "list":
 			val, err := redis.Strings(client.Do("LRANGE", key, 0, 1000))
-			fmt.Println(client.Do("LRANGE", key, 0, 1000))
+			//fmt.Println(client.Do("LRANGE", key, 0, 1000))
 			if err != nil {
 				return JSON(ResponseData{5000, "读取数据错误", err.Error()})
 			} else {
@@ -319,7 +316,7 @@ func RedisManagerConnectionServer(data map[string]interface{}) string {
 			}
 		case "set":
 			val, err := redis.Strings(client.Do("SMEMBERS", key))
-			fmt.Println(client.Do("SMEMBERS", key))
+			//fmt.Println(client.Do("SMEMBERS", key))
 			if err != nil {
 				return JSON(ResponseData{5000, "读取数据错误", err.Error()})
 			} else {
@@ -331,7 +328,7 @@ func RedisManagerConnectionServer(data map[string]interface{}) string {
 			}
 		case "zset":
 			val, err := redis.StringMap(client.Do("ZRANGEBYSCORE", key, "-inf", "+inf", "WITHSCORES"))
-			fmt.Println(redis.Strings(client.Do("ZRANGEBYSCORE", key, "-inf", "+inf", "WITHSCORES")))
+			//fmt.Println(redis.Strings(client.Do("ZRANGEBYSCORE", key, "-inf", "+inf", "WITHSCORES")))
 			if err != nil {
 				return JSON(ResponseData{5000, "读取数据错误", err.Error()})
 			} else {
@@ -347,7 +344,7 @@ func RedisManagerConnectionServer(data map[string]interface{}) string {
 			}
 		case "string":
 			val, err := redis.String(client.Do("GET", key))
-			fmt.Println(client.Do("GET", key))
+			//fmt.Println(client.Do("GET", key))
 
 			if err != nil {
 				return JSON(ResponseData{5000, "读取数据错误", err.Error()})
@@ -360,7 +357,7 @@ func RedisManagerConnectionServer(data map[string]interface{}) string {
 			}
 		case "hash":
 			val, err := redis.StringMap(client.Do("HGETALL", key))
-			fmt.Println(client.Do("HGETALL", key))
+			//fmt.Println(client.Do("HGETALL", key))
 			if err != nil {
 				return JSON(ResponseData{5000, "读取数据错误", err.Error()})
 			} else {
@@ -395,7 +392,7 @@ func RedisManagerConnectionServer(data map[string]interface{}) string {
 		var reskeys = map[string][]string{}
 		for _, v := range keys {
 			strs := strings.Split(v, ":")
-			fmt.Println(strs)
+			//fmt.Println(strs)
 			if len(strs) > 1 {
 				//_, ok := reskeys[strs[0]]
 				reskeys[strs[0]] = append(reskeys[strs[0]], strings.Join(strs[1:], ":"))
@@ -528,7 +525,7 @@ func RedisManagerUpdateKey(data map[string]interface{}) string {
 		case "zset":
 			score := int(data["score"].(float64))
 			rowkey := data["rowkey"].(string)
-			fmt.Println("rowkey", rowkey)
+			//fmt.Println("rowkey", rowkey)
 			_, err = client.Do("ZREM", rowkey)
 			_, err = client.Do("ZADD", rowkey, score, data["data"])
 		case "hash":

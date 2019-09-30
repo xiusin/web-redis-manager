@@ -1,6 +1,6 @@
 <style scoped>
   .layout {
-    border: 1px solid #d7dde4;
+    border: 0px solid #d7dde4;
     background: #f5f7f9;
     position: relative;
     border-radius: 0px;
@@ -43,11 +43,14 @@
   <div class="layout">
     <Layout>
       <Header style="padding: 0 10px;">
-        <Button size="large" icon="ios-download-outline" type="primary" @click="showLoginModal()">连接到Redis服务器</Button>
+        <Button @click="showLoginModal()" icon="ios-download-outline" size="large" type="primary">连接到Redis服务器</Button>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <Button size="large" icon="ios-download-outline" type="error" @click="showIssueModal()">报告问题</Button>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <Button size="large" v-if="currentDbIndex > -1 && currentConnectionId !== 0" icon="ios-download-outline" type="info" @click="openCli(currentConnectionId, currentDbIndex)">打开{{currentConnection}}:DB({{currentDbIndex}})CLI模式</Button>
+        <Button size="large"
+                v-if="currentDbIndex > -1 && currentConnectionId !== 0"
+                icon="ios-download-outline"
+                type="info" @click="openCli(currentConnectionId, currentDbIndex)">打开{{currentConnection}}:DB({{currentDbIndex}})CLI模式</Button>
       </Header>
       <Layout :style="{height: '100%'}">
         <Sider hide-trigger :style="{background: '#fff', width:'250px',maxWidth:'250px', minWidth:'250px' , 'overflow-y': 'auto', 'overflow-x': 'hidden'}">
@@ -67,9 +70,9 @@
                   </Col>
                   <Col span="12" style="text-align: right;">
                     <ButtonGroup>
-                      <Button type="ghost" :loading="buttonLoading" @click="removeKey(key)">删除</Button>
-                      <Button type="ghost" :loading="buttonLoading" @click="flushKey(key)">刷新</Button>
-                      <Button type="ghost" :loading="buttonLoading" @click="setTTL(key, data)">重置TTL</Button>
+                      <Button :loading="buttonLoading" @click="removeKey(key)">删除</Button>
+                      <Button :loading="buttonLoading" @click="flushKey(key)">刷新</Button>
+                      <Button :loading="buttonLoading" @click="setTTL(key, data)">重置TTL</Button>
                     </ButtonGroup>
                   </Col>
                 </Row>
@@ -85,7 +88,7 @@
                       <span slot="open" >Json</span>
                       <span slot="close">Text</span>
                     </i-switch>
-                    <Button type="ghost" style="float: right" @click="updateValue(key, data, 'value')" :loading="buttonLoading">保存</Button>
+                    <Button style="float: right" @click="updateValue(key, data, 'value')" :loading="buttonLoading">保存</Button>
                 </div>
                 <div v-else style="margin-top: 4px;">
                   <Row type="flex">
@@ -117,7 +120,6 @@
                            type="textarea"
                            :autosize="{minRows: 6,maxRows: 30}" placeholder="列值"></Input>
                     <Button
-                      type="ghost"
                       v-if="!textType"
                       style="float: right"
                       @click="updateValue(key, data, 'updateRowValue')"
@@ -286,6 +288,10 @@
       </div>
     </Modal>
 
+    <Modal v-model="showJsonModal" fullscreen title="转换的JSON数据" :on-visible-change="showJsonModalOkClick">
+      <div>This is a fullscreen modal</div>
+    </Modal>
+
   </div>
 </template>
 <script>
@@ -301,6 +307,7 @@
     },
     data () {
       return {
+        showJsonModal: false,
         terminalTabs: {},
         cliOpen: false,
         getTerminal (conn, db) {
@@ -387,7 +394,7 @@
         addRowModal: false,
         modal_loading: false,
         buttonProps: {
-          type: 'ghost',
+          // type: 'ghost',
           size: 'small'
         },
         confirmModal: false,
@@ -415,13 +422,16 @@
           commandOrControlKeyDown = false
         }
       }
+    },
+    mounted () {
       this.initWs(() => {
         this.getConnectionList()
       })
     },
-    mounted () {
-    },
     methods: {
+      showJsonModalOkClick () {
+        this.showJsonModal = false
+      },
       taskFunc (pushToList, input) {
         return new Promise((resolve, reject) => {
           Api.sendCommand({
@@ -443,7 +453,7 @@
       },
       showIssueModal () {
         this.$Message.info({
-          content: '请将问题报告到: http://www.xiusin.com/',
+          content: '请将问题报告到: https://github.com/xiusin/redis_manager.git',
           duration: 30,
           closable: true
         })
@@ -478,14 +488,14 @@
         })
       },
       formatJson (data, type) {
-        console.log('data', data)
-        if (type === 'string') {
-          this.currentSelectRowData = {}
-        }
+        console.log('this.showJsonModal', this.showJsonModal)
+        // if (type === 'string') {
+        //   this.currentSelectRowData = {}
+        // }
+        this.showJsonModal = true
         try {
           return JSON.parse(data)
         } catch (e) {
-          console.log(data, e)
           this.$Message.error('内容无法解析为JSON, 按钮切回Text')
           this.textType = false
         }
@@ -682,27 +692,30 @@
         return this.currentConnection + '-' + this.currentConnectionId + '-' + this.currentDbIndex
       },
       selectChange (nodes) {
-        // todo 优雅
         if (nodes.length === 0) return
         let node = nodes[0]
         if (node.action !== 'get_value') return
         let key = (node.group ? node.group + ':' : '') + node.title
-        Api.connectionServer({
-          id: node.redis_id,  // 连接数
-          index: node.index,
-          action: node.action,
-          key: key
-        }, (res) => {
-          if (res.status !== 200) {
-            this.$Message.error(res.msg)
-            return
-          }
-          this.currentDbIndex = node.index
-          this.currentConnectionId = node.redis_id
-          this.tabs[this.getTabsKey()].keys[key] = res.data
-          this.tabs = Object.assign({}, this.tabs) // 绑定为动态变量,否则页面不会动态渲染
+        if (!Object.keys(this.tabs[this.getTabsKey()].keys).includes(key)) {
+          Api.connectionServer({
+            id: node.redis_id,  // 连接数
+            index: node.index,
+            action: node.action,
+            key: key
+          }, (res) => {
+            if (res.status !== 200) {
+              this.$Message.error(res.msg)
+              return
+            }
+            this.currentDbIndex = node.index
+            this.currentConnectionId = node.redis_id
+            this.tabs[this.getTabsKey()].keys[key] = res.data
+            this.tabs = Object.assign({}, this.tabs) // 绑定为动态变量,否则页面不会动态渲染
+            this.currentKey = key
+          })
+        } else {
           this.currentKey = key
-        })
+        }
       },
       formatItem (type, data) {
         let res = []
@@ -829,9 +842,9 @@
               })
             }
             window.astilectron.get = (url, data, c) => {
-              console.log('get:' + url, data)
+              // console.log('get:' + url, data)
               window.astilectron.sendMessage(url + (data ? '___::___' + JSON.stringify(data) : ''), (message) => {
-                console.log('rev', message)
+                // console.log('rev', message)
                 try {
                   c(JSON.parse(message))
                 } catch (e) {
@@ -902,7 +915,7 @@
                 marginRight: '3px'
               },
               props: Object.assign({}, this.buttonProps, {
-                icon: 'ios-close-outline'
+                icon: 'ios-close'
               }),
               on: {
                 click: () => {
@@ -1102,7 +1115,7 @@
                               marginRight: '3px'
                             },
                             props: Object.assign({}, this.buttonProps, {
-                              icon: 'refresh'
+                              icon: 'ios-sync'
                             }),
                             on: {
                               click: () => {
@@ -1163,7 +1176,7 @@
                               marginRight: '3px'
                             },
                             props: Object.assign({}, this.buttonProps, {
-                              icon: 'ios-plus-outline'
+                              icon: 'ios-add'
                             }),
                             on: {
                               click: () => {
@@ -1182,7 +1195,7 @@
                               title: '清空数据库'
                             },
                             props: Object.assign({}, this.buttonProps, {
-                              icon: 'paintbrush'
+                              icon: 'ios-trash-outline'
                             }),
                             on: {
                               click: () => {
@@ -1310,7 +1323,7 @@
                 title: '删除键'
               },
               props: Object.assign({}, this.buttonProps, {
-                icon: 'ios-trash-outline'
+                icon: 'ios-remove'
               }),
               on: {
                 click: () => {

@@ -20,12 +20,10 @@ func (h *Handler) Handle(route string, data map[string]interface{}) string {
     }
   }()
   handle, ok := h.routes[route]
-  fmt.Println("params", data)
   if !ok {
     return JSON(ResponseData{Status: 5000, Data: nil, Msg: "404"})
   }
   res := handle(data)
-  fmt.Println("res", res)
   return res
 }
 

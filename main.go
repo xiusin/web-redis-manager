@@ -1,14 +1,13 @@
 package main
 
 import (
-  "encoding/json"
-  "fmt"
-  "runtime"
-  "strings"
+	"encoding/json"
+	"runtime"
+	"strings"
 
-  "github.com/apex/log"
-  "github.com/asticode/go-astilectron"
-  "github.com/xiusin/redis_manager/src"
+	"github.com/apex/log"
+	"github.com/asticode/go-astilectron"
+	"github.com/xiusin/redis_manager/src"
 )
 
 func main() {
@@ -94,20 +93,7 @@ func main() {
 		}
 		//拆分路由以及数据内容
 		info := strings.Split(s, "___::___")
-		fmt.Println(info)
-		handler := src.NewHandler()
-    handler.Add("/redis/connection/test", src.RedisManagerConnectionTest)
-    handler.Add("/redis/connection/get-command", src.RedisManagerGetCommandList)
-		handler.Add("/redis/connection/save", src.RedisManagerConfigSave)
-		handler.Add("/redis/connection/list", src.RedisManagerConnectionList)
-		handler.Add("/redis/connection/server", src.RedisManagerConnectionServer)
-		handler.Add("/redis/connection/removekey", src.RedisManagerRemoveKey)
-		handler.Add("/redis/connection/removerow", src.RedisManagerRemoveRow)
-		handler.Add("/redis/connection/updatekey", src.RedisManagerUpdateKey)
-		handler.Add("/redis/connection/addkey", src.RedisManagerAddKey)
-		handler.Add("/redis/connection/flushDB", src.RedisManagerFlushDB)
-		handler.Add("/redis/connection/remove", src.RedisManagerRemoveConnection)
-		handler.Add("/redis/connection/command", src.RedisManagerCommand)
+		//fmt.Println(info)
 		data := make(map[string]interface{})
 		if len(info) == 1 {
 			data = nil
@@ -130,4 +116,22 @@ func main() {
 
 	}
 	a.Wait()
+}
+
+var handler *src.Handler
+
+func init() {
+	handler = src.NewHandler()
+	handler.Add("/redis/connection/test", src.RedisManagerConnectionTest)
+	handler.Add("/redis/connection/get-command", src.RedisManagerGetCommandList)
+	handler.Add("/redis/connection/save", src.RedisManagerConfigSave)
+	handler.Add("/redis/connection/list", src.RedisManagerConnectionList)
+	handler.Add("/redis/connection/server", src.RedisManagerConnectionServer)
+	handler.Add("/redis/connection/removekey", src.RedisManagerRemoveKey)
+	handler.Add("/redis/connection/removerow", src.RedisManagerRemoveRow)
+	handler.Add("/redis/connection/updatekey", src.RedisManagerUpdateKey)
+	handler.Add("/redis/connection/addkey", src.RedisManagerAddKey)
+	handler.Add("/redis/connection/flushDB", src.RedisManagerFlushDB)
+	handler.Add("/redis/connection/remove", src.RedisManagerRemoveConnection)
+	handler.Add("/redis/connection/command", src.RedisManagerCommand)
 }
