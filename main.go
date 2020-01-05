@@ -32,15 +32,17 @@ func main() {
 	} else {
 		url = cacheDir + "/resources/dist/index.html"
 	}
+	center, HasShadow, Fullscreenable, Closable, MinimizeOnClose := true, true, true, true, true
+	height, width := 800, 1280
 	w, err := a.NewWindow(url, &astilectron.WindowOptions{
-		Center:         astilectron.PtrBool(true),
-		Height:         astilectron.PtrInt(800),
-		Width:          astilectron.PtrInt(1280),
-		HasShadow:      astilectron.PtrBool(true),
-		Fullscreenable: astilectron.PtrBool(true),
-		Closable:       astilectron.PtrBool(true),
+		Center:         &center,
+		Height:         &height,
+		Width:          &width,
+		HasShadow:      &HasShadow,
+		Fullscreenable: &Fullscreenable,
+		Closable:       &Closable,
 		Custom: &astilectron.WindowCustomOptions{
-			MinimizeOnClose: astilectron.PtrBool(true),
+			MinimizeOnClose: &MinimizeOnClose,
 		},
 	})
 	if err != nil {
@@ -57,20 +59,23 @@ func main() {
 	if src.DEBUG {
 		_ = w.OpenDevTools()
 	}
+	tooltips := "Redis 数据管理工具"
 	tr := a.NewTray(&astilectron.TrayOptions{
-		Image:   astilectron.PtrStr(options.AppIconDefaultPath),
-		Tooltip: astilectron.PtrStr("Redis 数据管理工具"),
+		Image:   &options.AppIconDefaultPath,
+		Tooltip: &tooltips,
 	})
+	openWin := "打开桌面"
+	exitWin := "退出工具"
 	m := tr.NewMenu([]*astilectron.MenuItemOptions{
 		{
-			Label: astilectron.PtrStr("打开桌面"),
+			Label: &openWin,
 			OnClick: func(e astilectron.Event) (deleteListener bool) {
 				_ = w.Show()
 				return false
 			},
 		},
 		{
-			Label: astilectron.PtrStr("退出工具"),
+			Label: &exitWin,
 			OnClick: func(e astilectron.Event) (deleteListener bool) {
 				_ = a.Quit()
 				return false
@@ -93,7 +98,6 @@ func main() {
 		}
 		//拆分路由以及数据内容
 		info := strings.Split(s, "___::___")
-		//fmt.Println(info)
 		data := make(map[string]interface{})
 		if len(info) == 1 {
 			data = nil
@@ -107,11 +111,9 @@ func main() {
 	})
 	if runtime.GOOS == "darwin" {
 		var d = a.Dock()
-		//d.Hide()
 		_ = d.Show()
 		id, _ := d.Bounce(astilectron.DockBounceTypeCritical)
 		_ = d.CancelBounce(id)
-		//d.SetBadge("3")
 		_ = d.SetIcon(options.AppIconDefaultPath)
 
 	}

@@ -47,7 +47,7 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <Button size="large" icon="ios-download-outline" type="error" @click="showIssueModal()">报告问题</Button>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <Button size="large"
+        <Button v-show="false" size="large"
                 v-if="currentDbIndex > -1 && currentConnectionId !== 0"
                 icon="ios-download-outline"
                 type="info" @click="openCli(currentConnectionId, currentDbIndex)">打开{{currentConnection}}:DB({{currentDbIndex}})CLI模式</Button>

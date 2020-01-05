@@ -5,6 +5,11 @@
     overflow: auto;
     background: #ffffff;
   }
+
+  .ivu-btn-icon-only.ivu-btn-small {
+    border-radius: 0px;
+  }
+
 </style>
 
 <template>
