@@ -47,6 +47,9 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <Button size="large" icon="ios-download-outline" type="error" @click="showIssueModal()">报告问题</Button>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+
+        <Button size="large" icon="el-icon-sort" type="info" @click="openPubSubTab()">发布订阅</Button>
+
         <Button v-show="false" size="large"
                 v-if="currentDbIndex > -1 && currentConnectionId !== 0"
                 icon="ios-download-outline"
@@ -135,6 +138,48 @@
                   </div>
                 </div>
               </TabPane>
+              <TabPane closable name="发布订阅" :key="currentConnection + 'pubsub'" :label="currentConnection + '::发布订阅'" >
+                <ul class="infinite-list" style="overflow:auto">
+                  <li class="infinite-list-item">订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 </li>
+                  <li class="infinite-list-item">1</li>
+                  <li class="infinite-list-item">1</li>
+                  <li class="infinite-list-item">1</li>
+                  <li class="infinite-list-item">1</li>
+                  <li class="infinite-list-item">1</li>
+                  <li class="infinite-list-item">1</li>
+                </ul>
+
+                <Input :name="currentConnection + 'input'" placeholder="发布内容到订阅的通道" style="position: absolute; bottom: 0px;">
+                  <span slot="prepend"><Select style="width: 150px" placeholder="请选择通道">
+                    <Option key="item.value"
+                            label="1"
+                            value="item.value">
+                    </Option>
+
+                    <Option key="item.value1"
+                            label="2"
+                            value="item.value">
+                    </Option>
+
+                    <Option key="item.value2"
+                            label="3"
+                            value="item.value">
+                    </Option>
+
+                    <Option key="item.value3"
+                            label="4"
+                            value="item.value">
+                    </Option>
+
+                    <Option key="item.value4"
+                            label="5"
+                            value="item.value">
+                    </Option>
+                  </Select></span>
+                </Input>
+
+              </TabPane>
+
             </Tabs>
             </div>
             <div v-else-if="cliOpen === true" style="height: 100%;background-color: #030924;">
@@ -429,6 +474,12 @@
       })
     },
     methods: {
+      openPubSubTab () {
+        // this.tabs[this.getTabsKey()]['keys'] = '发布订阅'
+        // this.tabs[this.getTabsKey()].keys['pubsub'] = {}
+        // this.tabs = Object.assign({}, this.tabs) // 绑定为动态变量,否则页面不会动态渲染
+        // this.currentKey = key
+      },
       showJsonModalOkClick () {
         this.showJsonModal = false
       },
@@ -623,6 +674,11 @@
           id: this.currentConnectionId,
           index: this.currentDbIndex
         }, (res) => {
+          console.log('删除返回结果:', res, {
+            key: key,
+            id: this.currentConnectionId,
+            index: this.currentDbIndex
+          })
           this.buttonLoading = false
           if (res.status !== 200) {
             this.$Message.error(res.msg)
@@ -1345,3 +1401,20 @@
     }
   }
 </script>
+
+<style >
+
+  .infinite-list .infinite-list-item {
+    display: flex;
+    padding: 5px 10px;
+    background: #e8f3fe;
+    margin: 10px;
+    color: #7dbcfc;
+  }
+
+  .ivu-btn-icon-only.ivu-btn-small {
+    border-radius: 0;
+  }
+
+</style>
+

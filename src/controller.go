@@ -211,8 +211,6 @@ func RedisManagerCommand(data map[string]interface{}) string {
 	default:
 		return JSON(ResponseData{200, "成功", fmt.Sprintf("%#v", val)})
 	}
-
-	return JSON(ResponseData{200, "成功", fmt.Sprintf("%#v", val)})
 }
 
 func RedisManagerRemoveConnection(data map[string]interface{}) string {
@@ -332,7 +330,7 @@ func RedisManagerConnectionServer(data map[string]interface{}) string {
 			if err != nil {
 				return JSON(ResponseData{5000, "读取数据错误", err.Error()})
 			} else {
-				var retData = []map[string]string{}
+				var retData []map[string]string
 				for k, v := range val {
 					retData = append(retData, map[string]string{"value": k, "score": v})
 				}
@@ -391,14 +389,14 @@ func RedisManagerConnectionServer(data map[string]interface{}) string {
 		}
 		var reskeys = map[string][]string{}
 		for _, v := range keys {
-			strs := strings.Split(v, ":")
+			//strs := strings.Split(v, ":")
 			//fmt.Println(strs)
-			if len(strs) > 1 {
-				//_, ok := reskeys[strs[0]]
-				reskeys[strs[0]] = append(reskeys[strs[0]], strings.Join(strs[1:], ":"))
-			} else {
+			//if len(strs) > 1 {
+			//	//_, ok := reskeys[strs[0]]
+			//	reskeys[strs[0]] = append(reskeys[strs[0]], strings.Join(strs[1:], ":"))
+			//} else {
 				reskeys[v] = append(reskeys[v], v)
-			}
+			//}
 		}
 		return JSON(ResponseData{200, "读取所有key成功", reskeys})
 	}
