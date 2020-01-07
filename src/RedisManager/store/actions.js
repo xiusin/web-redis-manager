@@ -47,7 +47,10 @@ export default {
   },
   // 保存配置
   'connectionServer': async ({ commit }, payload) => {
-    // 调接口
     return await Api.connectionServer(payload)
+  },
+  // 发布订阅
+  'pubSub': async ({ commit }, payload) => {
+    return await Api.pubSub(payload)
   }
 }

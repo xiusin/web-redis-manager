@@ -52,6 +52,7 @@ func main() {
 		_ = w.Hide()
 		return false
 	})
+  src.Window = w
 	err = w.Create()
 	if err != nil {
 		log.Error(err.Error())
@@ -82,7 +83,7 @@ func main() {
 			},
 		},
 	})
-	_ = tr.Create() //这俩顺序不能反
+	_ = tr.Create()
 	_ = m.Create()
 
 	tr.On(astilectron.EventNameTrayEventDoubleClicked, func(e astilectron.Event) (deleteListener bool) {
@@ -124,6 +125,7 @@ var handler *src.Handler
 
 func init() {
 	handler = src.NewHandler()
+
 	handler.Add("/redis/connection/test", src.RedisManagerConnectionTest)
 	handler.Add("/redis/connection/get-command", src.RedisManagerGetCommandList)
 	handler.Add("/redis/connection/save", src.RedisManagerConfigSave)
@@ -135,5 +137,6 @@ func init() {
 	handler.Add("/redis/connection/addkey", src.RedisManagerAddKey)
 	handler.Add("/redis/connection/flushDB", src.RedisManagerFlushDB)
 	handler.Add("/redis/connection/remove", src.RedisManagerRemoveConnection)
-	handler.Add("/redis/connection/command", src.RedisManagerCommand)
+  handler.Add("/redis/connection/command", src.RedisManagerCommand)
+  handler.Add("/redis/connection/pubsub", src.RedisPubSub)
 }

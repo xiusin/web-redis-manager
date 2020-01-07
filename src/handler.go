@@ -1,7 +1,8 @@
 package src
 
-import "fmt"
-
+import (
+  "fmt"
+)
 
 type Handler struct {
   routes map[string]HandleFunc

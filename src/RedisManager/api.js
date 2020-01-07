@@ -45,6 +45,9 @@ export default {
   getCommand: async (data, callback) => {
     return await Vue.prototype.$Websocket.get('/redis/connection/get-command', data, callback)
   },
+  pubSub: async (data, callback) => {
+    return await Vue.prototype.$Websocket.get('/redis/connection/pubsub', data, callback)
+  },
   // 获取redis服务器信息
   serverInfo: async (data, callback) => {
     return await Vue.prototype.$http.get('/redis/command', data, callback)

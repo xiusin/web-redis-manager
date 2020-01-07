@@ -46,9 +46,6 @@
         <Button @click="showLoginModal()" icon="ios-download-outline" size="large" type="primary">连接到Redis服务器</Button>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <Button size="large" icon="ios-download-outline" type="error" @click="showIssueModal()">报告问题</Button>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-
-        <Button size="large" icon="el-icon-sort" type="info" @click="openPubSubTab()">发布订阅</Button>
 
         <Button v-show="false" size="large"
                 v-if="currentDbIndex > -1 && currentConnectionId !== 0"
@@ -61,8 +58,8 @@
         </Sider>
         <Layout>
           <Content :style="{ height: '100%', background: '#fff', borderLeft: '1px solid #ccc'}">
-            <div v-if="currentConnection && currentDbIndex > -1 && !isEmptyObj(tabs[getTabsKey()]['keys']) && !cliOpen">
-            <Tabs @on-tab-remove="handleTabRemove" type="card" :value="currentKey" :animated="false" :style="{ background: '#fff'}">
+            <div v-if="currentConnection && currentDbIndex > -1 && !isEmptyObj(tabs[getTabsKey()]['keys']) && !cliOpen" :style="{height: '100%' }">
+            <Tabs @on-tab-remove="handleTabRemove" type="card" :value="currentKey" :animated="false" :style="{ background: '#fff', height: '100%' }">
               <TabPane v-for="(data, key) in tabs[getTabsKey()]['keys']" closable :name="key" :key="key" :label="currentConnection + '::DB' + currentDbIndex + '::' + key" >
                 <Row type="flex">
                   <Col span="12">
@@ -138,42 +135,16 @@
                   </div>
                 </div>
               </TabPane>
-              <TabPane closable name="发布订阅" :key="currentConnection + 'pubsub'" :label="currentConnection + '::发布订阅'" >
-                <ul class="infinite-list" style="overflow:auto">
-                  <li class="infinite-list-item">订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 订阅内容： 通道： ， 这里可以是订阅通道所有的内容展示。 也可以发布内容 </li>
-                  <li class="infinite-list-item">1</li>
-                  <li class="infinite-list-item">1</li>
-                  <li class="infinite-list-item">1</li>
-                  <li class="infinite-list-item">1</li>
-                  <li class="infinite-list-item">1</li>
-                  <li class="infinite-list-item">1</li>
+              <TabPane name="发布订阅" :key="currentConnection + 'pubsub'" :label="currentConnection + '::发布订阅'" >
+                <ul class="infinite-list" style="overflow:auto; margin-top:31px;">
+                  <li class="infinite-list-item"  v-for="(item, index) in chanMegs[getPubSubTabKey()]">{{item}}</li>
                 </ul>
 
-                <Input :name="currentConnection + 'input'" placeholder="发布内容到订阅的通道" style="position: absolute; bottom: 0px;">
-                  <span slot="prepend"><Select style="width: 150px" placeholder="请选择通道">
-                    <Option key="item.value"
-                            label="1"
-                            value="item.value">
-                    </Option>
-
-                    <Option key="item.value1"
-                            label="2"
-                            value="item.value">
-                    </Option>
-
-                    <Option key="item.value2"
-                            label="3"
-                            value="item.value">
-                    </Option>
-
-                    <Option key="item.value3"
-                            label="4"
-                            value="item.value">
-                    </Option>
-
-                    <Option key="item.value4"
-                            label="5"
-                            value="item.value">
+                <Input :name="currentConnection + 'input'" @keyup.enter.native="sendToChannel" v-model="channelMsg" placeholder="发布内容到订阅的频道" style="position: absolute; top: 31px; z-index:2;">
+                  <span slot="prepend"><Select v-model="selectedChannel" style="width: 150px" placeholder="请选择频道">
+                    <Option v-for="(item, index) in channels" :key="'channel_' + item"
+                            :label="item"
+                            :value="item">
                     </Option>
                   </Select></span>
                 </Input>
@@ -352,12 +323,16 @@
     },
     data () {
       return {
+        chanMegs: {}, // 消息内容
+        channelMsg: '',
+        selectedChannel: '',
         showJsonModal: false,
         terminalTabs: {},
         cliOpen: false,
         getTerminal (conn, db) {
           return 'terminal_' + conn + '_' + db
         },
+        channels: [],
         openCli (conn, db) {
           this.currentTerminalKey = this.getTerminal(conn, db)
           this.cliOpen = true
@@ -471,10 +446,51 @@
     mounted () {
       this.initWs(() => {
         this.getConnectionList()
+        this.channelWs()
       })
     },
     methods: {
+      channelWs () {
+        let that = this
+        window.astilectron.onMessage((message) => {
+          console.log(message)
+          if (!that.chanMegs.hasOwnProperty(message.id + '')) {
+            that.chanMegs[message.id + ''] = []
+          }
+          that.chanMegs[message.id + ''].push(message.channel + ': ' + message.data)
+          that.chanMegs = Object.assign({}, that.chanMegs)
+        })
+      },
+      getPubSubTabKey () {
+        return this.currentConnectionId + ''
+      },
+      sendToChannel () {
+        if (this.selectedChannel === '') {
+          this.$Message.error('请选择channel')
+        } else if (this.channelMsg !== '') {
+          Api.pubSub({
+            id: this.currentConnectionId,
+            channel: this.selectedChannel,
+            msg: this.channelMsg
+          }, (data) => {
+            if (data.status === 200) {
+              this.channelMsg = ''
+              this.$Message.success('发送到channel:' + this.selectedChannel + '的消息成功')
+            }
+          })
+        }
+      },
       openPubSubTab () {
+        Api.pubSub({
+          id: this.currentConnectionId
+        }, (data) => {
+          if (data.status === 200) {
+            console.log('this.channels', data.data)
+            this.channels = data.data
+          } else {
+            this.$Message.error(data.msg)
+          }
+        })
         // this.tabs[this.getTabsKey()]['keys'] = '发布订阅'
         // this.tabs[this.getTabsKey()].keys['pubsub'] = {}
         // this.tabs = Object.assign({}, this.tabs) // 绑定为动态变量,否则页面不会动态渲染
@@ -763,6 +779,7 @@
               this.$Message.error(res.msg)
               return
             }
+            this.openPubSubTab()
             this.currentDbIndex = node.index
             this.currentConnectionId = node.redis_id
             this.tabs[this.getTabsKey()].keys[key] = res.data
