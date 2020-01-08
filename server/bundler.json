@@ -1,0 +1,12 @@
+{
+  "app_name": "RedisManager",
+  "icon_path_darwin": "resources/icon.icns",
+  "icon_path_windows": "resources/icon.ico",
+  "resources_path": "resources",
+  "output_path": "output",
+  "version_electron": "7.1.7",
+  "environments": [
+    {"arch": "amd64", "os": "darwin"},
+    {"arch": "386", "os": "windows"}
+  ]
+}

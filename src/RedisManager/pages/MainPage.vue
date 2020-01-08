@@ -43,14 +43,11 @@
   <div class="layout">
     <Layout>
       <Header style="padding: 0 10px;">
-        <Button @click="showLoginModal()" icon="ios-download-outline" size="large" type="primary">连接到Redis服务器</Button>
+        <Button @click="showLoginModal()" size="small" icon="ios-download-outline"  type="primary">连接服务器</Button>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <Button size="large" icon="ios-download-outline" type="error" @click="showIssueModal()">报告问题</Button>
-
-        <Button v-show="false" size="large"
-                v-if="currentDbIndex > -1 && currentConnectionId !== 0"
-                icon="ios-download-outline"
-                type="info" @click="openCli(currentConnectionId, currentDbIndex)">打开{{currentConnection}}:DB({{currentDbIndex}})CLI模式</Button>
+        <Button size="small" icon="ios-download-outline" type="error" @click="showIssueModal()">报告问题</Button>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <Button size="small" v-if="currentConnectionId != ''" icon="ios-download-outline" type="info" @click="openPubSubTab()">发布订阅</Button>
       </Header>
       <Layout :style="{height: '100%'}">
         <Sider hide-trigger :style="{background: '#fff', width:'250px',maxWidth:'250px', minWidth:'250px' , 'overflow-y': 'auto', 'overflow-x': 'hidden'}">
@@ -58,7 +55,7 @@
         </Sider>
         <Layout>
           <Content :style="{ height: '100%', background: '#fff', borderLeft: '1px solid #ccc'}">
-            <div v-if="currentConnection && currentDbIndex > -1 && !isEmptyObj(tabs[getTabsKey()]['keys']) && !cliOpen" :style="{height: '100%' }">
+            <div v-if="currentConnectionId && currentDbIndex > -1 && typeof tabs[getTabsKey()] !== 'undefined' && !isEmptyObj(tabs[getTabsKey()]['keys'])" :style="{height: '100%' }">
             <Tabs @on-tab-remove="handleTabRemove" type="card" :value="currentKey" :animated="false" :style="{ background: '#fff', height: '100%' }">
               <TabPane v-for="(data, key) in tabs[getTabsKey()]['keys']" closable :name="key" :key="key" :label="currentConnection + '::DB' + currentDbIndex + '::' + key" >
                 <Row type="flex">
@@ -81,14 +78,19 @@
                   <vue-json-pretty
                     v-if="textType"
                     :path="'res'"
-                    :data="formatJson(data.data)"
+                    :data="formatJson(data.data, key)"
                   >
                   </vue-json-pretty>
-                   <i-switch size="large" v-model="textType" style="right: 80px;position: absolute;bottom: 3px;">
-                      <span slot="open" >Json</span>
-                      <span slot="close">Text</span>
-                    </i-switch>
-                    <Button style="float: right" @click="updateValue(key, data, 'value')" :loading="buttonLoading">保存</Button>
+
+                  <Row type="flex">
+                    <Col span="24" style="text-align: right">
+                      <i-switch size="large" v-model="textType" style="height: 24px; line-height: 23px;margin-right: 5px;">
+                        <span slot="open" >Json</span>
+                        <span slot="close">Text</span>
+                      </i-switch>
+                      <Button style="float: right" size="small" type="info" @click="updateValue(key, data, 'value')" :loading="buttonLoading">保存</Button>
+                    </Col>
+                  </Row>
                 </div>
                 <div v-else style="margin-top: 4px;">
                   <Row type="flex">
@@ -129,36 +131,43 @@
                     <vue-json-pretty
                       v-if="textType"
                       :path="'res'"
-                      :data="formatJson(currentSelectRowData.value)"
+                      :data="formatJson(currentSelectRowData.value, key)"
                     >
                     </vue-json-pretty>
                   </div>
                 </div>
               </TabPane>
-              <TabPane name="发布订阅" :key="currentConnection + 'pubsub'" :label="currentConnection + '::发布订阅'" >
-                <ul class="infinite-list" style="overflow:auto; margin-top:31px;">
+            </Tabs>
+            </div>
+            <div v-else style="text-align: center;">
+              <img draggable="false" src="static/rdm_logo.png" style="width: 20%; margin-top: 100px;"/>
+              <p style="font-size: 16px; font-weight: bold;  margin-top:100px;color: #000;">RedisManager - Redis客户端管理工具 @ By Xiusin</p>
+            </div>
+
+            <div v-if="currentConnectionId != '' && pubsubModal" style="position:absolute; z-index: 10;  top: 64px;background: #fff;width: 100%;height: 100%; padding:10px;">
+                <ul class="infinite-list" style="position:relative; top: 30px;">
                   <li class="infinite-list-item"  v-for="(item, index) in chanMegs[getPubSubTabKey()]">{{item}}</li>
                 </ul>
 
-                <Input :name="currentConnection + 'input'" @keyup.enter.native="sendToChannel" v-model="channelMsg" placeholder="发布内容到订阅的频道" style="position: absolute; top: 31px; z-index:2;">
-                  <span slot="prepend"><Select v-model="selectedChannel" style="width: 150px" placeholder="请选择频道">
-                    <Option v-for="(item, index) in channels" :key="'channel_' + item"
-                            :label="item"
-                            :value="item">
-                    </Option>
-                  </Select></span>
-                </Input>
-
-              </TabPane>
-
-            </Tabs>
-            </div>
-            <div v-else-if="cliOpen === true" style="height: 100%;background-color: #030924;">
-              <vue-terminal :ref="getTerminal(currentConnectionId, currentDbIndex)" :task-list="taskList" style="width:100%; height: 100%; margin:0 auto;margin-top: -30px;"></vue-terminal>
-            </div>
-            <div v-else style="text-align: center;">
-              <img src="static/rdm_logo.png" style="width: 20%; margin-top: 100px;"/>
-              <p style="font-size: 16px; font-weight: bold;  margin-top:100px;color: #000;">RDM - Redis Database Manager @ By Xiusin</p>
+                 <div style="position:absolute; top:8px; left:20px; width:100%">
+                   <Row>
+                  <Col span="6" >
+                    <Input :name="currentConnection + 'addinput'" v-model="customChannel" placeholder="如果填写则选项失效">
+                            <span slot="prepend">自定义频道</span>
+                    </Input>
+                  </Col>
+                  <Col span="10" offset="1">
+                    <Input :name="currentConnection + 'input'" @keyup.enter.native="sendToChannel"  v-model="channelMsg" placeholder="发布内容到订阅的频道">
+                            <span slot="prepend"><Select v-model="selectedChannel" style="width:120px" placeholder="选择频道">
+                              <Option v-for="(item, index) in channels" :key="'channel_' + item"
+                                      :label="item"
+                                      :value="item">
+                              </Option>
+                            </Select></span>
+                          </Input>
+                  </Col>
+                </Row>
+              </div>
             </div>
           </Content>
         </Layout>
@@ -305,7 +314,7 @@
     </Modal>
 
     <Modal v-model="showJsonModal" fullscreen title="转换的JSON数据" :on-visible-change="showJsonModalOkClick">
-      <div>This is a fullscreen modal</div>
+
     </Modal>
 
   </div>
@@ -314,61 +323,22 @@
   import Vue from 'vue'
   import VueJsonPretty from 'vue-json-pretty'
   import Api from '../api'
-  import VueTerminal from 'vue-terminal'
   export default {
     name: 'MainPage',
     components: {
-      VueJsonPretty,
-      VueTerminal
+      VueJsonPretty
     },
     data () {
       return {
+        customChannel: '',
         chanMegs: {}, // 消息内容
         channelMsg: '',
         selectedChannel: '',
+        pubsubModal: false,
         showJsonModal: false,
         terminalTabs: {},
         cliOpen: false,
-        getTerminal (conn, db) {
-          return 'terminal_' + conn + '_' + db
-        },
         channels: [],
-        openCli (conn, db) {
-          this.currentTerminalKey = this.getTerminal(conn, db)
-          this.cliOpen = true
-        },
-        taskList: {
-          defaultTask: {
-            defaultTask: () => {
-              return new Promise((resolve, reject) => {
-                // 请求地址
-                Api.getCommand({}, (data) => {
-                  if (data.status === 5000) {
-                    reject({ type: 'error', label: 'ERROR', message: '连接' + this.currentConnection + '::DB(' + this.currentDbIndex + ')' + '数据库失败' })
-                  } else {
-                    data = data.data
-                    let l = data.split('\n')
-                    try {
-                      for (let command in l) {
-                        if (l[command] === '') {
-                          continue
-                        }
-                        let coms = l[command].split(':::')
-                        this.taskList[coms[0]] = {}
-                        this.taskList[coms[0]].description = coms[1]
-                        this.taskList[coms[0]][coms[0]] = this.taskFunc
-                      }
-                      resolve({ type: 'success', label: 'SUCCESS', message: '连接' + this.currentConnection + '::DB(' + this.currentDbIndex + ')' + '数据库成功,切换数据库自动关闭窗口' })
-                    } catch (e) {
-                      reject({ type: 'error', label: 'ERROR', message: '连接' + this.currentConnection + '::DB(' + this.currentDbIndex + ')' + '数据库失败' })
-                    }
-                  }
-                })
-              })
-            }
-          }
-        },
-        commandList: {},
         inited: false,
         newKeyType: 'string',
         searchKey: '',
@@ -453,11 +423,10 @@
       channelWs () {
         let that = this
         window.astilectron.onMessage((message) => {
-          console.log(message)
           if (!that.chanMegs.hasOwnProperty(message.id + '')) {
             that.chanMegs[message.id + ''] = []
           }
-          that.chanMegs[message.id + ''].push(message.channel + ': ' + message.data)
+          that.chanMegs[message.id + ''].unshift('[ ' + message.time + ' ]  收到频道(' + message.channel + ') 的消息:  ' + message.data)
           that.chanMegs = Object.assign({}, that.chanMegs)
         })
       },
@@ -465,36 +434,42 @@
         return this.currentConnectionId + ''
       },
       sendToChannel () {
-        if (this.selectedChannel === '') {
-          this.$Message.error('请选择channel')
+        if (this.selectedChannel === '' && this.customChannel === '') {
+          this.$Message.error('请选择channel或输入自定义频道')
         } else if (this.channelMsg !== '') {
+          let channel = this.customChannel !== '' ? this.customChannel : this.selectedChannel
           Api.pubSub({
             id: this.currentConnectionId,
-            channel: this.selectedChannel,
+            channel: channel,
             msg: this.channelMsg
           }, (data) => {
             if (data.status === 200) {
               this.channelMsg = ''
-              this.$Message.success('发送到channel:' + this.selectedChannel + '的消息成功')
+              this.loadPubSubChannels()
+              this.$Message.success('发送到channel:' + channel + '的消息成功')
             }
           })
         }
       },
       openPubSubTab () {
+        if (this.pubsubModal) {
+          this.pubsubModal = false
+          return
+        }
+        this.pubsubModal = true
+        this.loadPubSubChannels()
+      },
+
+      loadPubSubChannels () {
         Api.pubSub({
           id: this.currentConnectionId
         }, (data) => {
           if (data.status === 200) {
-            console.log('this.channels', data.data)
             this.channels = data.data
           } else {
             this.$Message.error(data.msg)
           }
         })
-        // this.tabs[this.getTabsKey()]['keys'] = '发布订阅'
-        // this.tabs[this.getTabsKey()].keys['pubsub'] = {}
-        // this.tabs = Object.assign({}, this.tabs) // 绑定为动态变量,否则页面不会动态渲染
-        // this.currentKey = key
       },
       showJsonModalOkClick () {
         this.showJsonModal = false
@@ -539,7 +514,13 @@
           index: this.newValue.db
         }
         Api.addKey(param, (res) => {
+          this.currentConnectionId = this.newValue.redis_id
+          this.currentDbIndex = this.newValue.db
           this.modal_loading = false
+          if (typeof this.tabs[this.getTabsKey()] === undefined) {
+            this.tabs[this.getTabsKey()] = {keys: {}}
+            this.tabs = Object.assign({}, this.tabs) // 绑定为动态变量,否则页面不会动态渲染
+          }
           if (res.status !== 200) {
             this.$Message.error(res.msg)
           } else {
@@ -554,17 +535,14 @@
           }
         })
       },
-      formatJson (data, type) {
-        console.log('this.showJsonModal', this.showJsonModal)
-        // if (type === 'string') {
-        //   this.currentSelectRowData = {}
-        // }
-        this.showJsonModal = true
-        try {
-          return JSON.parse(data)
-        } catch (e) {
-          this.$Message.error('内容无法解析为JSON, 按钮切回Text')
-          this.textType = false
+      formatJson (data, key) {
+        if (this.currentKey === key) {
+          try {
+            return JSON.parse(data)
+          } catch (e) {
+            this.$Message.error('内容无法解析为JSON, 按钮切回Text')
+            this.textType = false
+          }
         }
       },
       getRowData (data, index) {
@@ -705,7 +683,6 @@
             callback()
           } else {  // 这是直接使用tab里的remove
             for (let i in this.connectionTreeList) {
-              // todo 这里目前没有考虑键名分组的情况
               if (this.currentConnectionId === this.connectionTreeList[i].data.id) {
                 const children = this.connectionTreeList[i].children[this.currentDbIndex].children
                 for (let j in children) {
@@ -728,11 +705,19 @@
           action: 'get_value',
           key: key
         }, (res) => {
-          if (res.status !== 200) {
+          if (res.status === 5000) {
             this.$Message.error(res.msg)
             return
+          } else if (res.status === 5001) {
+            let prv = ''
+            delete this.tabs[this.getTabsKey()].keys[key]
+            for (let i in this.tabs[this.getTabsKey()].keys) {
+              prv = i
+            }
+            this.currentKey = prv
+            this.tabs = Object.assign({}, this.tabs) // 绑定为动态变量,否则页面不会动态渲染
+            return
           }
-          this.buttonLoading = false
           this.tabs[this.getTabsKey()].keys[key] = res.data
           this.tabs = Object.assign({}, this.tabs) // 绑定为动态变量,否则页面不会动态渲染
           this.currentKey = key
@@ -761,13 +746,16 @@
         this.currentTerminalKey = ''
       },
       getTabsKey () {
-        return this.currentConnection + '-' + this.currentConnectionId + '-' + this.currentDbIndex
+        return this.currentConnectionId + '-' + this.currentDbIndex
       },
       selectChange (nodes) {
         if (nodes.length === 0) return
         let node = nodes[0]
         if (node.action !== 'get_value') return
         let key = (node.group ? node.group + ':' : '') + node.title
+        if (typeof this.tabs[this.getTabsKey()] === undefined) {
+          this.tabs[this.getTabsKey()] = {keys: {}}
+        }
         if (!Object.keys(this.tabs[this.getTabsKey()].keys).includes(key)) {
           Api.connectionServer({
             id: node.redis_id,  // 连接数
@@ -775,11 +763,15 @@
             action: node.action,
             key: key
           }, (res) => {
-            if (res.status !== 200) {
+            console.log(res)
+            if (res.status === 5000) {
               this.$Message.error(res.msg)
               return
+            } else if (res.status === 5001) {
+              delete this.tabs[this.getTabsKey()].keys[key]
+              this.tabs = Object.assign({}, this.tabs) // 绑定为动态变量,否则页面不会动态渲染
+              return
             }
-            this.openPubSubTab()
             this.currentDbIndex = node.index
             this.currentConnectionId = node.redis_id
             this.tabs[this.getTabsKey()].keys[key] = res.data
@@ -906,7 +898,7 @@
             window.astilectron.post = (url, data, c) => {
               console.log('post:' + url, data)
               window.astilectron.sendMessage(url + (data ? '___::___' + JSON.stringify(data) : ''), (message) => {
-                console.log('rev', message)
+                this.buttonLoading = false
                 try {
                   c(JSON.parse(message))
                 } catch (e) {
@@ -915,12 +907,11 @@
               })
             }
             window.astilectron.get = (url, data, c) => {
-              // console.log('get:' + url, data)
               window.astilectron.sendMessage(url + (data ? '___::___' + JSON.stringify(data) : ''), (message) => {
-                // console.log('rev', message)
-                try {
+                this.buttonLoading = false
+                if (typeof message === 'string') {
                   c(JSON.parse(message))
-                } catch (e) {
+                } else {
                   c(message)
                 }
               })
@@ -1125,12 +1116,13 @@
       },
       updateDbKeyCount (action) {
         for (let i in this.connectionTreeList) {
-          // todo 这里目前没有考虑键名分组的情况
           if (this.currentConnectionId === this.connectionTreeList[i].data.id) {
             let node = this.connectionTreeList[i].children[this.currentDbIndex]
-            let count = action === 'add' ? node.count + 1 : node.count - 1
-            node.count = count
-            node.title = 'DB' + this.currentDbIndex + '(' + node.count + ')'
+            console.log(node)
+            if (node) {
+              node.count = action === 'add' ? node.count + 1 : node.count - 1
+              node.title = 'DB' + this.currentDbIndex + ' (' + node.count + ')'
+            }
             break
           }
         }
@@ -1145,6 +1137,7 @@
               if (res.status !== 200) {
                 this.$Message.error(res.msg)
               } else {
+                this.currentConnectionId = item.data.id
                 this.currentConnection = item.data.title
                 let data = []
                 for (let i = 0; i < res.data.length; i++) {
@@ -1208,8 +1201,10 @@
                                     }
                                   }
                                   let data = []
+                                  var count = 0
                                   for (let i in res.data) {
                                     let children = []
+                                    count++
                                     if (res.data[i].length > 1 || res.data[i][0] !== i) {
                                       for (let y = 0; y < res.data[i].length; y++) {
                                         children.push({
@@ -1236,7 +1231,10 @@
                                     }
                                     data.push(v)
                                   }
+                                  console.log('res.data', res.data)
                                   item.children = data
+                                  item.count = count
+                                  item.title = 'DB' + item.db + ' (' + item.count + ')'
                                 })
                               }
                             }
