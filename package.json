@@ -14,7 +14,7 @@
     "lint": "eslint --ext .js,.vue src test/unit/specs test/e2e/specs"
   },
   "dependencies": {
-    "axios": "^0.16.2",
+    "axios": "^0.18.1",
     "browser-update": "^2.1.4",
     "html2canvas": "^1.0.0-alpha.12",
     "iview": "^3.5.1",
