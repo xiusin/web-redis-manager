@@ -48,6 +48,9 @@
         <Button size="small" icon="ios-download-outline" type="error" @click="showIssueModal()">报告问题</Button>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <Button size="small" v-if="currentConnectionId != ''" icon="ios-download-outline" type="info" @click="openPubSubTab()">发布订阅</Button>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <Button size="small" v-if="currentConnectionId != ''" icon="ios-download-outline" type="info" @click="openInfoTab()">服务信息</Button>
+
       </Header>
       <Layout :style="{height: '100%'}">
         <Sider hide-trigger :style="{background: '#fff', width:'250px',maxWidth:'250px', minWidth:'250px' , 'overflow-y': 'auto', 'overflow-x': 'hidden'}">
@@ -168,6 +171,13 @@
                   </Col>
                 </Row>
               </div>
+            </div>
+
+            <div v-if="currentConnectionId != '' && infoModal" style="position:absolute; z-index: 10;  top: 64px;background: #fff;width: 100%;height: 100%; padding:10px;">
+              <Tabs value="name1">
+                <TabPane label="配置信息" name="first">{{serverConfig}}</TabPane>
+                <TabPane label="服务器信息" name="second"><pre style="padding-left: 20px;">{{serverInfo}}</pre></TabPane>
+              </Tabs>
             </div>
           </Content>
         </Layout>
@@ -330,6 +340,8 @@
     },
     data () {
       return {
+        serverConfig: [],
+        serverInfo: '',
         customChannel: '',
         chanMegs: {}, // 消息内容
         channelMsg: '',
@@ -375,6 +387,7 @@
           'db': -1,
           'redis_id': 0
         },
+        infoModal: false,
         connectionListData: [],
         connectionTreeList: [],
         tabs: {},
@@ -414,10 +427,10 @@
       }
     },
     mounted () {
-      this.initWs(() => {
-        this.getConnectionList()
-        this.channelWs()
-      })
+      // 初始化ws
+      this.initWs()
+      this.getConnectionList()
+      this.channelWs()
     },
     methods: {
       channelWs () {
@@ -457,9 +470,38 @@
           return
         }
         this.pubsubModal = true
+        this.infoModal = false
         this.loadPubSubChannels()
       },
-
+      openInfoTab () {
+        if (this.infoModal) {
+          this.infoModal = false
+          return
+        }
+        this.infoModal = true
+        this.pubsubModal = false
+        this.loadInfo()
+      },
+      loadInfo () {
+        Api.info({
+          id: this.currentConnectionId
+        }, (data) => {
+          if (data.status === 200) {
+            // 显示内容
+            this.serverInfo = data.data.data
+            // let config = ''
+            // for (let i = 0; i < .length; i = i + 2) {
+            //   config += data.data.config[i]
+            //   config += ':'
+            //   config += data.data.config[i + 1]
+            //   config += '<br/>'
+            // }
+            this.serverConfig = data.data.config
+          } else {
+            this.$Message.error(data.msg)
+          }
+        })
+      },
       loadPubSubChannels () {
         Api.pubSub({
           id: this.currentConnectionId

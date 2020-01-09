@@ -1,10 +1,11 @@
 package src
 
 import (
-  "github.com/astaxie/beego/logs"
+  "fmt"
+  "github.com/asticode/go-astilog"
 )
 
-const DEBUG = false
+const DEBUG = true
 
 type ResponseData struct {
   Status int64       `json:"status"`
@@ -30,6 +31,12 @@ var (
 func init() {
   connectionList = []connection{}
   GetCacheDir(DEBUG)
-  log := logs.NewLogger(10)
-  _ = log.SetLogger("file", `{"filename":"`+CacheDir+`/rdm-error.log"}`)
+  fmt.Println("baseDir", CacheDir)
+  astilog.SetLogger(astilog.New(astilog.Configuration{
+    AppName:  "RedisManager",
+    Filename: CacheDir + `/rdm.log`,
+    Verbose:  DEBUG,
+  }))
+  astilog.FlagConfig()
+  astilog.Infof("baseDir: %s", CacheDir)
 }

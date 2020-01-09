@@ -11,14 +11,13 @@ import (
 )
 
 func main() {
-
   cacheDir := src.GetCacheDir(src.DEBUG)
   options := astilectron.Options{
     AppName:            "RedisManager",
     SingleInstance:     true,
     BaseDirectoryPath:  cacheDir,
     AppIconDefaultPath: cacheDir + "/resources/icon.png",
-    DataDirectoryPath: cacheDir,
+    DataDirectoryPath:  cacheDir,
   }
   var url string
   if src.DEBUG {
@@ -26,16 +25,16 @@ func main() {
   } else {
     url = cacheDir + "/resources/dist/index.html"
   }
-  center, HasShadow, Fullscreenable, Closable, MinimizeOnClose := true, true, true, true, true
+  center, HasShadow, Fullscreenable, Closable := true, true, true, true
   height, width := 800, 1280
 
   if err := bootstrap.Run(bootstrap.Options{
-    Asset:              Asset,
-    AssetDir:           AssetDir,
+    //Asset:              Asset,
+    //AssetDir:           AssetDir,
     AstilectronOptions: options,
     Debug:              src.DEBUG,
     Logger:             astilog.GetLogger(),
-    RestoreAssets:      RestoreAssets,
+    //RestoreAssets:      RestoreAssets,
     OnWait: func(_ *astilectron.Astilectron, ws []*astilectron.Window, _ *astilectron.Menu, _ *astilectron.Tray, _ *astilectron.Menu) error {
       src.Window = ws[0]
 
@@ -53,7 +52,8 @@ func main() {
         } else {
           err := json.Unmarshal([]byte(info[1]), &data)
           if err != nil {
-            return  err.Error()
+            astilog.Errorf("UnmarshalData Error", err.Error())
+            return err.Error()
           }
         }
         return handler.Handle(info[0], data)
@@ -70,9 +70,9 @@ func main() {
         HasShadow:      &HasShadow,
         Fullscreenable: &Fullscreenable,
         Closable:       &Closable,
-        Custom: &astilectron.WindowCustomOptions{
-          MinimizeOnClose: &MinimizeOnClose,
-        },
+        //Custom: &astilectron.WindowCustomOptions{
+        //  MinimizeOnClose: &MinimizeOnClose,
+        //},
       },
     }},
   }); err != nil {
@@ -86,7 +86,6 @@ func init() {
   handler = src.NewHandler()
 
   handler.Add("/redis/connection/test", src.RedisManagerConnectionTest)
-  handler.Add("/redis/connection/get-command", src.RedisManagerGetCommandList)
   handler.Add("/redis/connection/save", src.RedisManagerConfigSave)
   handler.Add("/redis/connection/list", src.RedisManagerConnectionList)
   handler.Add("/redis/connection/server", src.RedisManagerConnectionServer)
@@ -98,4 +97,5 @@ func init() {
   handler.Add("/redis/connection/remove", src.RedisManagerRemoveConnection)
   handler.Add("/redis/connection/command", src.RedisManagerCommand)
   handler.Add("/redis/connection/pubsub", src.RedisPubSub)
+  handler.Add("/redis/connection/info", src.RedisManagerGetInfo)
 }
