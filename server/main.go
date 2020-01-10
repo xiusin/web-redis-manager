@@ -7,6 +7,7 @@ import (
   "github.com/asticode/go-astilog"
   "github.com/pkg/errors"
   "github.com/xiusin/redis_manager/server/src"
+  "runtime"
   "strings"
 )
 
@@ -24,24 +25,27 @@ func main() {
     url = "http://localhost:8899"
   } else {
     url = cacheDir + "/resources/dist/index.html"
+    if runtime.GOOS == "windows" {
+      url = "./resources/dist/index.html"
+    }
   }
   center, HasShadow, Fullscreenable, Closable := true, true, true, true
   height, width := 800, 1280
 
   if err := bootstrap.Run(bootstrap.Options{
-    //Asset:              Asset,
-    //AssetDir:           AssetDir,
+    Asset:              Asset,
+    AssetDir:           AssetDir,
     AstilectronOptions: options,
     Debug:              src.DEBUG,
     Logger:             astilog.GetLogger(),
-    //RestoreAssets:      RestoreAssets,
+    RestoreAssets:      RestoreAssets,
     OnWait: func(_ *astilectron.Astilectron, ws []*astilectron.Window, _ *astilectron.Menu, _ *astilectron.Tray, _ *astilectron.Menu) error {
       src.Window = ws[0]
 
       ws[0].OnMessage(func(m *astilectron.EventMessage) (v interface{}) {
         var s string
-        m.Unmarshal(&s)
-        if s == "" {
+        err := m.Unmarshal(&s)
+        if err != nil {
           return "{}"
         }
         //拆分路由以及数据内容

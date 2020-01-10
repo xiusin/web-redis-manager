@@ -5,7 +5,7 @@ import (
   "github.com/asticode/go-astilog"
 )
 
-const DEBUG = true
+const DEBUG = false
 
 type ResponseData struct {
   Status int64       `json:"status"`
