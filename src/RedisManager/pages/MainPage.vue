@@ -28,13 +28,6 @@
   .ivu-layout {
     height: 100%;
   }
-  #terminalWindow {
-    min-height: 500px;
-    height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-  }
-
   .header {
     display: none;
   }
@@ -45,12 +38,11 @@
       <Header style="padding: 0 10px;">
         <Button @click="showLoginModal()" size="small" icon="ios-download-outline"  type="primary">连接服务器</Button>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <Button size="small" icon="ios-download-outline" type="error" @click="showIssueModal()">报告问题</Button>
+        <Button size="small" v-if="currentConnectionId != ''" icon="ios-swap" type="success" @click="openPubSubTab()">发布订阅</Button>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <Button size="small" v-if="currentConnectionId != ''" icon="ios-download-outline" type="info" @click="openPubSubTab()">发布订阅</Button>
+        <Button size="small" v-if="currentConnectionId != ''" icon="md-alert" type="info" @click="openInfoTab()">服务信息</Button>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <Button size="small" v-if="currentConnectionId != ''" icon="ios-download-outline" type="info" @click="openInfoTab()">服务信息</Button>
-
+        <Button size="small" v-if="currentConnectionId != ''" icon="md-laptop" type="warning" @click="showJsonModal = true">CLI</Button>
       </Header>
       <Layout :style="{height: '100%'}">
         <Sider hide-trigger :style="{background: '#fff', width:'250px',maxWidth:'250px', minWidth:'250px' , 'overflow-y': 'auto', 'overflow-x': 'hidden'}">
@@ -174,9 +166,16 @@
             </div>
 
             <div v-if="currentConnectionId != '' && infoModal" style="position:absolute; z-index: 10;  top: 64px;background: #fff;width: 100%;height: 100%; padding:10px;">
-              <Tabs value="name1">
-                <TabPane label="配置信息" name="first">{{serverConfig}}</TabPane>
-                <TabPane label="服务器信息" name="second"><pre style="padding-left: 20px;">{{serverInfo}}</pre></TabPane>
+              <Tabs value="first" :animated="false" style="height: 100%">
+                <TabPane label="配置信息" name="first" style="height: 100%"><Table size="small" :columns="serverConfigColumns" :data="serverConfig" :stripe="true" :border="true" style="height: 100%"></Table></TabPane>
+                <TabPane label="服务器信息" name="second" style="height: 100%">
+                  <Collapse v-model="infoCollapse">
+                    <Panel v-for="(val11, key11) in serverInfo" :key="key11">
+                      {{key11}}
+                      <pre slot="content">{{val11}}</pre>
+                    </Panel>
+                  </Collapse>
+                </TabPane>
               </Tabs>
             </div>
           </Content>
@@ -323,8 +322,11 @@
       </div>
     </Modal>
 
-    <Modal v-model="showJsonModal" fullscreen title="转换的JSON数据" :on-visible-change="showJsonModalOkClick">
-
+    <Modal v-model="showJsonModal" fullscreen footer-hide :title="currentConnection" :on-visible-change="showJsonModalOkClick">
+        <VueTerminal v-bind:id="currentConnectionId"
+                     v-bind:index="currentDbIndex"
+                     @command="onCliCommand"
+                     console-sign="redis-cli $"  style="height: 100%; font-size:14px"></VueTerminal>
     </Modal>
 
   </div>
@@ -332,16 +334,30 @@
 <script>
   import Vue from 'vue'
   import VueJsonPretty from 'vue-json-pretty'
+  import VueTerminal from '../../vue-terminal-ui'
   import Api from '../api'
   export default {
     name: 'MainPage',
     components: {
-      VueJsonPretty
+      VueJsonPretty,
+      VueTerminal
     },
     data () {
       return {
+        infoCollapse: '',
         serverConfig: [],
-        serverInfo: '',
+        serverConfigColumns: [
+          {
+            title: '配置项',
+            key: 'key',
+            width: 200 // 不加这东西
+          },
+          {
+            title: '值',
+            key: 'value'
+          }
+        ],
+        serverInfo: {},
         customChannel: '',
         chanMegs: {}, // 消息内容
         channelMsg: '',
@@ -427,10 +443,11 @@
       }
     },
     mounted () {
-      // 初始化ws
       this.initWs()
-      this.getConnectionList()
-      this.channelWs()
+      window.setTimeout(() => {
+        this.getConnectionList()
+        this.channelWs()
+      }, 300)
     },
     methods: {
       channelWs () {
@@ -460,6 +477,8 @@
               this.channelMsg = ''
               this.loadPubSubChannels()
               this.$Message.success('发送到channel:' + channel + '的消息成功')
+            } else {
+              this.$Message.error(data.msg)
             }
           })
         }
@@ -487,16 +506,35 @@
           id: this.currentConnectionId
         }, (data) => {
           if (data.status === 200) {
-            // 显示内容
-            this.serverInfo = data.data.data
-            // let config = ''
-            // for (let i = 0; i < .length; i = i + 2) {
-            //   config += data.data.config[i]
-            //   config += ':'
-            //   config += data.data.config[i + 1]
-            //   config += '<br/>'
-            // }
-            this.serverConfig = data.data.config
+            let dataStrs = data.data.data.split('\n')
+            let infos = []
+            let objVal = []
+            let objKey = ''
+            this.infoCollapse = ''
+            for (let i = 0; i < dataStrs.length; i++) {
+              if (dataStrs[i].indexOf('# ') > -1) {
+                if (objVal.length > 0 && objKey !== '') {
+                  infos[objKey] = objVal.join('\n')
+                  if (this.infoCollapse === '') {
+                    this.infoCollapse = objKey
+                  }
+                }
+                objKey = dataStrs[i]
+                objVal = []
+              } else {
+                objVal.push(dataStrs[i])
+              }
+            }
+            this.serverInfo = Object.assign({}, infos)
+            let config = []
+            let srvConfig = data.data.config
+            for (let i = 0; i < srvConfig.length; i = i + 2) {
+              config.push({
+                'key': srvConfig[i],
+                'value': srvConfig[i + 1]
+              })
+            }
+            this.serverConfig = config // data.data.config
           } else {
             this.$Message.error(data.msg)
           }
@@ -515,32 +553,6 @@
       },
       showJsonModalOkClick () {
         this.showJsonModal = false
-      },
-      taskFunc (pushToList, input) {
-        return new Promise((resolve, reject) => {
-          Api.sendCommand({
-            command: input,
-            id: this.currentConnectionId,
-            index: this.currentDbIndex
-          }, (data) => {
-            if (typeof data === 'string') {
-              resolve({ type: 'error', label: 'ERROR', message: data })
-            } else {
-              if (data.status === 5000) {
-                reject({ type: 'error', label: 'ERROR', message: data.data || data.msg })
-              } else {
-                resolve({ type: 'success', label: 'SUCCESS', message: data.data })
-              }
-            }
-          })
-        })
-      },
-      showIssueModal () {
-        this.$Message.info({
-          content: '请将问题报告到: https://github.com/xiusin/redis_manager.git',
-          duration: 30,
-          closable: true
-        })
       },
       isEmptyObj (obj) {
         return JSON.stringify(obj) === '{}'
@@ -661,17 +673,10 @@
           this.$set(data.data, rowKey, data.newRowValue)
           if (typeof data.data.data === 'object' && (data.newRowKey) && type !== 'zset') {
             data.data.data[data.newRowKey] = data.newRowValue
-          } else {
-            if (type === 'zset') {
-              rowIndex = Number(data.newRowKey)
-            }
-            data.data.data.push(type === 'zset' ? {
-              'score': rowKey,
-              'value': data.newRowValue
-            } : data.newRowValue)
+          } else if (type === 'zset') {
+            rowIndex = Number(data.newRowKey)
           }
-        }
-        if (action === 'updateRowValue') {
+        } else if (action === 'updateRowValue') {
           rowIndex = this.currentSelectRowData.index
           newRowKey = this.currentSelectRowData.key
           newRowValue = this.currentSelectRowData.value
@@ -700,6 +705,10 @@
             this.addRowModal = false
             this.ttlModal = false
             this.$Message.success(res.msg)
+            data.data.data.push(type === 'zset' ? {
+              'score': type === 'hash' ? newRowKey : rowIndex,
+              'value': data.newRowValue
+            } : data.newRowValue)
           }
         })
       },
@@ -776,17 +785,6 @@
         delete this.tabs[this.getTabsKey()].keys[key]
         this.currentKey = prv
       },
-      handleTerminalTabRemove (key) {
-        // let prv = ''
-        // for (let i in this.terminalTabs[this.getTabsKey()].keys) {
-        //   if (i === key) {
-        //     break
-        //   }
-        //   prv = i
-        // }
-        // delete this.terminalTabs[this.getTabsKey()].keys[key]
-        this.currentTerminalKey = ''
-      },
       getTabsKey () {
         return this.currentConnectionId + '-' + this.currentDbIndex
       },
@@ -794,6 +792,8 @@
         if (nodes.length === 0) return
         let node = nodes[0]
         if (node.action !== 'get_value') return
+        this.pubsubModal = false
+        this.infoModal = false
         let key = (node.group ? node.group + ':' : '') + node.title
         if (typeof this.tabs[this.getTabsKey()] === undefined) {
           this.tabs[this.getTabsKey()] = {keys: {}}
@@ -829,7 +829,7 @@
         switch (type) {
           case 'hash':
             for (let i in data) {
-              if ((this.searchKey && (i.indexOf(this.searchKey) > 0 || data[i].indexOf(this.searchKey) > 0)) || !this.searchKey) {
+              if ((this.searchKey && (i.indexOf(this.searchKey) > -1 || data[i].indexOf(this.searchKey) > -1)) || !this.searchKey) {
                 res.push({
                   key: i,
                   value: data[i]
@@ -839,7 +839,7 @@
             break
           case 'zset':
             for (let i in data) {
-              if ((this.searchKey && i.indexOf(this.searchKey) > 0) || !this.searchKey) {
+              if ((this.searchKey && (data[i]['score'].indexOf(this.searchKey) > -1 || data[i]['value'].indexOf(this.searchKey) > -1)) || !this.searchKey) {
                 res.push({
                   key: data[i]['score'],
                   value: data[i]['value']
@@ -849,7 +849,7 @@
             break
           default:
             for (let i = 0; i < data.length; i++) {
-              if (!this.searchKey || (this.searchKey && data[i].indexOf(this.searchKey) > 0)) {
+              if (!this.searchKey || (this.searchKey && data[i].indexOf(this.searchKey) > -1)) {
                 res.push({
                   value: data[i]
                 })
@@ -893,7 +893,9 @@
               },
               {
                 title: 'SCORE',
-                key: 'key'
+                key: 'key',
+                sortable: true,
+                sortType: 'asc'
               }
             ]
             break
@@ -927,7 +929,12 @@
           }
         })
       },
-      initWs (callback) {
+      onCliCommand (data, resolve, reject) {
+        setTimeout(() => {
+          resolve('')
+        }, 300)
+      },
+      initWs () {
         window.document.addEventListener('astilectron-ready', () => {
           if (window.astilectron === undefined) {
             window.astilectron = {}
@@ -941,6 +948,7 @@
               console.log('post:' + url, data)
               window.astilectron.sendMessage(url + (data ? '___::___' + JSON.stringify(data) : ''), (message) => {
                 this.buttonLoading = false
+                console.log('message:', message)
                 try {
                   c(JSON.parse(message))
                 } catch (e) {
@@ -952,15 +960,14 @@
               window.astilectron.sendMessage(url + (data ? '___::___' + JSON.stringify(data) : ''), (message) => {
                 this.buttonLoading = false
                 if (typeof message === 'string') {
-                  c(JSON.parse(message))
+                  return c(JSON.parse(message))
                 } else {
-                  c(message)
+                  return c(message)
                 }
               })
             }
           }
           Vue.prototype.$Websocket = window.astilectron
-          callback()
         })
       },
       getConnectionList () {
@@ -1147,6 +1154,7 @@
             title: param.key,
             redis_id: param.id,
             action: 'get_value',
+            selected: false,
             index: param.index,
             render: this.keyRenderFunc
           })
@@ -1188,6 +1196,7 @@
                     loading: false,
                     db: i,  // dbindex
                     count: res.data[i],
+                    selected: false,
                     redis_id: item.data.id, // 继续redis_id
                     action: 'select_db',
                     render: (h, { root, node, data }) => {
@@ -1253,6 +1262,7 @@
                                           title: res.data[i][y],
                                           group: i,
                                           index: item.db,
+                                          selected: false,
                                           redis_id: item.redis_id,
                                           render: this.keyRenderFunc,
                                           action: 'get_value'
@@ -1263,6 +1273,7 @@
                                       title: i,
                                       redis_id: item.redis_id,
                                       action: 'get_value',
+                                      selected: false,
                                       index: item.db
                                     }
                                     if (children.length > 0) {
@@ -1472,6 +1483,13 @@
   .ivu-btn-icon-only.ivu-btn-small {
     border-radius: 0;
   }
+  .ivu-table {
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
 
+  .ivu-tabs-no-animation > .ivu-tabs-content {
+    height: 100%;
+  }
 </style>
 

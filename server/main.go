@@ -32,13 +32,13 @@ func main() {
   center, HasShadow, Fullscreenable, Closable := true, true, true, true
   height, width := 800, 1280
 
-  if err := bootstrap.Run(bootstrap.Options{
-    Asset:              Asset,
-    AssetDir:           AssetDir,
+  config := bootstrap.Options{
+    //Asset:              Asset,
+    //AssetDir:           AssetDir,
     AstilectronOptions: options,
     Debug:              src.DEBUG,
     Logger:             astilog.GetLogger(),
-    RestoreAssets:      RestoreAssets,
+    //RestoreAssets:      RestoreAssets,
     OnWait: func(_ *astilectron.Astilectron, ws []*astilectron.Window, _ *astilectron.Menu, _ *astilectron.Tray, _ *astilectron.Menu) error {
       src.Window = ws[0]
 
@@ -79,7 +79,13 @@ func main() {
         //},
       },
     }},
-  }); err != nil {
+  }
+
+  //if os.Getenv("RDM_BUILD_MODE") == "prod" {
+  //
+  //}
+
+  if err := bootstrap.Run(config); err != nil {
     astilog.Fatal(errors.Wrap(err, "running bootstrap failed"))
   }
 }
@@ -102,4 +108,5 @@ func init() {
   handler.Add("/redis/connection/command", src.RedisManagerCommand)
   handler.Add("/redis/connection/pubsub", src.RedisPubSub)
   handler.Add("/redis/connection/info", src.RedisManagerGetInfo)
+  handler.Add("/redis/connection/get-command", src.RedisManagerGetCommandList)
 }

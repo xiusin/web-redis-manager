@@ -11,5 +11,6 @@ test/e2e/reports
 selenium-debug.log
 rdm-connections.json
 rdm.log
+server/connections.gob
 bind_*.go
 windows.syso

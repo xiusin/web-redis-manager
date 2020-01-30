@@ -4,7 +4,6 @@ import Vue from 'vue'
 export default {
   // 获取应用分类列表
   connectionTest: async (data, callback) => {
-    console.log('connection')
     return await Vue.prototype.$Websocket.post('/redis/connection/test', data, callback)
   },
   // 内部需要返回新增ID做到不刷新页面
@@ -40,7 +39,7 @@ export default {
   },
   // 发送redis命令
   sendCommand: async (data, callback) => {
-    return await Vue.prototype.$Websocket.get('/redis/connection/command', data, callback)
+    return Vue.prototype.$Websocket.get('/redis/connection/command', data, callback)
   },
   getCommand: async (data, callback) => {
     return await Vue.prototype.$Websocket.get('/redis/connection/get-command', data, callback)

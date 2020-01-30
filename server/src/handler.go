@@ -1,6 +1,9 @@
 package src
 
-import "github.com/asticode/go-astilog"
+import (
+  "github.com/asticode/go-astilog"
+  "runtime"
+)
 
 type Handler struct {
   routes map[string]HandleFunc
@@ -14,9 +17,10 @@ func NewHandler() *Handler {
 }
 func (h *Handler) Handle(route string, data map[string]interface{}) string {
   defer func() {
-    if err := recover(); err != nil {
-      astilog.Errorf("Recovered Error: %s", err)
-    }
+   if err := recover(); err != nil {
+     _,f,l,_ := runtime.Caller(2)
+     astilog.Errorf("%s:%d Recovered Error: %s", f, l, err)
+   }
   }()
   handle, ok := h.routes[route]
   if !ok {
