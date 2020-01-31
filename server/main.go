@@ -2,26 +2,64 @@ package main
 
 import (
   "encoding/json"
+  "fmt"
   "github.com/asticode/go-astilectron"
   bootstrap "github.com/asticode/go-astilectron-bootstrap"
   "github.com/asticode/go-astilog"
   "github.com/pkg/errors"
   "github.com/xiusin/redis_manager/server/src"
+  "os"
+  "path/filepath"
   "strings"
+  "sync"
 )
 
+const DEBUG  =  true
+
+var cacheDir = GetCacheDir()
+
+var once sync.Once
+
+var handler = src.NewHandler()
+
+func init() {
+
+  astilog.SetLogger(astilog.New(astilog.Configuration{
+    AppName:  "RedisManager",
+    Filename: cacheDir + `/rdm-log.log`,
+    Verbose:  DEBUG,
+  }))
+  astilog.FlagConfig()
+  astilog.Infof("baseDir: %s", cacheDir)
+
+  handler.Add("/redis/connection/test", src.RedisManagerConnectionTest)
+  handler.Add("/redis/connection/save", src.RedisManagerConfigSave)
+  handler.Add("/redis/connection/list", src.RedisManagerConnectionList)
+  handler.Add("/redis/connection/server", src.RedisManagerConnectionServer)
+  handler.Add("/redis/connection/removekey", src.RedisManagerRemoveKey)
+  handler.Add("/redis/connection/removerow", src.RedisManagerRemoveRow)
+  handler.Add("/redis/connection/updatekey", src.RedisManagerUpdateKey)
+  handler.Add("/redis/connection/addkey", src.RedisManagerAddKey)
+  handler.Add("/redis/connection/flushDB", src.RedisManagerFlushDB)
+  handler.Add("/redis/connection/remove", src.RedisManagerRemoveConnection)
+  handler.Add("/redis/connection/command", src.RedisManagerCommand)
+  handler.Add("/redis/connection/pubsub", src.RedisPubSub)
+  handler.Add("/redis/connection/info", src.RedisManagerGetInfo)
+  handler.Add("/redis/connection/get-command", src.RedisManagerGetCommandList)
+}
+
+
 func main() {
-  cacheDir := src.GetCacheDir(src.DEBUG)
   options := astilectron.Options{
     AppName:            "RedisManager",
     SingleInstance:     true,
     BaseDirectoryPath:  cacheDir,
-    AppIconDefaultPath: cacheDir + "/resources/icon.png",
+    AppIconDefaultPath: fmt.Sprintf("%s/resources/icon.png", cacheDir),
     DataDirectoryPath:  cacheDir,
   }
-  // 启动内部端口监听服务
+
   var url string
-  if src.DEBUG {
+  if DEBUG {
     url = "http://localhost:8899"
   } else {
     url = "index.html"
@@ -37,7 +75,7 @@ func main() {
     //Asset:              Asset,
     //AssetDir:           AssetDir,
     AstilectronOptions: options,
-    Debug:              true,
+    Debug:              DEBUG,
     Logger:             astilog.GetLogger(),
     //RestoreAssets:      RestoreAssets,
     OnWait: func(_ *astilectron.Astilectron, ws []*astilectron.Window, _ *astilectron.Menu, _ *astilectron.Tray, _ *astilectron.Menu) error {
@@ -49,7 +87,6 @@ func main() {
           return "{}"
         }
 
-        //拆分路由以及数据内容
         info := strings.Split(s, "___::___")
         data := make(map[string]interface{})
         if len(info) == 1 {
@@ -76,9 +113,6 @@ func main() {
         Fullscreenable:  &Fullscreenable,
         Closable:        &Closable,
         AutoHideMenuBar: &skipTaskBar,
-        Custom: &astilectron.WindowCustomOptions{
-
-        },
       },
     }},
   }
@@ -88,23 +122,18 @@ func main() {
   }
 }
 
-var handler *src.Handler
 
-func init() {
-  handler = src.NewHandler()
-
-  handler.Add("/redis/connection/test", src.RedisManagerConnectionTest)
-  handler.Add("/redis/connection/save", src.RedisManagerConfigSave)
-  handler.Add("/redis/connection/list", src.RedisManagerConnectionList)
-  handler.Add("/redis/connection/server", src.RedisManagerConnectionServer)
-  handler.Add("/redis/connection/removekey", src.RedisManagerRemoveKey)
-  handler.Add("/redis/connection/removerow", src.RedisManagerRemoveRow)
-  handler.Add("/redis/connection/updatekey", src.RedisManagerUpdateKey)
-  handler.Add("/redis/connection/addkey", src.RedisManagerAddKey)
-  handler.Add("/redis/connection/flushDB", src.RedisManagerFlushDB)
-  handler.Add("/redis/connection/remove", src.RedisManagerRemoveConnection)
-  handler.Add("/redis/connection/command", src.RedisManagerCommand)
-  handler.Add("/redis/connection/pubsub", src.RedisPubSub)
-  handler.Add("/redis/connection/info", src.RedisManagerGetInfo)
-  handler.Add("/redis/connection/get-command", src.RedisManagerGetCommandList)
+func GetCacheDir() string {
+  once.Do(func() {
+    var workingDir string
+    if DEBUG {
+      workingDir, _ = os.Getwd()
+    } else {
+      workingDir, _ = os.Executable()
+      workingDir = filepath.Dir(workingDir)
+    }
+    cacheDir = workingDir
+    src.ConnectionFile = fmt.Sprintf("%s/data.db", cacheDir)
+  })
+  return cacheDir
 }

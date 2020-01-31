@@ -1,11 +1,5 @@
 package src
 
-import (
-  "github.com/asticode/go-astilog"
-)
-
-const DEBUG = true
-
 type ResponseData struct {
   Status int64       `json:"status"`
   Msg    string      `json:"msg"`
@@ -21,20 +15,7 @@ type connection struct {
 }
 
 var (
-  CacheDir        string
   totalConnection = 0
   connectionList  []connection
-  jsonFile        string
+  ConnectionFile  string
 )
-
-func init() {
-  connectionList = []connection{}
-  GetCacheDir(DEBUG)
-  astilog.SetLogger(astilog.New(astilog.Configuration{
-    AppName:  "RedisManager",
-    Filename: CacheDir + `/rdm-log.log`,
-    Verbose:  DEBUG,
-  }))
-  astilog.FlagConfig()
-  astilog.Infof("baseDir: %s", CacheDir)
-}

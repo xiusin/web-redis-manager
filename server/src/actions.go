@@ -8,7 +8,6 @@ import (
   "github.com/asticode/go-astilectron"
   "github.com/asticode/go-astilog"
   "os"
-  "path/filepath"
   "strconv"
   "strings"
   "time"
@@ -17,22 +16,7 @@ import (
 )
 
 var Window *astilectron.Window
-
-func GetCacheDir(debug bool) string {
-  if "" != CacheDir {
-    return CacheDir
-  }
-  var workingDir string
-  if debug {
-    workingDir, _ = os.Getwd()
-  } else {
-    workingDir, _ = os.Executable()
-    workingDir = filepath.Dir(workingDir)
-  }
-  CacheDir = workingDir
-  jsonFile = CacheDir + "/connections.gob"
-  return CacheDir
-}
+var pubSubs = map[string]bool{}
 
 func RedisManagerGetInfo(data map[string]interface{}) string {
   client, _, _ := getRedisClient(data, false, false)
@@ -53,13 +37,13 @@ func RedisManagerGetInfo(data map[string]interface{}) string {
 }
 
 func RedisManagerConnectionTest(data map[string]interface{}) string {
-  config := connection{}
+  var config connection
   config.Ip = data["ip"].(string)
   config.Title = data["title"].(string)
   config.Port = int(data["port"].(float64))
   config.Auth = data["auth"].(string)
 
-  client, err := redis.Dial("tcp", config.Ip+":"+strconv.Itoa(config.Port))
+  client, err := redis.Dial("tcp", fmt.Sprintf("%s:%s", config.Ip, strconv.Itoa(config.Port)))
   if err != nil {
     return JSON(ResponseData{5000, "Connect to redis error" + err.Error(), err.Error()})
   }
@@ -74,7 +58,7 @@ func RedisManagerConnectionTest(data map[string]interface{}) string {
 }
 
 func RedisManagerConfigSave(data map[string]interface{}) string {
-  config := connection{}
+  var config connection
   config.Ip = data["ip"].(string)
   config.Title = data["title"].(string)
   config.Port = int(data["port"].(float64))
@@ -89,15 +73,13 @@ func RedisManagerConfigSave(data map[string]interface{}) string {
   return JSON(ResponseData{200, "保存成功", config})
 }
 
-func RedisManagerConnectionList(data map[string]interface{}) string {
+func RedisManagerConnectionList(_ map[string]interface{}) string {
   err := readConfigJSON()
   if err != nil {
     return JSON(ResponseData{5000, "获取列表失败:" + err.Error(), nil})
   }
   return JSON(ResponseData{200, "获取列表成功", connectionList})
 }
-
-var pubsubs = map[string]bool{}
 
 func RedisPubSub(data map[string]interface{}) string {
   client, _, err := getRedisClient(data, false, false)
@@ -146,11 +128,11 @@ func RedisPubSub(data map[string]interface{}) string {
     }
   } else {
 
-    if ok, _ := pubsubs[fmt.Sprintf("channel-%d", id)]; !ok {
-      pubsubs[fmt.Sprintf("channel-%d", id)] = true
+    if ok, _ := pubSubs[fmt.Sprintf("channel-%d", id)]; !ok {
+      pubSubs[fmt.Sprintf("channel-%d", id)] = true
       go func() {
         defer func(id int) {
-          pubsubs[fmt.Sprintf("channel-%d", id)] = false
+          pubSubs[fmt.Sprintf("channel-%d", id)] = false
         }(id)
         pubsub := redis.PubSubConn{Conn: client}
         if err := pubsub.PSubscribe("*"); err != nil {
@@ -160,7 +142,7 @@ func RedisPubSub(data map[string]interface{}) string {
           message := pubsub.Receive()
           switch v := message.(type) {
           case redis.Message: //单个订阅subscribe
-            Window.SendMessage(map[string]string{
+            _ = Window.SendMessage(map[string]string{
               "data":    string(v.Data),
               "id":      strconv.Itoa(id),
               "channel": v.Channel,
@@ -205,8 +187,8 @@ func RedisManagerCommand(data map[string]interface{}) string {
   fmt.Println(val)
   switch val.(type) {
   case []byte:
-   res, _ := redis.String(val, nil)
-   return JSON(ResponseData{200, "成功", res})
+    res, _ := redis.String(val, nil)
+    return JSON(ResponseData{200, "成功", res})
 
   //case []interface{}:
   // res, err := redis.StringMap(val, nil)
@@ -243,7 +225,7 @@ func RedisManagerCommand(data map[string]interface{}) string {
   // return JSON(ResponseData{200, "成功", strings.Join(strs, "<br/>")})
 
   default:
-   return JSON(ResponseData{200, "成功", val })
+    return JSON(ResponseData{200, "成功", val})
   }
 }
 
@@ -609,7 +591,7 @@ func JSON(data ResponseData) string {
 }
 
 func readConfigJSON() error {
-  f, err := os.OpenFile(jsonFile, os.O_RDWR, os.ModePerm)
+  f, err := os.OpenFile(ConnectionFile, os.O_RDWR, os.ModePerm)
   if err != nil && os.IsNotExist(err) {
     return nil
   }
@@ -626,8 +608,7 @@ func readConfigJSON() error {
   return nil
 }
 
-
-func RedisManagerGetCommandList(data map[string]interface{}) string {
+func RedisManagerGetCommandList(_ map[string]interface{}) string {
   commandList := `EXISTS:::测试给定的 key 是否存在
 DEL:::删除给定的 key
 EXPIRE:::设置键超时时间
@@ -701,7 +682,7 @@ ZSCORE:::返回有序集中，成员的分数值。 如果成员元素不是有�
 
 func writeConfigJSON() error {
   //os.O_TRUNC 清空内容
-  f, err := os.OpenFile(jsonFile, os.O_CREATE|os.O_TRUNC|os.O_RDWR, os.ModePerm)
+  f, err := os.OpenFile(ConnectionFile, os.O_CREATE|os.O_TRUNC|os.O_RDWR, os.ModePerm)
   if err != nil {
     return err
   }

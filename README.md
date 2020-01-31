@@ -4,12 +4,6 @@
 # 使用yarn #
 提醒 `@vue/app`无法找到预设, 需要到对应模块下的package.json删除babel下的预设
 
-# 部分截图 #
-![](images/image1.png)
-![](images/image2.png)
-![](images/image3.png)
-![](images/image4.png)
-
 ## BUG ##
 3. 字段视图转JSON时候数据错误
 4. 选中key无法高亮
