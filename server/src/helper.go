@@ -1,7 +1,6 @@
 package src
 
 import (
-  "fmt"
   "github.com/asticode/go-astilog"
 )
 
@@ -31,10 +30,9 @@ var (
 func init() {
   connectionList = []connection{}
   GetCacheDir(DEBUG)
-  fmt.Println("baseDir", CacheDir)
   astilog.SetLogger(astilog.New(astilog.Configuration{
     AppName:  "RedisManager",
-    Filename: CacheDir + `/rdm.log`,
+    Filename: CacheDir + `/rdm-log.log`,
     Verbose:  DEBUG,
   }))
   astilog.FlagConfig()

@@ -7,7 +7,6 @@ import (
   "github.com/asticode/go-astilog"
   "github.com/pkg/errors"
   "github.com/xiusin/redis_manager/server/src"
-  "runtime"
   "strings"
 )
 
@@ -20,34 +19,36 @@ func main() {
     AppIconDefaultPath: cacheDir + "/resources/icon.png",
     DataDirectoryPath:  cacheDir,
   }
+  // 启动内部端口监听服务
   var url string
   if src.DEBUG {
     url = "http://localhost:8899"
   } else {
-    url = cacheDir + "/resources/dist/index.html"
-    if runtime.GOOS == "windows" {
-      url = "./resources/dist/index.html"
-    }
+    url = "index.html"
   }
-  center, HasShadow, Fullscreenable, Closable := true, true, true, true
+  //else {
+  //  url = cacheDir + "/resources/dist/index.html"
+  //}
+  astilog.Infof("url: %s", url)
+  center, HasShadow, Fullscreenable, Closable, skipTaskBar := true, true, true, true, true
   height, width := 800, 1280
 
   config := bootstrap.Options{
     //Asset:              Asset,
     //AssetDir:           AssetDir,
     AstilectronOptions: options,
-    Debug:              src.DEBUG,
+    Debug:              true,
     Logger:             astilog.GetLogger(),
     //RestoreAssets:      RestoreAssets,
     OnWait: func(_ *astilectron.Astilectron, ws []*astilectron.Window, _ *astilectron.Menu, _ *astilectron.Tray, _ *astilectron.Menu) error {
       src.Window = ws[0]
-
       ws[0].OnMessage(func(m *astilectron.EventMessage) (v interface{}) {
         var s string
         err := m.Unmarshal(&s)
         if err != nil {
           return "{}"
         }
+
         //拆分路由以及数据内容
         info := strings.Split(s, "___::___")
         data := make(map[string]interface{})
@@ -68,22 +69,19 @@ func main() {
     Windows: []*bootstrap.Window{{
       Homepage: url,
       Options: &astilectron.WindowOptions{
-        Center:         &center,
-        Height:         &height,
-        Width:          &width,
-        HasShadow:      &HasShadow,
-        Fullscreenable: &Fullscreenable,
-        Closable:       &Closable,
-        //Custom: &astilectron.WindowCustomOptions{
-        //  MinimizeOnClose: &MinimizeOnClose,
-        //},
+        Center:          &center,
+        Height:          &height,
+        Width:           &width,
+        HasShadow:       &HasShadow,
+        Fullscreenable:  &Fullscreenable,
+        Closable:        &Closable,
+        AutoHideMenuBar: &skipTaskBar,
+        Custom: &astilectron.WindowCustomOptions{
+
+        },
       },
     }},
   }
-
-  //if os.Getenv("RDM_BUILD_MODE") == "prod" {
-  //
-  //}
 
   if err := bootstrap.Run(config); err != nil {
     astilog.Fatal(errors.Wrap(err, "running bootstrap failed"))

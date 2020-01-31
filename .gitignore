@@ -1,6 +1,5 @@
 .DS_Store
 node_modules/
-dist/
 output/
 server/vendor/
 npm-debug.log*
@@ -10,7 +9,9 @@ test/unit/coverage
 test/e2e/reports
 selenium-debug.log
 rdm-connections.json
-server/rdm.log
+server/rdm-log.log
 server/connections.gob
+server/resources/app/
+server/resources/dist/
 bind_*.go
 windows.syso

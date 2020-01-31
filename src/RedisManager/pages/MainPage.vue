@@ -40,10 +40,11 @@
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <Button size="small" v-if="currentConnectionId != ''" icon="ios-swap" type="success" @click="openPubSubTab()">发布订阅</Button>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <Button size="small" v-if="currentConnectionId != ''" icon="md-alert" type="info" @click="openInfoTab()">服务信息</Button>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <Button size="small" v-if="currentConnectionId != ''" icon="md-laptop" type="warning" @click="showJsonModal = true">CLI</Button>
+        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        <Button size="small" v-if="currentConnectionId != ''" icon="md-alert" type="info" @click="openInfoTab()">服务信息</Button>
       </Header>
+
       <Layout :style="{height: '100%'}">
         <Sider hide-trigger :style="{background: '#fff', width:'250px',maxWidth:'250px', minWidth:'250px' , 'overflow-y': 'auto', 'overflow-x': 'hidden'}">
           <Tree :data="connectionTreeList" :load-data="loadData" empty-text="" @on-select-change="selectChange"></Tree>
