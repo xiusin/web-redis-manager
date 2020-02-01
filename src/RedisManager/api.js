@@ -38,7 +38,7 @@ export default {
     return await Vue.prototype.$Websocket.get('/redis/connection/updatekey', data, callback)
   },
   // 发送redis命令
-  sendCommand: async (data, callback) => {
+  sendCommand: (data, callback) => {
     return Vue.prototype.$Websocket.get('/redis/connection/command', data, callback)
   },
   getCommand: async (data, callback) => {

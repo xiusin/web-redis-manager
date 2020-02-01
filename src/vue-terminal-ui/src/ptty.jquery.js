@@ -470,9 +470,11 @@ import jQuery from 'jquery'
         '</div>'
       );
 
-      var input = el.find('.prompt .input');
-      var content = el.find('.content');
-      var loading = el.find('.loading');
+      window.ptty = {};
+
+      var input = window.ptty.input = el.find('.prompt .input');
+      var content = window.ptty.content = el.find('.content');
+      var loading  = window.ptty.loading = el.find('.loading');
 
       // Setup styles.
       el.attr('data-theme', settings.theme).addClass(settings.theme);
@@ -601,41 +603,17 @@ import jQuery from 'jquery'
 
         // Call command
         if (typeof commands[cmd_name].exe === 'function') {
-
-          cmd_response(commands[cmd_name].exe(cmd_obj));
-          return cmd_update();
-
-        } else if (typeof commands[cmd_name].exe === 'string') {
-
-          // Setup the defaults
-          var ajax_defaults = {}
-          if (!settings.ajax_options.data) {
-            var ajax_data = {};
-            ajax_data[settings.param] = (cmd_opts.in !== null) ? cmd_opts.in : cmd_name;
-            ajax_data[settings.param + '_data'] = (cmd_opts.data !== null) ? cmd_opts.data : cmd_obj;
-            ajax_defaults.data = ajax_data;
+          // 新增回调解决异步返回值问题
+          if (!["help","clear","history"].includes(cmd_name)) {
+            commands[cmd_name].exe(cmd_obj, function (cmd_obj) {
+              cmd_response(cmd_obj);
+              cmd_update();
+            });
+          } else {
+            cmd_response(commands[cmd_name].exe(cmd_obj));
+            cmd_update();
           }
-
-          // Merge defaults with settings
-          var ajax_opts = $.extend(true, ajax_defaults, settings.ajax_options);
-          if (commands[cmd_name].exe) {
-            ajax_opts.url = commands[cmd_name].exe;
-          }
-
-          // Do it.
-          var jqxhr = $.ajax(ajax_opts);
-          jqxhr.done(function (data) {
-            cmd_obj = cmd_response(data);
-          });
-
-          jqxhr.fail(function () {
-            cmd_opts.out = settings.i18n.error_ajax;
-          });
-
-          jqxhr.always(function () {
-            return cmd_update();
-          });
-
+          return;
         } else {
           cmd_opts.out = settings.i18n.error_bad_method;
           return cmd_update();

@@ -98,16 +98,16 @@ export default {
           let command = commands[i].split(':::')
           $ptty.register('command', {
             name: command[0].toLowerCase(),
-            method: function (cmd) {
-              // $.ajax()
+            method: function (cmd, call) {
+              console.log('called')
               Api.sendCommand({
                 command: cmd.str,
                 id: that.id,
                 index: that.index
               }, (data) => {
                 cmd.out = data.data
+                call(cmd)
               })
-              return cmd
             },
             help: command[1]
           })

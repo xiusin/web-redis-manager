@@ -8,6 +8,8 @@ import (
   "github.com/asticode/go-astilectron"
   "github.com/asticode/go-astilog"
   "os"
+  "reflect"
+  "regexp"
   "strconv"
   "strings"
   "time"
@@ -17,6 +19,14 @@ import (
 
 var Window *astilectron.Window
 var pubSubs = map[string]bool{}
+
+type slowLog struct {
+  UsedTime string  `json:"used_time"`
+  Command  string `json:"command"`
+  Time     string `json:"time"`
+}
+
+var loc, _ = time.LoadLocation("PRC")
 
 func RedisManagerGetInfo(data map[string]interface{}) string {
   client, _, _ := getRedisClient(data, false, false)
@@ -30,9 +40,34 @@ func RedisManagerGetInfo(data map[string]interface{}) string {
   if err != nil {
     return JSON(ResponseData{5000, "读取配置文件失败:" + err.Error(), nil})
   }
+
+  logs, err := redis.Values(client.Do("SLOWLOG", "GET"))
+  if err != nil {
+    return JSON(ResponseData{5000, "读取慢日志失败:" + err.Error(), nil})
+  }
+  //1：每个慢查询条目的唯一的递增标识符。
+  //2：处理记录命令的unix时间戳。
+  //3：命令执行所需的总时间，以微秒为单位。
+  //4：组成该命令的参数的数组。
+  var structLogs []slowLog
+  for _, log := range logs {
+    var sl slowLog
+    for k, val := range log.([]interface{}) {
+      if k == 1 {
+        sl.Time = time.Unix(val.(int64), 0).In(loc).Format("2006-01-02 15:04:05")
+      } else if k == 2 {
+        sl.UsedTime = strconv.Itoa(int(val.(int64))) + "μs"
+      } else if k == 3 {
+        sl.Command = strings.TrimRight(strings.TrimLeft(fmt.Sprintf("%s", val), "["), "]")
+      }
+    }
+    structLogs = append(structLogs, sl)
+  }
+
   return JSON(ResponseData{200, "保存成功", map[string]interface{}{
-    "data":   d,
-    "config": c,
+    "data":     d,
+    "config":   c,
+    "slowLogs": structLogs,
   }})
 }
 
@@ -161,8 +196,6 @@ func RedisPubSub(data map[string]interface{}) string {
   }
 }
 
-var loc, _ = time.LoadLocation("PRC")
-
 func RedisManagerCommand(data map[string]interface{}) string {
   client, _, err := getRedisClient(data, true, false)
   if err != nil {
@@ -182,47 +215,45 @@ func RedisManagerCommand(data map[string]interface{}) string {
 
   val, err := client.Do(commands[0], flags...)
   if err != nil {
-    return JSON(ResponseData{5000, "获取数据错误", err.Error()})
+    return JSON(ResponseData{5000, "获取数据错误", fmt.Sprintf("(error) %s", err)})
   }
-  fmt.Println(val)
+  if val == nil {
+    return JSON(ResponseData{200, "成功", `(nil)`})
+  }
+  fmt.Println(reflect.TypeOf(val).String())
   switch val.(type) {
-  case []byte:
+  case []byte, string:
     res, _ := redis.String(val, nil)
-    return JSON(ResponseData{200, "成功", res})
+    return JSON(ResponseData{200, "成功", `"` + res + `"`})
 
-  //case []interface{}:
-  // res, err := redis.StringMap(val, nil)
-  // if err != nil {
-  //   return JSON(ResponseData{5000, "成功", err.Error()})
-  // }
-  // var strs []string
-  // var i int
-  // switch commands[0] {
-  // case "HGETALL":
-  //   for k, v := range res {
-  //     i++
-  //     strs = append(strs, strconv.Itoa(i)+"): "+k)
-  //     i++
-  //     strs = append(strs, strconv.Itoa(i)+"): "+v)
-  //   }
-  // case "LRANGE":
-  //   for k, v := range res {
-  //     i++
-  //     strs = append(strs, strconv.Itoa(i)+"): "+k)
-  //     i++
-  //     strs = append(strs, strconv.Itoa(i)+"): "+v)
-  //   }
-  // case "SMEMBERS":
-  //   for k, v := range res {
-  //     i++
-  //     strs = append(strs, strconv.Itoa(i)+"): "+k)
-  //     i++
-  //     strs = append(strs, strconv.Itoa(i)+"): "+v)
-  //   }
-  // default:
-  //   strs = append(strs, fmt.Sprintf("%#v", res))
-  // }
-  // return JSON(ResponseData{200, "成功", strings.Join(strs, "<br/>")})
+  case int64, int, int32:
+    res, _ := redis.Int64(val, nil)
+    return JSON(ResponseData{200, "成功", fmt.Sprintf("(integer) %d", res)})
+
+  case []interface{}:
+    res, err := redis.StringMap(val, nil)
+    if err != nil {
+      return JSON(ResponseData{5000, "成功", err.Error()})
+    }
+    var strs []string
+    var i int
+    switch strings.ToUpper(commands[0]) {
+    case "HGETALL", "SMEMBERS", "BLPOP", "LRANGE":
+      for k, v := range res {
+        i++
+        if ok, _ := regexp.MatchString("^d+$", k); ok {
+          strs = append(strs, strconv.Itoa(i)+") "+k)
+        } else {
+          strs = append(strs, strconv.Itoa(i)+`) "`+k+`"`)
+        }
+        i++
+        strs = append(strs, strconv.Itoa(i)+") \""+v+"\"")
+      }
+
+    default:
+      strs = append(strs, fmt.Sprintf("%#v", res))
+    }
+    return JSON(ResponseData{200, "成功", strings.Join(strs, "<br/>")})
 
   default:
     return JSON(ResponseData{200, "成功", val})
@@ -528,7 +559,7 @@ func RedisManagerUpdateKey(data map[string]interface{}) string {
 
     switch valType {
     case "list":
-      rowkey, _ := strconv.Atoi(data["rowkey"].(string))
+      rowkey := int(data["rowkey"].(float64))
       _, err = client.Do("LSET", key, rowkey, data["data"])
     case "set":
       rowkey := data["rowkey"].(string)
@@ -636,6 +667,7 @@ LPUSH:::Redis Lpush 命令将一个或多个值插入到列表头部。 如果 k
 LRANGE:::返回列表中指定区间内的元素，区间以偏移量 START 和 END 指定。其中 0 表示列表的第一个元素， 1 表示列表的第二个元素
 LREM:::根据参数 COUNT 的值，移除列表中与参数 VALUE 相等的元素。
 LSET:::通过索引来设置元素的值。
+BLPOP:::命令移出并获取列表的第一个元素， 如果列表没有元素会阻塞列表直到等待超时或发现可弹出元素为止。
 LTRIM:::对一个列表进行修剪(trim)，就是说，让列表只保留指定区间内的元素，不在指定区间之内的元素都将被删除。
 MGET:::返回所有(一个或多个)给定 key 的值。 如果给定的 key 里面，有某个 key 不存在，那么这个 key 返回特殊值 nil 。
 MSET:::同时设置一个或多个 key-value 对。

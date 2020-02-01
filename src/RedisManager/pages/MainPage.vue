@@ -168,8 +168,11 @@
 
             <div v-if="currentConnectionId != '' && infoModal" style="position:absolute; z-index: 10;  top: 64px;background: #fff;width: 100%;height: 100%; padding:10px;">
               <Tabs value="first" :animated="false" style="height: 100%">
-                <TabPane label="配置信息" name="first" style="height: 100%"><Table size="small" :columns="serverConfigColumns" :data="serverConfig" :stripe="true" :border="true" style="height: 100%"></Table></TabPane>
-                <TabPane label="服务器信息" name="second" style="height: 100%">
+                <TabPane label="慢日志" name="first" style="height: 100%">
+                  <Table size="small" :columns="slowLogColumns" :data="slowLogs" :stripe="true" :border="true" style="height: 100%"></Table>
+                </TabPane>
+                <TabPane label="配置信息" name="second" style="height: 100%"><Table size="small" :columns="serverConfigColumns" :data="serverConfig" :stripe="true" :border="true" style="height: 100%"></Table></TabPane>
+                <TabPane label="服务器信息" name="three" style="height: 100%">
                   <Collapse v-model="infoCollapse">
                     <Panel v-for="(val11, key11) in serverInfo" :key="key11">
                       {{key11}}
@@ -346,6 +349,24 @@
     data () {
       return {
         infoCollapse: '',
+        slowLogColumns: [
+          {
+            title: '时间',
+            key: 'time',
+            width: 170 // 不加这东西
+          },
+          {
+            title: '耗时',
+            key: 'used_time',
+            width: 120,
+            sortable: true
+          },
+          {
+            title: '命令',
+            key: 'command'
+          }
+        ],
+        slowLogs: [],
         serverConfig: [],
         serverConfigColumns: [
           {
@@ -375,7 +396,6 @@
         currentConnectionId: 0,
         buttonLoading: false,
         currentKey: '',
-        currentTerminalKey: '',
         currentConnection: '',
         currentDbIndex: -1,
         currentSelectRowData: {}, // 用于行列选择
@@ -535,7 +555,9 @@
                 'value': srvConfig[i + 1]
               })
             }
-            this.serverConfig = config // data.data.config
+            this.serverConfig = config // config
+            this.slowLogs = data.data.slowLogs
+            console.log(this.slowLogs, data.data)
           } else {
             this.$Message.error(data.msg)
           }
@@ -686,8 +708,6 @@
             rowIndex = this.currentSelectRowData.oldValue
           }
         }
-        // data = data.data
-        // console.log(data)
         this.buttonLoading = true
         Api.updateKey({
           key: key,
@@ -706,10 +726,12 @@
             this.addRowModal = false
             this.ttlModal = false
             this.$Message.success(res.msg)
-            data.data.data.push(type === 'zset' ? {
-              'score': type === 'hash' ? newRowKey : rowIndex,
-              'value': data.newRowValue
-            } : data.newRowValue)
+            if (action === 'addrow') {
+              data.data.data.push(type === 'zset' ? {
+                'score': type === 'hash' ? newRowKey : rowIndex,
+                'value': data.newRowValue
+              } : data.newRowValue)
+            }
           }
         })
       },
@@ -1491,6 +1513,11 @@
 
   .ivu-tabs-no-animation > .ivu-tabs-content {
     height: 100%;
+  }
+
+  .ivu-btn-icon-only.ivu-btn-small {
+    padding: 0px 2px 0px;
+    font-size: 10px;
   }
 </style>
 

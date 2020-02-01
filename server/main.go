@@ -8,6 +8,7 @@ import (
   "github.com/asticode/go-astilog"
   "github.com/pkg/errors"
   "github.com/xiusin/redis_manager/server/src"
+  "log"
   "os"
   "path/filepath"
   "strings"
@@ -16,13 +17,14 @@ import (
 
 const DEBUG  =  true
 
-var cacheDir = GetCacheDir()
-
 var once sync.Once
+
+var cacheDir string
 
 var handler = src.NewHandler()
 
 func init() {
+  cacheDir = GetCacheDir()
 
   astilog.SetLogger(astilog.New(astilog.Configuration{
     AppName:  "RedisManager",
@@ -30,7 +32,6 @@ func init() {
     Verbose:  DEBUG,
   }))
   astilog.FlagConfig()
-  astilog.Infof("baseDir: %s", cacheDir)
 
   handler.Add("/redis/connection/test", src.RedisManagerConnectionTest)
   handler.Add("/redis/connection/save", src.RedisManagerConfigSave)
@@ -56,6 +57,7 @@ func main() {
     BaseDirectoryPath:  cacheDir,
     AppIconDefaultPath: fmt.Sprintf("%s/resources/icon.png", cacheDir),
     DataDirectoryPath:  cacheDir,
+    //VersionElectron:    "6.1.2",
   }
 
   var url string
@@ -67,7 +69,6 @@ func main() {
   //else {
   //  url = cacheDir + "/resources/dist/index.html"
   //}
-  astilog.Infof("url: %s", url)
   center, HasShadow, Fullscreenable, Closable, skipTaskBar := true, true, true, true, true
   height, width := 800, 1280
 
@@ -78,7 +79,11 @@ func main() {
     Debug:              DEBUG,
     Logger:             astilog.GetLogger(),
     //RestoreAssets:      RestoreAssets,
-    OnWait: func(_ *astilectron.Astilectron, ws []*astilectron.Window, _ *astilectron.Menu, _ *astilectron.Tray, _ *astilectron.Menu) error {
+    OnWait: func(a *astilectron.Astilectron, ws []*astilectron.Window, _ *astilectron.Menu, _ *astilectron.Tray, _ *astilectron.Menu) error {
+      a.On(astilectron.EventNameAppCrash, func(e astilectron.Event) (deleteListener bool) {
+        log.Println("App has crashed")
+        return
+      })
       src.Window = ws[0]
       ws[0].OnMessage(func(m *astilectron.EventMessage) (v interface{}) {
         var s string
