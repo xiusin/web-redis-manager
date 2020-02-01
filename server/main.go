@@ -15,7 +15,7 @@ import (
   "sync"
 )
 
-const DEBUG  =  true
+const DEBUG = true
 
 var once sync.Once
 
@@ -28,27 +28,33 @@ func init() {
 
   astilog.SetLogger(astilog.New(astilog.Configuration{
     AppName:  "RedisManager",
-    Filename: cacheDir + `/rdm-log.log`,
+    Filename: fmt.Sprintf("%s/rdm-log.log", cacheDir),
     Verbose:  DEBUG,
   }))
   astilog.FlagConfig()
 
-  handler.Add("/redis/connection/test", src.RedisManagerConnectionTest)
-  handler.Add("/redis/connection/save", src.RedisManagerConfigSave)
-  handler.Add("/redis/connection/list", src.RedisManagerConnectionList)
-  handler.Add("/redis/connection/server", src.RedisManagerConnectionServer)
-  handler.Add("/redis/connection/removekey", src.RedisManagerRemoveKey)
-  handler.Add("/redis/connection/removerow", src.RedisManagerRemoveRow)
-  handler.Add("/redis/connection/updatekey", src.RedisManagerUpdateKey)
-  handler.Add("/redis/connection/addkey", src.RedisManagerAddKey)
-  handler.Add("/redis/connection/flushDB", src.RedisManagerFlushDB)
-  handler.Add("/redis/connection/remove", src.RedisManagerRemoveConnection)
-  handler.Add("/redis/connection/command", src.RedisManagerCommand)
-  handler.Add("/redis/connection/pubsub", src.RedisPubSub)
-  handler.Add("/redis/connection/info", src.RedisManagerGetInfo)
-  handler.Add("/redis/connection/get-command", src.RedisManagerGetCommandList)
-}
+  var routes = map[string]src.HandleFunc{
+    "/redis/connection/test":        src.RedisManagerConnectionTest,
+    "/redis/connection/save":        src.RedisManagerConfigSave,
+    "/redis/connection/list":        src.RedisManagerConnectionList,
+    "/redis/connection/server":      src.RedisManagerConnectionServer,
+    "/redis/connection/removekey":   src.RedisManagerRemoveKey,
+    "/redis/connection/removerow":   src.RedisManagerRemoveRow,
+    "/redis/connection/updatekey":   src.RedisManagerUpdateKey,
+    "/redis/connection/addkey":      src.RedisManagerAddKey,
+    "/redis/connection/flushDB":     src.RedisManagerFlushDB,
+    "/redis/connection/remove":      src.RedisManagerRemoveConnection,
+    "/redis/connection/command":     src.RedisManagerCommand,
+    "/redis/connection/pubsub":      src.RedisPubSub,
+    "/redis/connection/info":        src.RedisManagerGetInfo,
+    "/redis/connection/get-command": src.RedisManagerGetCommandList,
+  }
 
+
+  for route, handle := range routes {
+    handler.Add(route, handle)
+  }
+}
 
 func main() {
   options := astilectron.Options{
@@ -126,7 +132,6 @@ func main() {
     astilog.Fatal(errors.Wrap(err, "running bootstrap failed"))
   }
 }
-
 
 func GetCacheDir() string {
   once.Do(func() {

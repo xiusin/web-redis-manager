@@ -7,6 +7,7 @@ import (
   "fmt"
   "github.com/asticode/go-astilectron"
   "github.com/asticode/go-astilog"
+  "github.com/gorilla/websocket"
   "os"
   "reflect"
   "regexp"
@@ -21,7 +22,7 @@ var Window *astilectron.Window
 var pubSubs = map[string]bool{}
 
 type slowLog struct {
-  UsedTime string  `json:"used_time"`
+  UsedTime string `json:"used_time"`
   Command  string `json:"command"`
   Time     string `json:"time"`
 }
@@ -75,10 +76,10 @@ func RedisManagerConnectionTest(data map[string]interface{}) string {
   var config connection
   config.Ip = data["ip"].(string)
   config.Title = data["title"].(string)
-  config.Port = int(data["port"].(float64))
+  config.Port = data["port"].(string)
   config.Auth = data["auth"].(string)
 
-  client, err := redis.Dial("tcp", fmt.Sprintf("%s:%s", config.Ip, strconv.Itoa(config.Port)))
+  client, err := redis.Dial("tcp", fmt.Sprintf("%s:%s", config.Ip, config.Port))
   if err != nil {
     return JSON(ResponseData{5000, "Connect to redis error" + err.Error(), err.Error()})
   }
@@ -96,7 +97,7 @@ func RedisManagerConfigSave(data map[string]interface{}) string {
   var config connection
   config.Ip = data["ip"].(string)
   config.Title = data["title"].(string)
-  config.Port = int(data["port"].(float64))
+  config.Port = data["port"].(string)
   config.Auth = data["auth"].(string)
   totalConnection = totalConnection + 1
   config.ID = int64(totalConnection)
@@ -116,9 +117,30 @@ func RedisManagerConnectionList(_ map[string]interface{}) string {
   return JSON(ResponseData{200, "获取列表成功", connectionList})
 }
 
+func getFromInterfaceOrFloat64ToInt(id interface{}) int {
+  switch id.(type) {
+  case float64:
+    return int(id.(float64))
+  case string:
+    idInfo, _ := strconv.Atoi(id.(string))
+    return idInfo
+  default:
+    panic("参数类型非法")
+  }
+}
+
 func RedisPubSub(data map[string]interface{}) string {
+  wsIntf, _ := data["ws"]
+  channelPrefix := "channel-"
+  var ws *websocket.Conn
+  if wsIntf != nil {
+    channelPrefix = "ws-channel-"
+    ws = wsIntf.(*websocket.Conn)
+  } else {
+    ws = nil
+  }
   client, _, err := getRedisClient(data, false, false)
-  id := int(data["id"].(float64))
+  id := getFromInterfaceOrFloat64ToInt(data["id"])
   if err != nil {
     return JSON(ResponseData{5000, "连接错误" + err.Error(), nil})
   }
@@ -141,11 +163,9 @@ func RedisPubSub(data map[string]interface{}) string {
       }
     }
     if !flag {
-      // 订阅该渠道
       go func() {
         client, _, _ := getRedisClient(data, false, false)
         defer client.Close()
-        fmt.Println("subscribe channel", channel)
         pubsub := redis.PubSubConn{Conn: client}
         if err := pubsub.Subscribe(channel); err != nil {
           panic(err)
@@ -162,12 +182,11 @@ func RedisPubSub(data map[string]interface{}) string {
       return JSON(ResponseData{200, "发布内容成功", nil})
     }
   } else {
-
-    if ok, _ := pubSubs[fmt.Sprintf("channel-%d", id)]; !ok {
-      pubSubs[fmt.Sprintf("channel-%d", id)] = true
+    if _, ok := pubSubs[fmt.Sprintf("%s%d", channelPrefix, id)]; !ok {
+      pubSubs[fmt.Sprintf("%s%d", channelPrefix, id)] = true
       go func() {
         defer func(id int) {
-          pubSubs[fmt.Sprintf("channel-%d", id)] = false
+          pubSubs[fmt.Sprintf("%s%d", channelPrefix, id)] = false
         }(id)
         pubsub := redis.PubSubConn{Conn: client}
         if err := pubsub.PSubscribe("*"); err != nil {
@@ -177,14 +196,23 @@ func RedisPubSub(data map[string]interface{}) string {
           message := pubsub.Receive()
           switch v := message.(type) {
           case redis.Message: //单个订阅subscribe
-            _ = Window.SendMessage(map[string]string{
+            retData := map[string]string{
               "data":    string(v.Data),
               "id":      strconv.Itoa(id),
               "channel": v.Channel,
               "time":    time.Now().In(loc).Format("15:04:05"),
-            }, func(m *astilectron.EventMessage) {
-              astilog.Debugf("received %s", m)
-            })
+            }
+            if ws != nil {
+              resultValue, _ := json.Marshal(&retData)
+              if err := ws.WriteMessage(websocket.TextMessage, resultValue); err != nil {
+                astilog.GetLogger().Error(err)
+                fmt.Println("send to ws, err")
+              } else {
+                fmt.Println("send to ws")
+              }
+            } else if Window != nil {
+              _ = Window.SendMessage(retData, func(m *astilectron.EventMessage) {})
+            }
           case error:
             panic(v)
           default:
@@ -262,7 +290,7 @@ func RedisManagerCommand(data map[string]interface{}) string {
 
 func RedisManagerRemoveConnection(data map[string]interface{}) string {
   var configs []connection
-  id := int64(data["id"].(float64))
+  id := int64(getFromInterfaceOrFloat64ToInt(data["id"]))
   if id == 0 {
     return JSON(ResponseData{200, "参数失败", nil})
   }
@@ -281,7 +309,7 @@ func RedisManagerRemoveConnection(data map[string]interface{}) string {
 
 func getRedisClient(data map[string]interface{}, getSelectedIndexClient bool, getKey bool) (redis.Conn, string, error) {
   var config connection
-  id := int(data["id"].(float64))
+  id := getFromInterfaceOrFloat64ToInt(data["id"])
   if id == 0 {
     return nil, "", errors.New("参数错误")
   }
@@ -297,7 +325,7 @@ func getRedisClient(data map[string]interface{}, getSelectedIndexClient bool, ge
   if config.Title == "" {
     return nil, "", errors.New("没有该连接项")
   }
-  client, err = redis.Dial("tcp", config.Ip+":"+strconv.Itoa(config.Port))
+  client, err = redis.Dial("tcp", config.Ip+":"+config.Port)
   if err != nil {
     return nil, "", err
   }
@@ -309,7 +337,7 @@ func getRedisClient(data map[string]interface{}, getSelectedIndexClient bool, ge
   }
 
   if getSelectedIndexClient {
-    index := int(data["index"].(float64))
+    index := getFromInterfaceOrFloat64ToInt(data["index"])
     _, _ = client.Do("SELECT", index) //选择数据库
   }
   var key string
@@ -332,7 +360,7 @@ func RedisManagerConnectionServer(data map[string]interface{}) string {
   action := strings.Trim(data["action"].(string), " ")
   switch action {
   case "get_value":
-    index := int(data["index"].(float64))
+    index := getFromInterfaceOrFloat64ToInt(data["index"])
     _, err = client.Do("SELECT", index) //选择数据库
     if err != nil {
       return JSON(ResponseData{5000, "选择数据库失败", nil})
@@ -421,7 +449,7 @@ func RedisManagerConnectionServer(data map[string]interface{}) string {
     }
     return JSON(ResponseData{200, "连接数据库成功", dbs})
   case "select_db":
-    index := int(data["index"].(float64))
+    index := getFromInterfaceOrFloat64ToInt(data["index"])
     _, _ = client.Do("SELECT", index) //选择数据库
     //todo 这里要优化
     keys, err := redis.Strings(client.Do("KEYS", "*"))
@@ -501,7 +529,7 @@ func RedisManagerUpdateKey(data map[string]interface{}) string {
   action := data["action"].(string)
   switch action {
   case "ttl": //更新ttl时间
-    ttl := int(data["ttl"].(float64))
+    ttl := getFromInterfaceOrFloat64ToInt(data["ttl"])
     _, err = client.Do("EXPIRE", key, ttl)
     if err != nil {
       return JSON(ResponseData{5000, "操作失败", nil})
@@ -542,7 +570,7 @@ func RedisManagerUpdateKey(data map[string]interface{}) string {
         return JSON(ResponseData{5000, "添加失败", nil})
       }
     case "zset":
-      score := int(data["rowkey"].(float64))
+      score := getFromInterfaceOrFloat64ToInt(data["rowkey"])
       _, err = client.Do("ZADD", key, score, data["data"])
     case "hash":
       rowkey := data["rowkey"].(string)
@@ -559,14 +587,14 @@ func RedisManagerUpdateKey(data map[string]interface{}) string {
 
     switch valType {
     case "list":
-      rowkey := int(data["rowkey"].(float64))
+      rowkey := getFromInterfaceOrFloat64ToInt(data["rowkey"])
       _, err = client.Do("LSET", key, rowkey, data["data"])
     case "set":
       rowkey := data["rowkey"].(string)
       _, err = client.Do("SREM", key, rowkey)
       _, err = client.Do("SADD", key, data["data"])
     case "zset":
-      score := int(data["score"].(float64))
+      score := getFromInterfaceOrFloat64ToInt(data["score"])
       rowkey := data["rowkey"].(string)
       _, err = client.Do("ZREM", rowkey)
       _, err = client.Do("ZADD", rowkey, score, data["data"])
@@ -599,7 +627,7 @@ func RedisManagerAddKey(data map[string]interface{}) string {
   case "set":
     _, err = client.Do("SADD", key, data["data"].(string))
   case "zset":
-    score := int(data["rowKey"].(float64))
+    score := getFromInterfaceOrFloat64ToInt(data["rowKey"])
     _, err = client.Do("ZADD", key, score, data["data"].(string))
   case "string":
     _, err = client.Do("SET", key, data["data"].(string))

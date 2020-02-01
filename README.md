@@ -1,10 +1,9 @@
 # redis_manager #
 自用redis管理客户端,  基于[go-astilectron](https://github.com/asticode/go-astilectron.git) 开发构建, 代码比较简陋. 后期时间充足了会重构代码
 
-# 使用yarn #
-提醒 `@vue/app`无法找到预设, 需要到对应模块下的package.json删除babel下的预设
-
 ## BUG ##
+1. http模式pubsub接口兼容
+2. client链接数过多
 3. 字段视图转JSON时候数据错误
 4. 选中key无法高亮
 

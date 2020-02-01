@@ -340,6 +340,7 @@
   import VueJsonPretty from 'vue-json-pretty'
   import VueTerminal from '../../vue-terminal-ui'
   import Api from '../api'
+  import $ from 'jquery'
   export default {
     name: 'MainPage',
     components: {
@@ -403,7 +404,7 @@
         formItem: {
           title: '',
           ip: '127.0.0.1',
-          port: 6379,
+          port: '6379',
           auth: ''
         },
         ttlValue: {
@@ -464,22 +465,49 @@
       }
     },
     mounted () {
-      this.initWs()
-      window.setTimeout(() => {
-        this.getConnectionList()
-        this.channelWs()
-      }, 300)
+      if (!window.require) {
+        this.initWs(() => {
+          this.getConnectionList()
+          this.channelWs()
+        })
+      } else {
+        this.initWs()
+        window.setTimeout(() => {
+          this.getConnectionList()
+          this.channelWs()
+        }, 300)
+      }
     },
     methods: {
       channelWs () {
         let that = this
-        window.astilectron.onMessage((message) => {
-          if (!that.chanMegs.hasOwnProperty(message.id + '')) {
-            that.chanMegs[message.id + ''] = []
+        if (!window.require) {
+          window.$websocket.onmessage = (event) => {
+            let data = JSON.parse(event.data)
+            if (data.status !== 200) {
+              this.$Message.error(data.msg)
+              return
+            }
+            let message = data.data
+            let channel = this.customChannel !== '' ? this.customChannel : this.selectedChannel
+            this.channelMsg = ''
+            this.loadPubSubChannels()
+            this.$Message.success('发送到channel:' + channel + '的消息成功')
+            if (!that.chanMegs.hasOwnProperty(message.id + '')) {
+              that.chanMegs[message.id + ''] = []
+            }
+            that.chanMegs[message.id + ''].unshift('[ ' + message.time + ' ]  收到频道(' + message.channel + ') 的消息:  ' + message.data)
+            that.chanMegs = Object.assign({}, that.chanMegs)
           }
-          that.chanMegs[message.id + ''].unshift('[ ' + message.time + ' ]  收到频道(' + message.channel + ') 的消息:  ' + message.data)
-          that.chanMegs = Object.assign({}, that.chanMegs)
-        })
+        } else {
+          window.astilectron.onMessage((message) => {
+            if (!that.chanMegs.hasOwnProperty(message.id + '')) {
+              that.chanMegs[message.id + ''] = []
+            }
+            that.chanMegs[message.id + ''].unshift('[ ' + message.time + ' ]  收到频道(' + message.channel + ') 的消息:  ' + message.data)
+            that.chanMegs = Object.assign({}, that.chanMegs)
+          })
+        }
       },
       getPubSubTabKey () {
         return this.currentConnectionId + ''
@@ -489,19 +517,27 @@
           this.$Message.error('请选择channel或输入自定义频道')
         } else if (this.channelMsg !== '') {
           let channel = this.customChannel !== '' ? this.customChannel : this.selectedChannel
-          Api.pubSub({
-            id: this.currentConnectionId,
-            channel: channel,
-            msg: this.channelMsg
-          }, (data) => {
-            if (data.status === 200) {
-              this.channelMsg = ''
-              this.loadPubSubChannels()
-              this.$Message.success('发送到channel:' + channel + '的消息成功')
-            } else {
-              this.$Message.error(data.msg)
-            }
-          })
+          if (!window.require) {
+            window.$websocket.send(JSON.stringify({
+              id: this.currentConnectionId,
+              channel: channel,
+              msg: this.channelMsg
+            }))
+          } else {
+            Api.pubSub({
+              id: this.currentConnectionId,
+              channel: channel,
+              msg: this.channelMsg
+            }, (data) => {
+              if (data.status === 200) {
+                this.channelMsg = ''
+                this.loadPubSubChannels()
+                this.$Message.success('发送到channel:' + channel + '的消息成功')
+              } else {
+                this.$Message.error(data.msg)
+              }
+            })
+          }
         }
       },
       openPubSubTab () {
@@ -957,48 +993,69 @@
           resolve('')
         }, 300)
       },
-      initWs () {
-        window.document.addEventListener('astilectron-ready', () => {
-          if (window.astilectron === undefined) {
-            window.astilectron = {}
-            // todo切换路由端口, 直接兼容数据. 其次, 怎么才能保护数据完整性
-            window.astilectron.post = (url, data, c) => {
-            }
-            window.astilectron.get = (url, data, c) => {
-            }
-          } else if (window.astilectron.post === undefined) {
-            window.astilectron.post = (url, data, c) => {
-              console.log('post:' + url, data)
-              window.astilectron.sendMessage(url + (data ? '___::___' + JSON.stringify(data) : ''), (message) => {
-                this.buttonLoading = false
-                console.log('message:', message)
-                try {
-                  c(JSON.parse(message))
-                } catch (e) {
-                  c(message)
-                }
-              })
-            }
-            window.astilectron.get = (url, data, c) => {
-              window.astilectron.sendMessage(url + (data ? '___::___' + JSON.stringify(data) : ''), (message) => {
-                this.buttonLoading = false
-                if (typeof message === 'string') {
-                  return c(JSON.parse(message))
-                } else {
-                  return c(message)
-                }
-              })
-            }
+      initWs (callback) {
+        if (callback) {
+          window.astilectron = {}
+          window.$websocket = new WebSocket('ws://localhost:18998/channel')
+          window.astilectron.post = (url, data, c) => {
+            console.log('post', data)
+            $.post('http://localhost:18998' + url, data, (message) => {
+              this.buttonLoading = false
+              console.log('message:', message)
+              try {
+                c(JSON.parse(message))
+              } catch (e) {
+                c(message)
+              }
+            })
+          }
+          window.astilectron.get = (url, data, c) => {
+            console.log('post', data)
+            $.getJSON('http://localhost:18998' + url, data, (message) => {
+              this.buttonLoading = false
+              if (typeof message === 'string') {
+                return c(JSON.parse(message))
+              } else {
+                return c(message)
+              }
+            })
           }
           Vue.prototype.$Websocket = window.astilectron
-        })
+          if (callback) callback()
+        } else {
+          window.document.addEventListener('astilectron-ready', () => {
+            if (window.astilectron.post === undefined) {
+              window.astilectron.post = (url, data, c) => {
+                console.log('post:' + url, data)
+                window.astilectron.sendMessage(url + (data ? '___::___' + JSON.stringify(data) : ''), (message) => {
+                  this.buttonLoading = false
+                  console.log('message:', message)
+                  try {
+                    c(JSON.parse(message))
+                  } catch (e) {
+                    c(message)
+                  }
+                })
+              }
+              window.astilectron.get = (url, data, c) => {
+                window.astilectron.sendMessage(url + (data ? '___::___' + JSON.stringify(data) : ''), (message) => {
+                  this.buttonLoading = false
+                  if (typeof message === 'string') {
+                    return c(JSON.parse(message))
+                  } else {
+                    return c(message)
+                  }
+                })
+              }
+            }
+            Vue.prototype.$Websocket = window.astilectron
+          })
+        }
       },
       getConnectionList () {
-        // this.modal_loading = true
         this.connectionTreeList = []
         this.connectionListData = []
         Api.connectionList((res) => {
-          console.log(res)
           this.modal_loading = false
           if (res.status !== 200) {
             this.$Message.error(res.msg)
@@ -1146,7 +1203,7 @@
             this.formItem = {
               title: '',
               ip: '',
-              port: 6379,
+              port: '6379',
               auth: ''
             }
             this.$Message.success(res.msg)

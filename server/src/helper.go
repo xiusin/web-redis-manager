@@ -10,7 +10,7 @@ type connection struct {
   ID    int64  `json:"id"`
   Title string `json:"title"`
   Ip    string `json:"ip"`
-  Port  int    `json:"port"`
+  Port  string `json:"port"`
   Auth  string `json:"auth"`
 }
 
