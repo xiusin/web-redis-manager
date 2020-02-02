@@ -357,7 +357,7 @@
             width: 170 // 不加这东西
           },
           {
-            title: '耗时',
+            title: '耗时(μs)',
             key: 'used_time',
             width: 120,
             sortable: true
@@ -484,11 +484,8 @@
         if (!window.require) {
           window.$websocket.onmessage = (event) => {
             let data = JSON.parse(event.data)
-            if (data.status !== 200) {
-              this.$Message.error(data.msg)
-              return
-            }
-            let message = data.data
+            let message = data
+            console.log('onmessage', message)
             let channel = this.customChannel !== '' ? this.customChannel : this.selectedChannel
             this.channelMsg = ''
             this.loadPubSubChannels()
@@ -996,7 +993,7 @@
       initWs (callback) {
         if (callback) {
           window.astilectron = {}
-          window.$websocket = new WebSocket('ws://localhost:18998/channel')
+          window.$websocket = new WebSocket('ws://localhost:18998/redis/connection/pubsub')
           window.astilectron.post = (url, data, c) => {
             console.log('post', data)
             $.post('http://localhost:18998' + url, data, (message) => {

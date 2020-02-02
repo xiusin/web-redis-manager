@@ -90,6 +90,17 @@ func main() {
         log.Println("App has crashed")
         return
       })
+      a.On(astilectron.EventNameAppClose, func(e astilectron.Event) (deleteListener bool) {
+        a.Close()
+        fmt.Println("astilectron.EventNameAppClose")
+        return
+      })
+      a.On(astilectron.EventNameAppCmdQuit, func(e astilectron.Event) (deleteListener bool) {
+        a.Close()
+        fmt.Println("astilectron.EventNameAppCmdQuit")
+        return
+      })
+
       src.Window = ws[0]
       ws[0].OnMessage(func(m *astilectron.EventMessage) (v interface{}) {
         var s string

@@ -90,7 +90,22 @@ func main() {
     },
     EnableCompression: true,
   }
-  mux.HandleFunc("/channel", func(writer http.ResponseWriter, request *http.Request) {
+  mux.HandleFunc("/redis/connection/pubsub", func(writer http.ResponseWriter, request *http.Request) {
+    if request.Method == http.MethodPost {
+      data := make(map[string]interface{})
+      request.ParseForm()
+      params := request.PostForm
+      for param, values := range params {
+        if len(values) > 0 {
+          data[param] = values[0]
+        } else {
+          data[param] = nil
+        }
+      }
+      writer.Write([]byte(src.RedisPubSub(data)))
+      return
+    }
+
     ws, _ := upgrader.Upgrade(writer, request, nil)
     for {
       _, msg, _ := ws.ReadMessage()

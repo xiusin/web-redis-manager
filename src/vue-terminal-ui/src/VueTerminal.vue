@@ -30,9 +30,6 @@ export default {
     id: {
       default: 0
     },
-    index: {
-      default: 0
-    },
     height: {
       type: String,
       default: '100%'
@@ -102,8 +99,7 @@ export default {
               console.log('called')
               Api.sendCommand({
                 command: cmd.str,
-                id: that.id,
-                index: that.index
+                id: that.id
               }, (data) => {
                 cmd.out = data.data
                 call(cmd)
