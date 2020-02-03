@@ -3,6 +3,7 @@ redis管理客户端,  基于[go-astilectron](https://github.com/asticode/go-ast
 
 ## BUG ##
 1. http模式pubsub接口兼容, 调整订阅与发布顺序, 消除第一次发送消息失败的情况
+2. macos下打开发布订阅模式软件崩溃
 3. 字段视图转JSON时候数据错误
 4. 选中key无法高亮
 
