@@ -15,6 +15,7 @@ redis管理客户端,  基于[go-astilectron](https://github.com/asticode/go-ast
 - [ ] 集群模式
 - [ ] Electron Cpu占用率太高, windows 不关闭Electron进程
 - [ ] redis-cli功能新增切换连接情况功能.(保持select 数据库的状态)
+- [ ] 替换类库为(https://github.com/zserge/lorca), 精简文件大小与依赖
 
 ## 原理图 ##
 ```
@@ -27,7 +28,7 @@ redis管理客户端,  基于[go-astilectron](https://github.com/asticode/go-ast
 +-------+-----^-----------+
         |     |
 +-------v-----+-----------+
-|      golang/redigo      |
+|     golang/redigo       |
 +-----+----------^--------+
       |          |
 +-----v----------+-------+
