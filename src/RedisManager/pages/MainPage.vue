@@ -1053,7 +1053,7 @@
         this.connectionListData = []
         Api.connectionList((res) => {
           this.modal_loading = false
-          if (res.status !== 200) {
+          if (res.status === 200) {
             this.connectionListData = res.data
             for (let i = 0; i < res.data.length; i++) {
               this.connectionTreeList.push({
