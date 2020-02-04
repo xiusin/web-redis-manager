@@ -140,7 +140,6 @@ func RedisPubSub(data map[string]interface{}) string {
     ws = nil
   }
   client, _ := getRedisClient(data, false, false)
-  defer client.Close()
   id := getFromInterfaceOrFloat64ToInt(data["id"])
   channels, err := redis.Strings(client.Do("PUBSUB", "channels"))
   if err != nil {
@@ -154,6 +153,7 @@ func RedisPubSub(data map[string]interface{}) string {
     go func() {
       defer func(id int) {
         pubSubs[fmt.Sprintf("%s%d", channelPrefix, id)] = false
+        defer client.Close()
       }(id)
       fmt.Printf("ID为%d开始订阅所有频道\n", id)
       pubsub := redis.PubSubConn{Conn: client}
