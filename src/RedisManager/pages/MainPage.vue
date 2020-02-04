@@ -165,7 +165,6 @@
                 </Row>
               </div>
             </div>
-
             <div v-if="currentConnectionId != '' && infoModal" style="position:absolute; z-index: 10;  top: 64px;background: #fff;width: 100%;height: 100%; padding:10px;">
               <Tabs value="first" :animated="false" style="height: 100%">
                 <TabPane label="慢日志" name="first" style="height: 100%">
