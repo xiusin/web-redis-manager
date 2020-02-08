@@ -325,7 +325,7 @@
       </div>
     </Modal>
 
-    <Modal v-model="showJsonModal" fullscreen footer-hide :title="currentConnection" :on-visible-change="showJsonModalOkClick">
+    <Modal v-model="showJsonModal" fullscreen footer-hide :title="getTerminalTitle()" :on-visible-change="showJsonModalOkClick">
         <VueTerminal v-bind:id="currentConnectionId"
                      v-bind:index="currentDbIndex"
                      @command="onCliCommand"
@@ -340,6 +340,7 @@
   import VueTerminal from '../../vue-terminal-ui'
   import Api from '../api'
   import $ from 'jquery'
+  import CryptoJS from 'crypto-js'
   export default {
     name: 'MainPage',
     components: {
@@ -424,6 +425,7 @@
           'db': -1,
           'redis_id': 0
         },
+        sk: '',
         infoModal: false,
         connectionListData: [],
         connectionTreeList: [],
@@ -488,6 +490,7 @@
             let channel = this.customChannel !== '' ? this.customChannel : this.selectedChannel
             this.channelMsg = ''
             this.loadPubSubChannels()
+            this.$Message.destroy()
             this.$Message.success('发送到channel:' + channel + '的消息成功')
             if (!that.chanMegs.hasOwnProperty(message.id + '')) {
               that.chanMegs[message.id + ''] = []
@@ -497,6 +500,7 @@
           }
         } else {
           window.astilectron.onMessage((message) => {
+            console.log(message)
             if (!that.chanMegs.hasOwnProperty(message.id + '')) {
               that.chanMegs[message.id + ''] = []
             }
@@ -507,6 +511,13 @@
       },
       getPubSubTabKey () {
         return this.currentConnectionId + ''
+      },
+      getTerminalTitle () {
+        let dbIndex = this.currentDbIndex
+        if (dbIndex === -1) {
+          dbIndex = 0
+        }
+        return this.currentConnection + ': DB(' + dbIndex + ')'
       },
       sendToChannel () {
         if (this.selectedChannel === '' && this.customChannel === '') {
@@ -528,6 +539,7 @@
               if (data.status === 200) {
                 this.channelMsg = ''
                 this.loadPubSubChannels()
+                this.$Message.destroy()
                 this.$Message.success('发送到channel:' + channel + '的消息成功')
               } else {
                 this.$Message.error(data.msg)
@@ -994,10 +1006,9 @@
           window.astilectron = {}
           window.$websocket = new WebSocket('ws://localhost:18998/redis/connection/pubsub')
           window.astilectron.post = (url, data, c) => {
-            console.log('post', data)
             $.post('http://localhost:18998' + url, data, (message) => {
               this.buttonLoading = false
-              console.log('message:', message)
+              this.$Message.destroy()
               try {
                 c(JSON.parse(message))
               } catch (e) {
@@ -1006,9 +1017,9 @@
             })
           }
           window.astilectron.get = (url, data, c) => {
-            console.log('post', data)
             $.getJSON('http://localhost:18998' + url, data, (message) => {
               this.buttonLoading = false
+              this.$Message.destroy()
               if (typeof message === 'string') {
                 return c(JSON.parse(message))
               } else {
@@ -1020,33 +1031,44 @@
           if (callback) callback()
         } else {
           window.document.addEventListener('astilectron-ready', () => {
-            if (window.astilectron.post === undefined) {
-              window.astilectron.post = (url, data, c) => {
-                console.log('post:' + url, data)
-                window.astilectron.sendMessage(url + (data ? '___::___' + JSON.stringify(data) : ''), (message) => {
-                  this.buttonLoading = false
-                  console.log('message:', message)
-                  try {
-                    c(JSON.parse(message))
-                  } catch (e) {
-                    c(message)
-                  }
-                })
+            window.astilectron.sendMessage('/gek', (message) => {
+              this.sk = JSON.parse(message).data
+              if (window.astilectron.post === undefined) {
+                window.astilectron.post = (url, data, c) => {
+                  window.astilectron.sendMessage(url + this.encryptData(data), (message) => {
+                    console.log(message)
+                    this.buttonLoading = false
+                    this.$Message.destroy()
+                    try {
+                      c(JSON.parse(message))
+                    } catch (e) {
+                      console.log(e)
+                      c(message)
+                    }
+                  })
+                }
+                window.astilectron.get = (url, data, c) => {
+                  window.astilectron.sendMessage(url + this.encryptData(data), (message) => {
+                    this.buttonLoading = false
+                    this.$Message.destroy()
+                    if (typeof message === 'string') {
+                      return c(JSON.parse(message))
+                    } else {
+                      return c(message)
+                    }
+                  })
+                }
               }
-              window.astilectron.get = (url, data, c) => {
-                window.astilectron.sendMessage(url + (data ? '___::___' + JSON.stringify(data) : ''), (message) => {
-                  this.buttonLoading = false
-                  if (typeof message === 'string') {
-                    return c(JSON.parse(message))
-                  } else {
-                    return c(message)
-                  }
-                })
-              }
-            }
+            })
             Vue.prototype.$Websocket = window.astilectron
           })
         }
+      },
+      encryptData (data) {
+        return data ? '___::___' + CryptoJS.AES.encrypt(JSON.stringify(data), this.sk).toString() : ''
+      },
+      decryptData (data) {
+        return CryptoJS.AES.decrypt(data, this.sk).toString()
       },
       getConnectionList () {
         this.connectionTreeList = []

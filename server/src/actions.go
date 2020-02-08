@@ -114,7 +114,18 @@ func RedisManagerConnectionList(_ map[string]interface{}) string {
   if err != nil {
     return JSON(ResponseData{5000, "获取列表失败:" + err.Error(), nil})
   }
-  return JSON(ResponseData{200, "获取列表成功", connectionList})
+  var conns []struct {
+    ID    int64  `json:"id"`
+    Title string `json:"title"`
+  }
+  for _, conn := range connectionList {
+    conns = append(conns, struct {
+      ID    int64  `json:"id"`
+      Title string `json:"title"`
+    }{ID: conn.ID, Title: conn.Title})
+  }
+
+  return JSON(ResponseData{200, "获取列表成功", conns})
 }
 
 func getFromInterfaceOrFloat64ToInt(id interface{}) int {

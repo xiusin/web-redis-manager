@@ -9,9 +9,9 @@ test/unit/coverage
 test/e2e/reports
 selenium-debug.log
 rdm-connections.json
-server/rdm-log.log
 server/data.db
 server/resources/app/
 server/resources/dist/
 bind_*.go
 windows.syso
+/server/error.log

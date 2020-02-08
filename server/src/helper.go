@@ -18,4 +18,5 @@ var (
   totalConnection = 0
   connectionList  []connection
   ConnectionFile  string
+  SecretKey string
 )

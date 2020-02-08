@@ -23,20 +23,20 @@ export default {
   data: function () {
     return {
       waiting: false,
-      commands: []
+      commands: [],
+      intro: ''
     }
   },
   props: {
     id: {
       default: 0
     },
+    index: {
+      default: 0
+    },
     height: {
       type: String,
       default: '100%'
-    },
-    intro: {
-      type: String,
-      default: ''
     },
     allowArbitrary: {
       type: Boolean,
@@ -57,6 +57,7 @@ export default {
     }
   },
   mounted () {
+    this.intro = '请在连接处选择要操作的DB, 默认为DB(0), 此功能为模拟cli实现, 部分命令的返回值无法还原. 使用`help`命令查看支持的redis命令'
     const commandEmitter = (commandText) => {
       let prms = new Promise((resolve, reject) => {
         var data = {
@@ -78,28 +79,22 @@ export default {
       passCommand: this.allowArbitrary ? commandEmitter : null
     })
     let that = this
-    let sleep = function (numberMillis) {
-      var now = new Date()
-      var exitTime = now.getTime() + numberMillis
-      while (true) {
-        now = new Date()
-        if (now.getTime() > exitTime) {
-          return
-        }
-      }
-    }
     window.setTimeout(() => {
-      Api.getCommand({}, (data) => {
+      Api.getCommand(null, (data) => {
         let commands = data.data.split('\n')
         for (let i in commands) {
           let command = commands[i].split(':::')
           $ptty.register('command', {
             name: command[0].toLowerCase(),
             method: function (cmd, call) {
-              console.log('called')
+              let dbIndex = that.index
+              if (dbIndex === -1) {
+                dbIndex = 0
+              }
               Api.sendCommand({
                 command: cmd.str,
-                id: that.id
+                id: that.id,
+                index: dbIndex
               }, (data) => {
                 cmd.out = data.data
                 call(cmd)
