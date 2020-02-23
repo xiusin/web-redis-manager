@@ -24,14 +24,12 @@ export default {
     return {
       waiting: false,
       commands: [],
-      intro: ''
+      intro: '',
+      $ptty: null
     }
   },
   props: {
     id: {
-      default: 0
-    },
-    index: {
       default: 0
     },
     height: {
@@ -70,7 +68,7 @@ export default {
       prms.finally(this.toggleWaiting)
       return prms
     }
-    var $ptty = $('#terminal', '.vue-terminal-wrapper').Ptty({
+    this.$ptty = $('#terminal', '.vue-terminal-wrapper').Ptty({
       i18n: {
         welcome: this.intro
       },
@@ -81,11 +79,10 @@ export default {
     let that = this
     window.setTimeout(() => {
       Api.getCommand(null, (data) => {
-        let commands = data.data.split('\n')
-        for (let i in commands) {
-          let command = commands[i].split(':::')
-          $ptty.register('command', {
-            name: command[0].toLowerCase(),
+        this.$ptty.helpers = data.data['helpers']
+        for (let i in data.data['helpers']) {
+          this.$ptty.register('command', {
+            name: i.toLowerCase(),
             method: function (cmd, call) {
               let dbIndex = that.index
               if (dbIndex === -1) {
@@ -96,11 +93,11 @@ export default {
                 id: that.id,
                 index: dbIndex
               }, (data) => {
-                cmd.out = data.data
+                cmd.out = data.data.replace(/\n/g, '<br/>')
                 call(cmd)
               })
             },
-            help: command[1]
+            help: data.data['helpers'][i].summary
           })
         }
       })

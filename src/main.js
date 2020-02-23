@@ -12,8 +12,6 @@ import routers from './routers'
 
 import 'iview/dist/styles/iview.css'
 
-import './RedisManager/rdm.less'
-
 import RedisManager from './RedisManager/store'
 
 Vue.config.debug = true
@@ -26,6 +24,8 @@ Vue.config.productionTip = true
 Vue.use(Vuex)
 
 Vue.use(VueRouter)
+
+import './RedisManager/rdm.less'
 
 Vue.use(iView)
 
