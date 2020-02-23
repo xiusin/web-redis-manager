@@ -5,7 +5,6 @@
   "resources_path": "resources",
   "output_path": "output",
   "environments": [
-    {"arch": "amd64", "os": "darwin"},
-    {"arch": "386", "os": "windows"}
+    {"arch": "amd64", "os": "darwin"}
   ]
 }

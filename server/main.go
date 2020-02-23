@@ -18,7 +18,7 @@ import (
   "time"
 )
 
-const DEBUG = true
+var DEBUG = true
 
 var once sync.Once
 
@@ -32,18 +32,13 @@ var secretKey []byte
 
 func init() {
   cacheDir = GetCacheDir()
-  salt := "ABCEDFGHIJKLMNOPQRSTUVWXYZ0123456789"
-  l := len(salt)
-  rand.Seed(time.Now().UnixNano())
-  for i := 0; i < SecretLen; i++ {
-    secretKey = append(secretKey, salt[rand.Int63n(int64(l))])
-  }
-  src.SecretKey = string(secretKey)
+  getRandomKey()
   astilog.SetLogger(astilog.New(astilog.Configuration{
     AppName:  "RedisManager",
     Filename: fmt.Sprintf("%s/error.log", cacheDir),
     Verbose:  false,
   }))
+
   astilog.FlagConfig()
 
   var routes = map[string]src.HandleFunc{
@@ -76,7 +71,6 @@ func main() {
     BaseDirectoryPath:  cacheDir,
     AppIconDefaultPath: fmt.Sprintf("%s/resources/icon.png", cacheDir),
     DataDirectoryPath:  cacheDir,
-    //VersionElectron:    "6.1.2",
   }
 
   var url string
@@ -85,16 +79,16 @@ func main() {
   } else {
     url = "index.html"
   }
-  center, HasShadow, Fullscreenable, Closable, skipTaskBar := true, true, true, true, true
+  center, HasShadow, FullScreenable, Closable, skipTaskBar := true, true, true, true, true
   height, width := 800, 1280
 
   config := bootstrap.Options{
     //Asset:              Asset,
     //AssetDir:           AssetDir,
+    //RestoreAssets:      RestoreAssets,
     AstilectronOptions: options,
     Debug:              DEBUG,
     Logger:             astilog.GetLogger(),
-    //RestoreAssets:      RestoreAssets,
     OnWait: func(a *astilectron.Astilectron, ws []*astilectron.Window, _ *astilectron.Menu, _ *astilectron.Tray, _ *astilectron.Menu) error {
       a.On(astilectron.EventNameAppCrash, func(e astilectron.Event) (deleteListener bool) {
         log.Println("App has crashed")
@@ -120,11 +114,12 @@ func main() {
           return "{}"
         }
         info := strings.Split(s, "___::___")
-        data := make(map[string]interface{})
+        data, path := src.RequestData{}, info[0]
         if len(info) == 1 {
           data = nil
         } else {
-          s, err := opensslHandler.DecryptString(src.SecretKey, info[1])
+          params := info[1]
+          s, err := opensslHandler.DecryptString(src.SecretKey, params)
           if err != nil {
             astilog.Errorf("Decrypt Error", err.Error())
             return err.Error()
@@ -134,16 +129,10 @@ func main() {
             return err.Error()
           }
         }
-        return handler.Handle(info[0], data)
-        //if info[0] != "/gek" {
-        //  sb, err := opensslHandler.EncryptString(src.SecretKey, rest)
-        //  if err != nil {
-        //    astilog.Errorf("Encrypt Error", err.Error())
-        //    return err.Error()
-        //  }
-        //  return string(sb)
-        //}
-        //return rest
+        if path == "/redis/connection/updatekey" {
+          fmt.Println(data)
+        }
+        return handler.Handle(path, data)
       })
       return nil
     },
@@ -152,9 +141,11 @@ func main() {
       Options: &astilectron.WindowOptions{
         Center:          &center,
         Height:          &height,
+        MinHeight:       &height,
         Width:           &width,
+        MinWidth:        &width,
         HasShadow:       &HasShadow,
-        Fullscreenable:  &Fullscreenable,
+        Fullscreenable:  &FullScreenable,
         Closable:        &Closable,
         AutoHideMenuBar: &skipTaskBar,
       },
@@ -181,10 +172,20 @@ func GetCacheDir() string {
   return cacheDir
 }
 
-func gek(_ map[string]interface{}) string {
+func gek(_ src.RequestData) string {
   return src.JSON(src.ResponseData{
-    Status: 200,
+    Status: src.SuccessCode,
     Msg:    "success",
     Data:   src.SecretKey,
   })
+}
+
+func getRandomKey() {
+  salt := "ABCEDFGHIJKLMNOPQRSTUVWXYZ0123456789"
+  l := len(salt)
+  rand.Seed(time.Now().UnixNano())
+  for i := 0; i < SecretLen; i++ {
+    secretKey = append(secretKey, salt[rand.Int63n(int64(l))])
+  }
+  src.SecretKey = string(secretKey)
 }

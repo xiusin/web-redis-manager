@@ -4,13 +4,18 @@ go 1.13
 
 require (
 	github.com/Luzifer/go-openssl v2.0.0+incompatible
+	github.com/Workiva/go-datastructures v1.0.50
 	github.com/asticode/go-astilectron v0.11.0
 	github.com/asticode/go-astilectron-bootstrap v0.3.0
 	github.com/asticode/go-astilog v1.4.0
+	github.com/coreos/etcd v3.3.18+incompatible
+	github.com/coreos/go-semver v0.3.0 // indirect
 	github.com/gomodule/redigo v2.0.0+incompatible
 	github.com/gorilla/websocket v1.4.1
+	github.com/json-iterator/go v1.1.9 // indirect
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/mattn/go-isatty v0.0.11 // indirect
+	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/pkg/errors v0.8.1
 	github.com/rs/cors v1.7.0
 	golang.org/x/crypto v0.0.0-20191206172530-e9b2fee46413 // indirect
