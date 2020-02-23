@@ -31,6 +31,10 @@
   .header {
     display: none;
   }
+
+ .ivu-tabs-nav-container {
+   font-size: 12px;
+ }
 </style>
 <template>
   <div class="layout">
@@ -327,7 +331,6 @@
 
     <Modal v-model="showJsonModal" fullscreen footer-hide :title="getTerminalTitle()" :on-visible-change="showJsonModalOkClick">
         <VueTerminal v-bind:id="currentConnectionId"
-                     v-bind:index="currentDbIndex"
                      @command="onCliCommand"
                      console-sign="redis-cli $"  style="height: 100%; font-size:14px"></VueTerminal>
     </Modal>
@@ -513,11 +516,7 @@
         return this.currentConnectionId + ''
       },
       getTerminalTitle () {
-        let dbIndex = this.currentDbIndex
-        if (dbIndex === -1) {
-          dbIndex = 0
-        }
-        return this.currentConnection + ': DB(' + dbIndex + ')'
+        return this.currentConnection
       },
       sendToChannel () {
         if (this.selectedChannel === '' && this.customChannel === '') {
@@ -661,7 +660,7 @@
           try {
             return JSON.parse(data)
           } catch (e) {
-            this.$Message.error('内容无法解析为JSON, 按钮切回Text')
+            this.$Message.error('内容无法解析为JSON')
             this.textType = false
           }
         }
@@ -730,10 +729,22 @@
       updateValue (key, data, action) {
         // 判断操作
         let type = data.type
+        if (!type) {
+          type = data.data.type
+        }
+        console.log(data, key, data)
         let rowIndex = null
         let newRowValue = data.newRowValue
         let newRowKey = data.newRowKey
         if (action === 'addrow') {
+          if (type === 'zset') {
+            for (let i in data.data.data) {
+              if (data.data.data[i].value === data.newRowValue) {
+                this.$Message.error('已经存在值')
+                return
+              }
+            }
+          }
           type = data.data.type
           rowIndex = data.data.data.length
           let rowKey = type === 'zset' ? rowIndex : (newRowKey || rowIndex)
@@ -743,11 +754,15 @@
           } else if (type === 'zset') {
             rowIndex = Number(data.newRowKey)
           }
-        } else if (action === 'updateRowValue') {
+        }
+        if (action === 'updateRowValue') {
           rowIndex = this.currentSelectRowData.index
           newRowKey = this.currentSelectRowData.key
           newRowValue = this.currentSelectRowData.value
-          this.$set(data.data, newRowKey || rowIndex, this.currentSelectRowData.value)
+          this.$set(data.data, this.currentSelectRowData.index, type === 'zset' ? {
+            'score': newRowKey,
+            'value': newRowValue
+          } : newRowValue)
           if (type === 'set' || type === 'zset') {
             rowIndex = this.currentSelectRowData.oldValue
           }
@@ -760,6 +775,7 @@
           ttl: Number(data.ttl),
           action: action !== 'ttl' ? action : 'ttl',
           rowkey: type === 'hash' ? newRowKey : rowIndex,
+          score: newRowKey,
           id: this.currentConnectionId,
           index: this.currentDbIndex
         }, (res) => {
@@ -772,48 +788,47 @@
             this.$Message.success(res.msg)
             if (action === 'addrow') {
               data.data.data.push(type === 'zset' ? {
-                'score': type === 'hash' ? newRowKey : rowIndex,
+                'score': newRowKey,
                 'value': data.newRowValue
               } : data.newRowValue)
             }
           }
         })
       },
-      removeKey (key, callback) {
-        this.buttonLoading = true
-        Api.removeKey({
-          key: key,
-          id: this.currentConnectionId,
-          index: this.currentDbIndex
-        }, (res) => {
-          console.log('删除返回结果:', res, {
+      removeKey (key, callback, tips) {
+        this.confirmModalText = '是否要删除"' + key + '"吗?'
+        this.confirmModal = true
+        this.confirmModalEvent = () => {
+          this.buttonLoading = true
+          Api.removeKey({
             key: key,
             id: this.currentConnectionId,
             index: this.currentDbIndex
-          })
-          this.buttonLoading = false
-          if (res.status !== 200) {
-            this.$Message.error(res.msg)
-            return
-          }
-          this.handleTabRemove(key)
-          if (callback) { // 这种情况是在treenode里删除的
-            callback()
-          } else {  // 这是直接使用tab里的remove
-            for (let i in this.connectionTreeList) {
-              if (this.currentConnectionId === this.connectionTreeList[i].data.id) {
-                const children = this.connectionTreeList[i].children[this.currentDbIndex].children
-                for (let j in children) {
-                  if (children[j].title === key) {
-                    this.connectionTreeList[i].children[this.currentDbIndex].children.splice(j, 1)
-                    this.updateDbKeyCount('sub')
-                    return
+          }, (res) => {
+            this.buttonLoading = false
+            if (res.status !== 200) {
+              this.$Message.error(res.msg)
+              return
+            }
+            this.handleTabRemove(key)
+            if (callback) { // 这种情况是在treenode里删除的
+              callback()
+            } else {  // 这是直接使用tab里的remove
+              for (let i in this.connectionTreeList) {
+                if (this.currentConnectionId === this.connectionTreeList[i].data.id) {
+                  const children = this.connectionTreeList[i].children[this.currentDbIndex].children
+                  for (let j in children) {
+                    if (children[j].title === key) {
+                      this.connectionTreeList[i].children[this.currentDbIndex].children.splice(j, 1)
+                      this.updateDbKeyCount('sub')
+                      return
+                    }
                   }
                 }
               }
             }
-          }
-        })
+          })
+        }
       },
       flushKey (key) {
         this.buttonLoading = true
@@ -823,6 +838,7 @@
           action: 'get_value',
           key: key
         }, (res) => {
+          this.buttonLoading = false
           if (res.status === 5000) {
             this.$Message.error(res.msg)
             return
@@ -1036,14 +1052,16 @@
               if (window.astilectron.post === undefined) {
                 window.astilectron.post = (url, data, c) => {
                   window.astilectron.sendMessage(url + this.encryptData(data), (message) => {
-                    console.log(message)
                     this.buttonLoading = false
                     this.$Message.destroy()
                     try {
-                      c(JSON.parse(message))
+                      if (typeof message === 'string') {
+                        c(JSON.parse(message))
+                      } else {
+                        c(message)
+                      }
                     } catch (e) {
-                      console.log(e)
-                      c(message)
+                      console.error(e)
                     }
                   })
                 }
@@ -1051,10 +1069,14 @@
                   window.astilectron.sendMessage(url + this.encryptData(data), (message) => {
                     this.buttonLoading = false
                     this.$Message.destroy()
-                    if (typeof message === 'string') {
-                      return c(JSON.parse(message))
-                    } else {
-                      return c(message)
+                    try {
+                      if (typeof message === 'string') {
+                        return c(JSON.parse(message))
+                      } else {
+                        return c(message)
+                      }
+                    } catch (e) {
+                      console.error(e)
                     }
                   })
                 }
@@ -1068,6 +1090,7 @@
         return data ? '___::___' + CryptoJS.AES.encrypt(JSON.stringify(data), this.sk).toString() : ''
       },
       decryptData (data) {
+        // TODO 解码,目前没找到类库可以对称解密go字符串
         return CryptoJS.AES.decrypt(data, this.sk).toString()
       },
       getConnectionList () {
@@ -1547,15 +1570,11 @@
               }),
               on: {
                 click: () => {
-                  this.confirmModalText = '是否要删除"' + data.title + '"吗?'
-                  this.confirmModal = true
-                  this.confirmModalEvent = async () => {
-                    this.removeKey(data.title, () => {
-                      this.remove(root, node, data)
-                      this.updateDbKeyCount('sub')
-                      this.confirmModal = false
-                    })
-                  }
+                  this.removeKey(data.title, () => {
+                    this.remove(root, node, data)
+                    this.updateDbKeyCount('sub')
+                    this.confirmModal = false
+                  })
                 }
               }
             })
