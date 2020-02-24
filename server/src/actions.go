@@ -5,9 +5,6 @@ import (
   "encoding/json"
   "errors"
   "fmt"
-  "github.com/asticode/go-astilectron"
-  "github.com/asticode/go-astilog"
-  "github.com/gorilla/websocket"
   "os"
   "reflect"
   "regexp"
@@ -15,6 +12,10 @@ import (
   "strings"
   "sync"
   "time"
+
+  "github.com/asticode/go-astilectron"
+  "github.com/asticode/go-astilog"
+  "github.com/gorilla/websocket"
 
   "github.com/gomodule/redigo/redis"
 )
@@ -263,14 +264,18 @@ func RedisManagerCommand(data RequestData) string {
   if !ok {
     return JSON(ResponseData{FailedCode, FailedMsg, "command empty!"})
   }
-  commands := strings.Split(command.(string), " ")
-  var flags []interface{}
-
-  for _, v := range commands[1:] {
-    flags = append(flags, v)
+  var commands []interface{}
+  if err := json.Unmarshal([]byte(command.(string)), &commands); err != nil {
+    return JSON(ResponseData{FailedCode, FailedMsg, "command failed!"})
   }
-
-  val, err := conn.Do(commands[0], flags...)
+  var flags []interface{}
+  for _, v := range commands[1:] {
+    rightfulParam := strings.Replace(v.(string), "\"","\\\"", -1)
+    rightfulParam = strings.Replace(rightfulParam, "'","\\'", -1)
+    flags = append(flags, rightfulParam)
+  }
+  //fmt.Println(flags...)
+  val, err := conn.Do(commands[0].(string), flags...)
   if err != nil {
     return JSON(ResponseData{SuccessCode, SuccessMsg, fmt.Sprintf("(error) %s", err)})
   }
