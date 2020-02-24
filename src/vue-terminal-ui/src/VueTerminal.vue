@@ -84,14 +84,10 @@ export default {
           this.$ptty.register('command', {
             name: i.toLowerCase(),
             method: function (cmd, call) {
-              let dbIndex = that.index
-              if (dbIndex === -1) {
-                dbIndex = 0
-              }
               Api.sendCommand({
                 command: cmd.str,
                 id: that.id,
-                index: dbIndex
+                index: 0
               }, (data) => {
                 cmd.out = data.data.replace(/\n/g, '<br/>')
                 call(cmd)
