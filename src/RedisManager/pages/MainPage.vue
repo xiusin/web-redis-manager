@@ -1491,6 +1491,7 @@
                 }
               }
               let data = []
+              // res.data = Array.from(new Set(res.data))
               for (let i in res.data) {
                 let children = []
                 if (res.data[i].length > 1 || res.data[i][0] !== i) {

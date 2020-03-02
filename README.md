@@ -13,4 +13,3 @@ redis管理客户端,  基于GO语言+Electron开发, 支持常见的数据结�
 - [ ] 集群模式
 - [ ] 替换类库为(https://github.com/zserge/lorca), 精简文件大小与依赖
 - [ ] 切换db清空cli的输入内容(暴露全局命令行对象)
-- [ ] 使用SCAN读取key列表.

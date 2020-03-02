@@ -270,8 +270,8 @@ func RedisManagerCommand(data RequestData) string {
   }
   var flags []interface{}
   for _, v := range commands[1:] {
-    rightfulParam := strings.Replace(v.(string), "\"","\\\"", -1)
-    rightfulParam = strings.Replace(rightfulParam, "'","\\'", -1)
+    rightfulParam := strings.Replace(v.(string), "\"", "\\\"", -1)
+    rightfulParam = strings.Replace(rightfulParam, "'", "\\'", -1)
     flags = append(flags, rightfulParam)
   }
   //fmt.Println(flags...)
@@ -547,16 +547,23 @@ func RedisManagerConnectionServer(data RequestData) string {
   case "select_db":
     index := getFromInterfaceOrFloat64ToInt(data["index"])
     _, _ = client.Do("SELECT", index) //选择数据库
-    //todo 这里要替换为SCAN扫描数据
-    keys, err := redis.Strings(client.Do("KEYS", "*"))
-    if err != nil {
-      return JSON(ResponseData{FailedCode, "读取数据错误", err.Error()})
+    var nextCur = "0"
+    var resKeys = map[string][]string{}
+    for {
+      repl, _ := client.Do("SCAN", nextCur)
+      nextCur = string(repl.([]interface{})[0].([]byte))
+      keys, err := redis.Strings(repl.([]interface{})[1], nil)
+      if err != nil {
+        return JSON(ResponseData{FailedCode, "错误,无法解析SCAN返回值", nil})
+      }
+      for _, v := range keys {
+        resKeys[v] = append(resKeys[v], v)
+      }
+      if nextCur == "0" || nextCur == "" {
+        break
+      }
     }
-    var reskeys = map[string][]string{}
-    for _, v := range keys {
-      reskeys[v] = append(reskeys[v], v)
-    }
-    return JSON(ResponseData{SuccessCode, "读取所有key成功", reskeys})
+    return JSON(ResponseData{SuccessCode, "读取所有key成功", resKeys})
   }
   return JSON(ResponseData{FailedCode, "错误,无法解析到动作:" + action, nil})
 }
