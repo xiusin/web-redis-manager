@@ -878,6 +878,7 @@
         this.pubsubModal = false
         this.infoModal = false
         let key = (node.group ? node.group + ':' : '') + node.title
+        console.log(key)
         if (typeof this.tabs[this.getTabsKey()] === undefined) {
           this.tabs[this.getTabsKey()] = {keys: {}}
         }
