@@ -89,6 +89,7 @@ func main() {
     AstilectronOptions: options,
     Debug:              DEBUG,
     Logger:             astilog.GetLogger(),
+    MenuOptions: nil,
     OnWait: func(a *astilectron.Astilectron, ws []*astilectron.Window, _ *astilectron.Menu, _ *astilectron.Tray, _ *astilectron.Menu) error {
       a.On(astilectron.EventNameAppCrash, func(e astilectron.Event) (deleteListener bool) {
         log.Println("App has crashed")
@@ -106,6 +107,7 @@ func main() {
       if DEBUG {
         src.Window.OpenDevTools()
       }
+
       ws[0].OnMessage(func(m *astilectron.EventMessage) (v interface{}) {
         opensslHandler := openssl.New()
         var s string
