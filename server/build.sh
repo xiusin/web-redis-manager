@@ -12,5 +12,3 @@ cd server
 astilectron-bundler -v
 
 echo "打包已完成, 打开程序"
-
-open "output/darwin-amd64/RedisManager.app"

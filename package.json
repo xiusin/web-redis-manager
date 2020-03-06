@@ -14,9 +14,8 @@
     "lint": "eslint --ext .js,.vue src test/unit/specs test/e2e/specs"
   },
   "dependencies": {
-    "axios": "^0.19.2",
     "browser-update": "^2.1.4",
-    "html2canvas": "^1.0.0-alpha.12",
+    "crypto-js": "^3.3.0",
     "iview": "^3.5.1",
     "jquery": "^3.4.1",
     "md5": "^2.2.1",
@@ -49,7 +48,7 @@
     "cross-env": "^4.0.0",
     "cross-spawn": "^5.0.1",
     "css-loader": "^0.28.0",
-    "eslint": "^3.19.0",
+    "eslint": "^4.18.2",
     "eslint-config-standard": "^6.2.1",
     "eslint-friendly-formatter": "^2.0.7",
     "eslint-loader": "^1.7.1",

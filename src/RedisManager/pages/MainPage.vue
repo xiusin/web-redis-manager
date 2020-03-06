@@ -31,6 +31,10 @@
   .header {
     display: none;
   }
+
+ .ivu-tabs-nav-container {
+   font-size: 12px;
+ }
 </style>
 <template>
   <div class="layout">
@@ -137,7 +141,7 @@
             </div>
             <div v-else style="text-align: center;">
               <img draggable="false" src="static/rdm_logo.png" style="width: 20%; margin-top: 100px;"/>
-              <p style="font-size: 16px; font-weight: bold;  margin-top:100px;color: #000;">RedisManager - Redis客户端管理工具 @ By Xiusin</p>
+              <p style="font-size: 16px; font-weight: bold;  margin-top:100px;color: #000;">RedisManager - Redis客户端管理工具 @ xiusin</p>
             </div>
 
             <div v-if="currentConnectionId != '' && pubsubModal" style="position:absolute; z-index: 10;  top: 64px;background: #fff;width: 100%;height: 100%; padding:10px;">
@@ -165,7 +169,6 @@
                 </Row>
               </div>
             </div>
-
             <div v-if="currentConnectionId != '' && infoModal" style="position:absolute; z-index: 10;  top: 64px;background: #fff;width: 100%;height: 100%; padding:10px;">
               <Tabs value="first" :animated="false" style="height: 100%">
                 <TabPane label="慢日志" name="first" style="height: 100%">
@@ -326,9 +329,8 @@
       </div>
     </Modal>
 
-    <Modal v-model="showJsonModal" fullscreen footer-hide :title="currentConnection" :on-visible-change="showJsonModalOkClick">
+    <Modal v-model="showJsonModal" fullscreen footer-hide :title="getTerminalTitle()" :on-visible-change="showJsonModalOkClick">
         <VueTerminal v-bind:id="currentConnectionId"
-                     v-bind:index="currentDbIndex"
                      @command="onCliCommand"
                      console-sign="redis-cli $"  style="height: 100%; font-size:14px"></VueTerminal>
     </Modal>
@@ -341,6 +343,7 @@
   import VueTerminal from '../../vue-terminal-ui'
   import Api from '../api'
   import $ from 'jquery'
+  import CryptoJS from 'crypto-js'
   export default {
     name: 'MainPage',
     components: {
@@ -425,6 +428,7 @@
           'db': -1,
           'redis_id': 0
         },
+        sk: '',
         infoModal: false,
         connectionListData: [],
         connectionTreeList: [],
@@ -489,6 +493,7 @@
             let channel = this.customChannel !== '' ? this.customChannel : this.selectedChannel
             this.channelMsg = ''
             this.loadPubSubChannels()
+            this.$Message.destroy()
             this.$Message.success('发送到channel:' + channel + '的消息成功')
             if (!that.chanMegs.hasOwnProperty(message.id + '')) {
               that.chanMegs[message.id + ''] = []
@@ -498,6 +503,7 @@
           }
         } else {
           window.astilectron.onMessage((message) => {
+            console.log(message)
             if (!that.chanMegs.hasOwnProperty(message.id + '')) {
               that.chanMegs[message.id + ''] = []
             }
@@ -508,6 +514,9 @@
       },
       getPubSubTabKey () {
         return this.currentConnectionId + ''
+      },
+      getTerminalTitle () {
+        return this.currentConnection
       },
       sendToChannel () {
         if (this.selectedChannel === '' && this.customChannel === '') {
@@ -529,6 +538,7 @@
               if (data.status === 200) {
                 this.channelMsg = ''
                 this.loadPubSubChannels()
+                this.$Message.destroy()
                 this.$Message.success('发送到channel:' + channel + '的消息成功')
               } else {
                 this.$Message.error(data.msg)
@@ -650,7 +660,7 @@
           try {
             return JSON.parse(data)
           } catch (e) {
-            this.$Message.error('内容无法解析为JSON, 按钮切回Text')
+            this.$Message.error('内容无法解析为JSON')
             this.textType = false
           }
         }
@@ -719,10 +729,22 @@
       updateValue (key, data, action) {
         // 判断操作
         let type = data.type
+        if (!type) {
+          type = data.data.type
+        }
+        console.log(data, key, data)
         let rowIndex = null
         let newRowValue = data.newRowValue
         let newRowKey = data.newRowKey
         if (action === 'addrow') {
+          if (type === 'zset') {
+            for (let i in data.data.data) {
+              if (data.data.data[i].value === data.newRowValue) {
+                this.$Message.error('已经存在值')
+                return
+              }
+            }
+          }
           type = data.data.type
           rowIndex = data.data.data.length
           let rowKey = type === 'zset' ? rowIndex : (newRowKey || rowIndex)
@@ -732,11 +754,15 @@
           } else if (type === 'zset') {
             rowIndex = Number(data.newRowKey)
           }
-        } else if (action === 'updateRowValue') {
+        }
+        if (action === 'updateRowValue') {
           rowIndex = this.currentSelectRowData.index
           newRowKey = this.currentSelectRowData.key
           newRowValue = this.currentSelectRowData.value
-          this.$set(data.data, newRowKey || rowIndex, this.currentSelectRowData.value)
+          this.$set(data.data, this.currentSelectRowData.index, type === 'zset' ? {
+            'score': newRowKey,
+            'value': newRowValue
+          } : newRowValue)
           if (type === 'set' || type === 'zset') {
             rowIndex = this.currentSelectRowData.oldValue
           }
@@ -749,6 +775,7 @@
           ttl: Number(data.ttl),
           action: action !== 'ttl' ? action : 'ttl',
           rowkey: type === 'hash' ? newRowKey : rowIndex,
+          score: newRowKey,
           id: this.currentConnectionId,
           index: this.currentDbIndex
         }, (res) => {
@@ -761,48 +788,47 @@
             this.$Message.success(res.msg)
             if (action === 'addrow') {
               data.data.data.push(type === 'zset' ? {
-                'score': type === 'hash' ? newRowKey : rowIndex,
+                'score': newRowKey,
                 'value': data.newRowValue
               } : data.newRowValue)
             }
           }
         })
       },
-      removeKey (key, callback) {
-        this.buttonLoading = true
-        Api.removeKey({
-          key: key,
-          id: this.currentConnectionId,
-          index: this.currentDbIndex
-        }, (res) => {
-          console.log('删除返回结果:', res, {
+      removeKey (key, callback, tips) {
+        this.confirmModalText = '是否要删除"' + key + '"吗?'
+        this.confirmModal = true
+        this.confirmModalEvent = () => {
+          this.buttonLoading = true
+          Api.removeKey({
             key: key,
             id: this.currentConnectionId,
             index: this.currentDbIndex
-          })
-          this.buttonLoading = false
-          if (res.status !== 200) {
-            this.$Message.error(res.msg)
-            return
-          }
-          this.handleTabRemove(key)
-          if (callback) { // 这种情况是在treenode里删除的
-            callback()
-          } else {  // 这是直接使用tab里的remove
-            for (let i in this.connectionTreeList) {
-              if (this.currentConnectionId === this.connectionTreeList[i].data.id) {
-                const children = this.connectionTreeList[i].children[this.currentDbIndex].children
-                for (let j in children) {
-                  if (children[j].title === key) {
-                    this.connectionTreeList[i].children[this.currentDbIndex].children.splice(j, 1)
-                    this.updateDbKeyCount('sub')
-                    return
+          }, (res) => {
+            this.buttonLoading = false
+            if (res.status !== 200) {
+              this.$Message.error(res.msg)
+              return
+            }
+            this.handleTabRemove(key)
+            if (callback) { // 这种情况是在treenode里删除的
+              callback()
+            } else {  // 这是直接使用tab里的remove
+              for (let i in this.connectionTreeList) {
+                if (this.currentConnectionId === this.connectionTreeList[i].data.id) {
+                  const children = this.connectionTreeList[i].children[this.currentDbIndex].children
+                  for (let j in children) {
+                    if (children[j].title === key) {
+                      this.connectionTreeList[i].children[this.currentDbIndex].children.splice(j, 1)
+                      this.updateDbKeyCount('sub')
+                      return
+                    }
                   }
                 }
               }
             }
-          }
-        })
+          })
+        }
       },
       flushKey (key) {
         this.buttonLoading = true
@@ -812,6 +838,7 @@
           action: 'get_value',
           key: key
         }, (res) => {
+          this.buttonLoading = false
           if (res.status === 5000) {
             this.$Message.error(res.msg)
             return
@@ -851,6 +878,7 @@
         this.pubsubModal = false
         this.infoModal = false
         let key = (node.group ? node.group + ':' : '') + node.title
+        console.log(key)
         if (typeof this.tabs[this.getTabsKey()] === undefined) {
           this.tabs[this.getTabsKey()] = {keys: {}}
         }
@@ -995,10 +1023,9 @@
           window.astilectron = {}
           window.$websocket = new WebSocket('ws://localhost:18998/redis/connection/pubsub')
           window.astilectron.post = (url, data, c) => {
-            console.log('post', data)
             $.post('http://localhost:18998' + url, data, (message) => {
               this.buttonLoading = false
-              console.log('message:', message)
+              this.$Message.destroy()
               try {
                 c(JSON.parse(message))
               } catch (e) {
@@ -1007,9 +1034,9 @@
             })
           }
           window.astilectron.get = (url, data, c) => {
-            console.log('post', data)
             $.getJSON('http://localhost:18998' + url, data, (message) => {
               this.buttonLoading = false
+              this.$Message.destroy()
               if (typeof message === 'string') {
                 return c(JSON.parse(message))
               } else {
@@ -1021,42 +1048,58 @@
           if (callback) callback()
         } else {
           window.document.addEventListener('astilectron-ready', () => {
-            if (window.astilectron.post === undefined) {
-              window.astilectron.post = (url, data, c) => {
-                console.log('post:' + url, data)
-                window.astilectron.sendMessage(url + (data ? '___::___' + JSON.stringify(data) : ''), (message) => {
-                  this.buttonLoading = false
-                  console.log('message:', message)
-                  try {
-                    c(JSON.parse(message))
-                  } catch (e) {
-                    c(message)
-                  }
-                })
+            window.astilectron.sendMessage('/gek', (message) => {
+              this.sk = JSON.parse(message).data
+              if (window.astilectron.post === undefined) {
+                window.astilectron.post = (url, data, c) => {
+                  window.astilectron.sendMessage(url + this.encryptData(data), (message) => {
+                    this.buttonLoading = false
+                    this.$Message.destroy()
+                    try {
+                      if (typeof message === 'string') {
+                        c(JSON.parse(message))
+                      } else {
+                        c(message)
+                      }
+                    } catch (e) {
+                      console.error(e)
+                    }
+                  })
+                }
+                window.astilectron.get = (url, data, c) => {
+                  window.astilectron.sendMessage(url + this.encryptData(data), (message) => {
+                    this.buttonLoading = false
+                    this.$Message.destroy()
+                    try {
+                      if (typeof message === 'string') {
+                        return c(JSON.parse(message))
+                      } else {
+                        return c(message)
+                      }
+                    } catch (e) {
+                      console.error(e)
+                    }
+                  })
+                }
               }
-              window.astilectron.get = (url, data, c) => {
-                window.astilectron.sendMessage(url + (data ? '___::___' + JSON.stringify(data) : ''), (message) => {
-                  this.buttonLoading = false
-                  if (typeof message === 'string') {
-                    return c(JSON.parse(message))
-                  } else {
-                    return c(message)
-                  }
-                })
-              }
-            }
+            })
             Vue.prototype.$Websocket = window.astilectron
           })
         }
+      },
+      encryptData (data) {
+        return data ? '___::___' + CryptoJS.AES.encrypt(JSON.stringify(data), this.sk).toString() : ''
+      },
+      decryptData (data) {
+        // TODO 解码,目前没找到类库可以对称解密go字符串
+        return CryptoJS.AES.decrypt(data, this.sk).toString()
       },
       getConnectionList () {
         this.connectionTreeList = []
         this.connectionListData = []
         Api.connectionList((res) => {
           this.modal_loading = false
-          if (res.status !== 200) {
-            this.$Message.error(res.msg)
-          } else {
+          if (res.status === 200) {
             this.connectionListData = res.data
             for (let i = 0; i < res.data.length; i++) {
               this.connectionTreeList.push({
@@ -1449,6 +1492,7 @@
                 }
               }
               let data = []
+              // res.data = Array.from(new Set(res.data))
               for (let i in res.data) {
                 let children = []
                 if (res.data[i].length > 1 || res.data[i][0] !== i) {
@@ -1528,15 +1572,11 @@
               }),
               on: {
                 click: () => {
-                  this.confirmModalText = '是否要删除"' + data.title + '"吗?'
-                  this.confirmModal = true
-                  this.confirmModalEvent = async () => {
-                    this.removeKey(data.title, () => {
-                      this.remove(root, node, data)
-                      this.updateDbKeyCount('sub')
-                      this.confirmModal = false
-                    })
-                  }
+                  this.removeKey(data.title, () => {
+                    this.remove(root, node, data)
+                    this.updateDbKeyCount('sub')
+                    this.confirmModal = false
+                  })
                 }
               }
             })
