@@ -83,9 +83,9 @@ func main() {
   height, width := 800, 1280
 
   config := bootstrap.Options{
-    Asset:              Asset,
-    AssetDir:           AssetDir,
-    RestoreAssets:      RestoreAssets,
+    //Asset:              Asset,
+    //AssetDir:           AssetDir,
+    //RestoreAssets:      RestoreAssets,
     AstilectronOptions: options,
     Debug:              DEBUG,
     Logger:             astilog.GetLogger(),
