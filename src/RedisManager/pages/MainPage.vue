@@ -141,7 +141,7 @@
             </div>
             <div v-else style="text-align: center;">
               <img draggable="false" src="static/rdm_logo.png" style="width: 20%; margin-top: 100px;"/>
-              <p style="font-size: 16px; font-weight: bold;  margin-top:100px;color: #000;">RedisManager - Redis客户端管理工具 @ xiusin</p>
+              <p style="font-size: 16px; font-weight: bold;  margin-top:100px;color: #000;">RedisDesktop - Redis客户端管理工具</p>
             </div>
 
             <div v-if="currentConnectionId != '' && pubsubModal" style="position:absolute; z-index: 10;  top: 64px;background: #fff;width: 100%;height: 100%; padding:10px;">

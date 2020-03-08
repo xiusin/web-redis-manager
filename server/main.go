@@ -18,7 +18,7 @@ import (
   "time"
 )
 
-var DEBUG = true
+var DEBUG = false
 
 var once sync.Once
 
@@ -34,7 +34,7 @@ func init() {
   cacheDir = GetCacheDir()
   getRandomKey()
   astilog.SetLogger(astilog.New(astilog.Configuration{
-    AppName:  "RedisManager",
+    AppName:  "RedisDesktop",
     Filename: fmt.Sprintf("%s/error.log", cacheDir),
     Verbose:  false,
   }))
@@ -83,9 +83,9 @@ func main() {
   height, width := 800, 1280
 
   config := bootstrap.Options{
-    //Asset:              Asset,
-    //AssetDir:           AssetDir,
-    //RestoreAssets:      RestoreAssets,
+    Asset:              Asset,
+    AssetDir:           AssetDir,
+    RestoreAssets:      RestoreAssets,
     AstilectronOptions: options,
     Debug:              DEBUG,
     Logger:             astilog.GetLogger(),
