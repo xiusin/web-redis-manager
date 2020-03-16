@@ -129,10 +129,10 @@ func RedisManagerConnectionList(_ RequestData) string {
   if err != nil {
     return JSON(ResponseData{FailedCode, "获取列表失败:" + err.Error(), nil})
   }
-  var conns []struct {
+  var conns  = []struct {
     ID    int64  `json:"id"`
     Title string `json:"title"`
-  }
+  }{}
   for _, conn := range connectionList {
     conns = append(conns, struct {
       ID    int64  `json:"id"`

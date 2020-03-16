@@ -3,8 +3,5 @@
   "icon_path_darwin": "resources/icon.icns",
   "icon_path_windows": "resources/icon.ico",
   "resources_path": "resources",
-  "output_path": "output",
-  "environments": [
-    {"arch": "amd64", "os": "darwin"}
-  ]
+  "output_path": "output"
 }

@@ -83,9 +83,9 @@ func main() {
   height, width := 800, 1280
 
   config := bootstrap.Options{
-    //Asset:              Asset,
-    //AssetDir:           AssetDir,
-    //RestoreAssets:      RestoreAssets,
+    Asset:              Asset,
+    AssetDir:           AssetDir,
+    RestoreAssets:      RestoreAssets,
     AstilectronOptions: options,
     Debug:              DEBUG,
     Logger:             astilog.GetLogger(),
@@ -104,10 +104,6 @@ func main() {
         return
       })
       src.Window = ws[0]
-      if DEBUG {
-        src.Window.OpenDevTools()
-      }
-
       ws[0].OnMessage(func(m *astilectron.EventMessage) (v interface{}) {
         opensslHandler := openssl.New()
         var s string

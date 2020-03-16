@@ -5,8 +5,10 @@ go 1.13
 require (
 	github.com/Luzifer/go-openssl v2.0.0+incompatible
 	github.com/Workiva/go-datastructures v1.0.50
-	github.com/asticode/go-astilectron v0.11.0
+	github.com/asticode/go-astikit v0.5.0 // indirect
+	github.com/asticode/go-astilectron v0.12.4
 	github.com/asticode/go-astilectron-bootstrap v0.3.0
+	github.com/asticode/go-astilectron-bundler v0.4.3 // indirect
 	github.com/asticode/go-astilog v1.4.0
 	github.com/coreos/etcd v3.3.18+incompatible
 	github.com/coreos/go-semver v0.3.0 // indirect
