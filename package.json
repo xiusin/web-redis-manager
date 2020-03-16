@@ -1,5 +1,5 @@
 {
-  "name": "RDM",
+  "name": "RedisDesktop",
   "version": "2.0.0",
   "description": "redis database mamager",
   "author": "xiusin",
@@ -48,7 +48,7 @@
     "cross-env": "^4.0.0",
     "cross-spawn": "^5.0.1",
     "css-loader": "^0.28.0",
-    "eslint": "^4.18.2",
+    "eslint": "^3.19.0",
     "eslint-config-standard": "^6.2.1",
     "eslint-friendly-formatter": "^2.0.7",
     "eslint-loader": "^1.7.1",
@@ -92,7 +92,7 @@
     "vue-style-loader": "^3.0.1",
     "vue-template-compiler": "^2.5.21",
     "webpack": "^2.6.1",
-    "webpack-bundle-analyzer": "^3.3.2",
+    "webpack-bundle-analyzer": "^2.2.1",
     "webpack-dev-middleware": "^1.10.0",
     "webpack-hot-middleware": "^2.18.0",
     "webpack-merge": "^4.1.5"
