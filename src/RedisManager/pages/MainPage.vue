@@ -50,7 +50,7 @@
       </Header>
 
       <Layout :style="{height: '100%'}">
-        <Sider hide-trigger :style="{background: '#fff', width:'250px',maxWidth:'250px', minWidth:'250px' , 'overflow-y': 'auto', 'overflow-x': 'hidden'}">
+        <Sider hide-trigger :style="{background: '#fff', width:'300px',maxWidth:'300px', minWidth:'300px' , 'overflow-y': 'auto', 'overflow-x': 'hidden'}">
           <Tree :data="connectionTreeList" :load-data="loadData" empty-text="" @on-select-change="selectChange"></Tree>
         </Sider>
         <Layout>
@@ -73,8 +73,8 @@
                     </ButtonGroup>
                   </Col>
                 </Row>
-                <div v-if="data.type === 'string'" style="margin-top: 4px;">
-                  <Input v-model="data.data" v-if="!textType" type="textarea" :autosize="{minRows: 20,maxRows: 30}" placeholder="Enter something..."></Input>
+                <div v-if="data.type === 'string'" style="margin-top: 4px; height: 625px; overflow: auto">
+                  <Input v-model="data.data" v-if="!textType" type="textarea" :style="{height: '600px'}" :autosize="{ minRows: 25, maxRows: 25 }" placeholder="Enter something..."></Input>
                   <vue-json-pretty
                     v-if="textType"
                     :path="'res'"
@@ -92,7 +92,7 @@
                     </Col>
                   </Row>
                 </div>
-                <div v-else style="margin-top: 4px;">
+                <div v-else style="margin-top: 4px; height: 100%">
                   <Row type="flex">
                     <Col span="16">
                       <Table highlight-row @on-row-click="getRowData" ref="currentRowTable" border height="400" :columns="getColumns(data.type)" :data="formatItem(data.type,data.data)"></Table>
@@ -1530,7 +1530,8 @@
         return h('span', {
           style: {
             display: 'inline-block',
-            width: '100%'
+            width: '100%',
+            position: 'relative'
           }
         }, [
           h('span', [
@@ -1560,7 +1561,10 @@
             style: {
               display: 'inline-block',
               float: 'right',
-              marginRight: '32px'
+              marginRight: '32px',
+              position: 'absolute',
+              zIndex: 30,
+              right: 0
             }
           }, [
             h('Button', {
