@@ -4,7 +4,7 @@
     background: #f5f7f9;
     position: relative;
     border-radius: 0px;
-    overflow: hidden;
+    /* overflow: hidden; */
     height: 100%;
   }
 </style>
@@ -31,6 +31,8 @@
   .header {
     display: none;
   }
+
+
 
  .ivu-tabs-nav-container {
    font-size: 12px;
@@ -73,8 +75,8 @@
                     </ButtonGroup>
                   </Col>
                 </Row>
-                <div v-if="data.type === 'string'" style="margin-top: 4px; height: 625px; overflow: auto">
-                  <Input v-model="data.data" v-if="!textType" type="textarea" :style="{height: '600px'}" :autosize="{ minRows: 25, maxRows: 25 }" placeholder="Enter something..."></Input>
+                <div v-if="data.type === 'string'" style="margin-top: 4px; height: 600px; overflow: auto">
+                  <Input v-model="data.data" v-if="!textType" type="textarea" :style="{height: '575px'}" :autosize="{ minRows: 25, maxRows: 25 }" placeholder="Enter something..."></Input>
                   <vue-json-pretty
                     v-if="textType"
                     :path="'res'"
@@ -95,10 +97,10 @@
                 <div v-else style="margin-top: 4px; height: 100%">
                   <Row type="flex">
                     <Col span="16">
-                      <Table highlight-row @on-row-click="getRowData" ref="currentRowTable" border height="400" :columns="getColumns(data.type)" :data="formatItem(data.type,data.data)"></Table>
+                      <Table highlight-row @on-row-click="getRowData" ref="currentRowTable" border height="250" :columns="getColumns(data.type)" :data="formatItem(data.type,data.data)"></Table>
                     </Col>
                     <Col span="8">
-                      <Card style="height:400px;border-left: none;" dis-hover>
+                      <Card style="height:250px;border-left: none;" dis-hover>
                         <p slot="title">
                           操作
                         </p>
@@ -106,7 +108,7 @@
                         <br/>
                         <br/>
                         <Button long @click="removeRow(key,data)">删除行</Button>
-                        <br/><br/><br/><br/><br/><br/><br/><br/><br/>
+                        <br/><br/>
                         <Input placeholder="列表中查询..." v-model="searchKey"></Input>
                         <i-switch size="large" v-model="textType" style="right: 3px;position: absolute;bottom: 3px;">
                           <span slot="open" >Json</span>
@@ -115,12 +117,11 @@
                       </Card>
                     </Col>
                   </Row>
-                  <div>
-                    <Input style="margin-top: 4px;"
-                           v-if="!textType"
+                  <div style="height: 350px; overflow:hidden;">
+                    <Input v-if="!textType"
                            v-model="currentSelectRowData.value"
                            type="textarea"
-                           :autosize="{minRows: 6,maxRows: 30}" placeholder="列值"></Input>
+                           style="margin-top: 4px;" :autosize="{minRows:14, maxRows: 14}" placeholder="列值"></Input>
                     <Button
                       v-if="!textType"
                       style="float: right"
@@ -131,6 +132,7 @@
                     <vue-json-pretty
                       v-if="textType"
                       :path="'res'"
+                      style="height: 350px; overflow:auto;"
                       :data="formatJson(currentSelectRowData.value, key)"
                     >
                     </vue-json-pretty>
@@ -667,9 +669,9 @@
       },
       getRowData (data, index) {
         this.currentSelectRowData = {
-          value: data.value,
+          value: data.fullValue,
           key: data.key,
-          oldValue: data.value,
+          oldValue: data.fullValue,
           index: index
         }
       },
@@ -878,7 +880,6 @@
         this.pubsubModal = false
         this.infoModal = false
         let key = (node.group ? node.group + ':' : '') + node.title
-        console.log(key)
         if (typeof this.tabs[this.getTabsKey()] === undefined) {
           this.tabs[this.getTabsKey()] = {keys: {}}
         }
@@ -916,7 +917,8 @@
               if ((this.searchKey && (i.indexOf(this.searchKey) > -1 || data[i].indexOf(this.searchKey) > -1)) || !this.searchKey) {
                 res.push({
                   key: i,
-                  value: data[i]
+                  value: data[i].substr(0, 50),
+                  fullValue: data[i]
                 })
               }
             }
@@ -926,7 +928,8 @@
               if ((this.searchKey && (data[i]['score'].indexOf(this.searchKey) > -1 || data[i]['value'].indexOf(this.searchKey) > -1)) || !this.searchKey) {
                 res.push({
                   key: data[i]['score'],
-                  value: data[i]['value']
+                  value: data[i]['value'].substr(0, 50),
+                  fullValue: data[i]
                 })
               }
             }
@@ -935,7 +938,8 @@
             for (let i = 0; i < data.length; i++) {
               if (!this.searchKey || (this.searchKey && data[i].indexOf(this.searchKey) > -1)) {
                 res.push({
-                  value: data[i]
+                  value: data[i].substr(0, 50),
+                  fullValue: data[i]
                 })
               }
             }
@@ -1604,9 +1608,13 @@
   .ivu-btn-icon-only.ivu-btn-small {
     border-radius: 0;
   }
-  .ivu-table {
+  /* .ivu-table {
     overflow-y: auto;
     overflow-x: hidden;
+  } */
+
+  .ivu-table {
+    overflow: hidden;
   }
 
   .ivu-tabs-no-animation > .ivu-tabs-content {
