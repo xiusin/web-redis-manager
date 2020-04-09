@@ -5,6 +5,4 @@ redis管理客户端,  基于GO语言+Electron开发, 支持常见的数据结�
 ## TODO ##
 - [ ] ~~键搜索, tree组件无法提供, 暂时不添加功能~~
 - [ ] 替换类库为(https://github.com/zserge/lorca), 精简文件大小与依赖
-- [ ] 切换连接清空cli的输入内容(暴露全局命令行对象)
-- [ ] zset list hash set 数据切换时内容未清空. hash读取内容发现出现[object jobect]内容
 

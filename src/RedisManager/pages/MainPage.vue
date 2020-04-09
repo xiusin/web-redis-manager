@@ -59,7 +59,7 @@
           <Content :style="{ height: '100%', background: '#fff', borderLeft: '1px solid #ccc'}">
             <div v-if="currentConnectionId && currentDbIndex > -1 && typeof tabs[getTabsKey()] !== 'undefined' && !isEmptyObj(tabs[getTabsKey()]['keys'])" :style="{height: '100%' }">
             <Tabs @on-tab-remove="handleTabRemove" type="card" :value="currentKey" :animated="false" :style="{ background: '#fff', height: '100%' }">
-              <TabPane v-for="(data, key) in tabs[getTabsKey()]['keys']" closable :name="key" :key="key" :label="currentConnection + '::DB' + currentDbIndex + '::' + key" >
+              <TabPane v-for="(data, key) in tabs[getTabsKey()]['keys']" closable :name="key" :key="key" :label="key" >
                 <Row type="flex">
                   <Col span="12">
                     <Input v-model="key" readonly>
@@ -332,7 +332,7 @@
     </Modal>
 
     <Modal v-model="showJsonModal" fullscreen footer-hide :title="getTerminalTitle()" :on-visible-change="showJsonModalOkClick">
-        <VueTerminal v-bind:id="currentConnectionId"
+        <VueTerminal ref="child" v-bind:id="currentConnectionId"
                      @command="onCliCommand"
                      console-sign="redis-cli $"  style="height: 100%; font-size:14px"></VueTerminal>
     </Modal>
@@ -668,10 +668,12 @@
         }
       },
       getRowData (data, index) {
+        console.log('getRowData', data, index)
+        let fullValue = typeof data.fullValue === 'object' ? data.fullValue.value : data.fullValue
         this.currentSelectRowData = {
-          value: data.fullValue,
+          value: fullValue,
           key: data.key,
-          oldValue: data.fullValue,
+          oldValue: fullValue,
           index: index
         }
       },
@@ -734,7 +736,6 @@
         if (!type) {
           type = data.data.type
         }
-        console.log(data, key, data)
         let rowIndex = null
         let newRowValue = data.newRowValue
         let newRowKey = data.newRowKey
@@ -761,7 +762,13 @@
           rowIndex = this.currentSelectRowData.index
           newRowKey = this.currentSelectRowData.key
           newRowValue = this.currentSelectRowData.value
-          this.$set(data.data, this.currentSelectRowData.index, type === 'zset' ? {
+          console.log('this.currentSelectRowData', this.currentSelectRowData)
+          if (!newRowValue) {
+            this.$Message.error('请设置要操作Key / Value')
+            return
+          }
+
+          this.$set(data.data, type === 'hash' ? this.currentSelectRowData.key : this.currentSelectRowData.index, type === 'zset' ? {
             'score': newRowKey,
             'value': newRowValue
           } : newRowValue)
@@ -789,10 +796,13 @@
             this.ttlModal = false
             this.$Message.success(res.msg)
             if (action === 'addrow') {
-              data.data.data.push(type === 'zset' ? {
-                'score': newRowKey,
-                'value': data.newRowValue
-              } : data.newRowValue)
+              if (type === 'hash') {
+                data.data.data[newRowKey] = data.newRowValue
+              } else if (type === 'zset') {
+                data.data.data.push({'score': newRowKey, 'value': data.newRowValue})
+              } else {
+                data.data.data.push(data.newRowValue)
+              }
             }
           }
         })
@@ -908,6 +918,8 @@
         } else {
           this.currentKey = key
         }
+        // 清空输入框数据
+        this.currentSelectRowData = {}
       },
       formatItem (type, data) {
         let res = []
@@ -976,7 +988,7 @@
               },
               {
                 title: '值',
-                width: 160,
+                width: 400,
                 key: 'value'
               },
               {
@@ -1590,6 +1602,14 @@
             })
           ])
         ])
+      }
+    },
+    watch: {
+      currentConnectionId: (newVal) => {
+        window.document.querySelector('#terminal .content').innerHTML = ''
+      },
+      currentDbIndex: (newVal) => {
+        window.document.querySelector('#terminal .content').innerHTML = ''
       }
     }
   }

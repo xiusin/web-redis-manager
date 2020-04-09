@@ -52,6 +52,9 @@ export default {
   methods: {
     toggleWaiting () {
       this.waiting = !this.waiting
+    },
+    clear () {
+      this.$ptty.run_command('clear', false)
     }
   },
   mounted () {
