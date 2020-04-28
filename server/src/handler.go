@@ -1,7 +1,7 @@
 package src
 
 import (
-  "github.com/asticode/go-astilog"
+  "github.com/xiusin/logger"
   "runtime/debug"
   "sync"
 )
@@ -23,7 +23,7 @@ func (h *Handler) Handle(route string, data RequestData) string {
   defer func() {
     if err := recover(); err != nil {
       s := debug.Stack()
-      astilog.Errorf("Recovered Error: %s, ErrorStack: \n%s\n\n", err, string(s))
+      logger.Errorf("Recovered Error: %s, ErrorStack: \n%s\n\n", err, string(s))
     }
   }()
 

@@ -5,6 +5,7 @@ import (
   "encoding/json"
   "errors"
   "fmt"
+  "github.com/xiusin/logger"
   "os"
   "reflect"
   "regexp"
@@ -14,7 +15,6 @@ import (
   "time"
 
   "github.com/asticode/go-astilectron"
-  "github.com/asticode/go-astilog"
   "github.com/gorilla/websocket"
 
   "github.com/gomodule/redigo/redis"
@@ -199,7 +199,7 @@ func RedisPubSub(data RequestData) string {
           if ws != nil {
             resultValue, _ := json.Marshal(&retData)
             if err := ws.WriteMessage(websocket.TextMessage, resultValue); err != nil {
-              astilog.GetLogger().Error(err)
+              logger.Error(err)
               return
             }
           } else if Window != nil {

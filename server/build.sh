@@ -9,6 +9,4 @@ echo "构建可运行程序打包,请等待..."
 
 cd server
 
-astilectron-bundler -v
-
-echo "打包已完成, 打开程序"
+astilectron-bundler

@@ -8,6 +8,7 @@ import (
   bootstrap "github.com/asticode/go-astilectron-bootstrap"
   "github.com/asticode/go-astilog"
   "github.com/pkg/errors"
+  "github.com/xiusin/logger"
   "github.com/xiusin/redis_manager/server/src"
   "log"
   "math/rand"
@@ -33,12 +34,10 @@ var secretKey []byte
 func init() {
   cacheDir = GetCacheDir()
   getRandomKey()
-  astilog.SetLogger(astilog.New(astilog.Configuration{
-    AppName:  "RedisDesktop",
-    Filename: fmt.Sprintf("%s/error.log", cacheDir),
-    Verbose:  false,
-  }))
-
+  f,err := os.OpenFile(fmt.Sprintf("%s/error.log", cacheDir), os.O_APPEND|os.O_CREATE|os.O_WRONLY, os.ModePerm)
+  if err == nil {
+    logger.SetOutput(f)
+  }
   astilog.FlagConfig()
 
   var routes = map[string]src.HandleFunc{
@@ -88,7 +87,6 @@ func main() {
     RestoreAssets:      RestoreAssets,
     AstilectronOptions: options,
     Debug:              DEBUG,
-    Logger:             astilog.GetLogger(),
     MenuOptions: nil,
     OnWait: func(a *astilectron.Astilectron, ws []*astilectron.Window, _ *astilectron.Menu, _ *astilectron.Tray, _ *astilectron.Menu) error {
       a.On(astilectron.EventNameAppCrash, func(e astilectron.Event) (deleteListener bool) {
@@ -119,11 +117,11 @@ func main() {
           params := info[1]
           s, err := opensslHandler.DecryptString(src.SecretKey, params)
           if err != nil {
-            astilog.Errorf("Decrypt Error", err.Error())
+            logger.Errorf("Decrypt Error", err.Error())
             return err.Error()
           }
           if err := json.Unmarshal(s, &data); err != nil {
-            astilog.Errorf("UnmarshalData Error", err.Error())
+            logger.Errorf("UnmarshalData Error", err.Error())
             return err.Error()
           }
         }
@@ -151,7 +149,8 @@ func main() {
   }
 
   if err := bootstrap.Run(config); err != nil {
-    astilog.Fatal(errors.Wrap(err, "running bootstrap failed"))
+    logger.Errorf("%s", errors.Wrap(err, "running bootstrap failed"))
+    os.Exit(0)
   }
 }
 
