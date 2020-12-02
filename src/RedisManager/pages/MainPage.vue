@@ -59,7 +59,7 @@
           <Content :style="{ height: '100%', background: '#fff', borderLeft: '1px solid #ccc'}">
             <div v-if="currentConnectionId && currentDbIndex > -1 && typeof tabs[getTabsKey()] !== 'undefined' && !isEmptyObj(tabs[getTabsKey()]['keys'])" :style="{height: '100%' }">
             <Tabs @on-tab-remove="handleTabRemove" type="card" :value="currentKey" :animated="false" :style="{ background: '#fff', height: '100%' }">
-              <TabPane v-for="(data, key) in tabs[getTabsKey()]['keys']" closable :name="key" :key="key" :label="key" >
+              <TabPane v-for="(data, key) in tabs[getTabsKey()]['keys']" closable :name="key" :key="key" :label="smllKey(key)" >
                 <Row type="flex">
                   <Col span="12">
                     <Input v-model="key" readonly>
@@ -485,6 +485,24 @@
       }
     },
     methods: {
+      smllKey (str) {
+        var last = 0
+        var all = str.length
+        var fisrt = str.substring(0, 8)
+        if (str.lastIndexOf('（') === -1) {
+          if (str.lastIndexOf('(') === -1) {
+            last = all - 7
+          } else {
+            last = str.lastIndexOf('(')
+          }
+        } else {
+          last = str.lastIndexOf('（')
+        }
+        if (all > 20) {
+          return fisrt + ' ... ' + str.substring(last, all)
+        }
+        return str
+      },
       channelWs () {
         let that = this
         if (!window.require) {
@@ -1561,7 +1579,7 @@
             }), // 图标
             h('span', {
               domProps: {
-                innerHTML: data.title
+                innerHTML: this.smllKey(data.title)
               },
               on: {
                 click: () => {
