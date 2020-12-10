@@ -1561,6 +1561,7 @@
         }
       },
       keyRenderFunc (h, { root, node, data }) {
+        console.log(data.title)
         return h('span', {
           style: {
             display: 'inline-block',
