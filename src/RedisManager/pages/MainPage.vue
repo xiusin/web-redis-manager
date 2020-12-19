@@ -41,7 +41,7 @@
 <template>
   <div class="layout">
     <Layout>
-      <Header style="padding: 0 10px;">
+      <Header style="padding: 0 10px;" v-if="!isQtWebView()">
         <Button @click="showLoginModal()" size="small" icon="ios-download-outline"  type="primary">连接服务器</Button>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
         <Button size="small" v-if="currentConnectionId != ''" icon="ios-swap" type="success" @click="openPubSubTab()">发布订阅</Button>
@@ -52,7 +52,7 @@
       </Header>
 
       <Layout :style="{height: '100%'}">
-        <Sider hide-trigger :style="{background: '#fff', width:'300px',maxWidth:'300px', minWidth:'300px' , 'overflow-y': 'auto', 'overflow-x': 'hidden'}">
+        <Sider hide-trigger :style="{background: '#fff', width:'300px',maxWidth:'300px', minWidth:'300px' , 'overflow-y': 'auto', 'overflow-x': 'hidden'}" v-if="!isQtWebView()">
           <Tree :data="connectionTreeList" :load-data="loadData" empty-text="" @on-select-change="selectChange"></Tree>
         </Sider>
         <Layout>
@@ -471,6 +471,7 @@
       }
     },
     mounted () {
+      window.isQtWebView = true
       if (!window.require) {
         this.initWs(() => {
           this.getConnectionList()
@@ -483,8 +484,14 @@
           this.channelWs()
         }, 300)
       }
+      window.changeValue = (nodes) => {
+        this.selectChange(nodes)
+      }
     },
     methods: {
+      isQtWebView () {
+        return window.isQtWebView
+      },
       smllKey (str) {
         var last = 0
         var all = str.length
@@ -509,7 +516,7 @@
           window.$websocket.onmessage = (event) => {
             let data = JSON.parse(event.data)
             let message = data
-            console.log('onmessage', message)
+            // console.log('onmessage', message)
             let channel = this.customChannel !== '' ? this.customChannel : this.selectedChannel
             this.channelMsg = ''
             this.loadPubSubChannels()
@@ -523,7 +530,7 @@
           }
         } else {
           window.astilectron.onMessage((message) => {
-            console.log(message)
+            // console.log(message)
             if (!that.chanMegs.hasOwnProperty(message.id + '')) {
               that.chanMegs[message.id + ''] = []
             }
@@ -620,7 +627,7 @@
             }
             this.serverConfig = config // config
             this.slowLogs = data.data.slowLogs
-            console.log(this.slowLogs, data.data)
+            // console.log(this.slowLogs, data.data)
           } else {
             this.$Message.error(data.msg)
           }
@@ -686,7 +693,6 @@
         }
       },
       getRowData (data, index) {
-        console.log('getRowData', data, index)
         let fullValue = typeof data.fullValue === 'object' ? data.fullValue.value : data.fullValue
         this.currentSelectRowData = {
           value: fullValue,
@@ -780,7 +786,7 @@
           rowIndex = this.currentSelectRowData.index
           newRowKey = this.currentSelectRowData.key
           newRowValue = this.currentSelectRowData.value
-          console.log('this.currentSelectRowData', this.currentSelectRowData)
+          // console.log('this.currentSelectRowData', this.currentSelectRowData)
           if (!newRowValue) {
             this.$Message.error('请设置要操作Key / Value')
             return
@@ -905,10 +911,14 @@
         if (nodes.length === 0) return
         let node = nodes[0]
         if (node.action !== 'get_value') return
+        if (window.isQtWebView) {
+          this.currentConnectionId = node.redis_id
+          this.currentConnection = node.index
+        }
         this.pubsubModal = false
         this.infoModal = false
         let key = (node.group ? node.group + ':' : '') + node.title
-        if (typeof this.tabs[this.getTabsKey()] === undefined) {
+        if (!this.tabs[this.getTabsKey()]) {
           this.tabs[this.getTabsKey()] = {keys: {}}
         }
         if (!Object.keys(this.tabs[this.getTabsKey()].keys).includes(key)) {
@@ -918,7 +928,6 @@
             action: node.action,
             key: key
           }, (res) => {
-            console.log(res)
             if (res.status === 5000) {
               this.$Message.error(res.msg)
               return
@@ -1295,7 +1304,7 @@
         })
       },
       remove (root, node, data) {
-        console.log('remove', root, node, data)
+        // console.log('remove', root, node, data)
         const parentKey = root.find(el => el === node).parent
         const parent = root.find(el => el.nodeKey === parentKey).node
         const index = parent.children.indexOf(data)
@@ -1322,7 +1331,7 @@
         for (let i in this.connectionTreeList) {
           if (this.currentConnectionId === this.connectionTreeList[i].data.id) {
             let node = this.connectionTreeList[i].children[this.currentDbIndex]
-            console.log(node)
+            // console.log(node)
             if (node) {
               node.count = action === 'add' ? node.count + 1 : node.count - 1
               node.title = 'DB' + this.currentDbIndex + ' (' + node.count + ')'
@@ -1438,7 +1447,7 @@
                                     }
                                     data.push(v)
                                   }
-                                  console.log('res.data', res.data)
+                                  // console.log('res.data', res.data)
                                   item.children = data
                                   item.count = count
                                   item.title = 'DB' + item.db + ' (' + item.count + ')'
@@ -1561,7 +1570,7 @@
         }
       },
       keyRenderFunc (h, { root, node, data }) {
-        console.log(data.title)
+        // console.log(data.title)
         return h('span', {
           style: {
             display: 'inline-block',
