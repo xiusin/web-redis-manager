@@ -57,6 +57,8 @@
         </Sider>
         <Layout>
           <Content :style="{ height: '100%', background: '#fff', borderLeft: '1px solid #ccc'}">
+          <Spin size="large" fix v-if="keyLoading">
+          </Spin>
             <div v-if="currentConnectionId && currentDbIndex > -1 && typeof tabs[getTabsKey()] !== 'undefined' && !isEmptyObj(tabs[getTabsKey()]['keys'])" :style="{height: '100%' }">
             <Tabs @on-tab-remove="handleTabRemove" type="card" :value="currentKey" :animated="false" :style="{ background: '#fff', height: '100%' }">
               <TabPane v-for="(data, key) in tabs[getTabsKey()]['keys']" closable :name="key" :key="key" :label="smllKey(key)" >
@@ -444,6 +446,7 @@
           // type: 'ghost',
           size: 'small'
         },
+        keyLoading: false,
         confirmModal: false,
         confirmModalText: '',
         confirmModalEvent: () => {}
@@ -922,12 +925,14 @@
           this.tabs[this.getTabsKey()] = {keys: {}}
         }
         if (!Object.keys(this.tabs[this.getTabsKey()].keys).includes(key)) {
+          this.keyLoading = true
           Api.connectionServer({
             id: node.redis_id,  // 连接数
             index: node.index,
             action: node.action,
             key: key
           }, (res) => {
+            this.keyLoading = false
             if (res.status === 5000) {
               this.$Message.error(res.msg)
               return
