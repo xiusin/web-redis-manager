@@ -16,169 +16,196 @@
   .ivu-alert,
   .ivu-btn,
   .ivu-btn-small,
-  .ivu-input ,
+  .ivu-input,
   .ivu-card,
   .ivu-input-group-append,
   .ivu-input-group-prepend,
   .ivu-modal-content,
-  .ivu-tabs.ivu-tabs-card>.ivu-tabs-bar .ivu-tabs-tab {
+  .ivu-tabs.ivu-tabs-card > .ivu-tabs-bar .ivu-tabs-tab {
     border-radius: 0;
   }
 
   .ivu-layout {
     height: 100%;
   }
+
   .header {
     display: none;
   }
 
 
-
- .ivu-tabs-nav-container {
-   font-size: 12px;
- }
+  .ivu-tabs-nav-container {
+    font-size: 12px;
+  }
 </style>
 <template>
   <div class="layout">
     <Layout>
       <Header style="padding: 0 10px;" v-if="!isQtWebView()">
-        <Button @click="showLoginModal()" size="small" icon="ios-download-outline"  type="primary">连接服务器</Button>
+        <Button @click="showLoginModal()" size="small" icon="ios-download-outline" type="primary">连接服务器</Button>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <Button size="small" v-if="currentConnectionId != ''" icon="ios-swap" type="success" @click="openPubSubTab()">发布订阅</Button>
+        <Button size="small" v-if="currentConnectionId != ''" icon="ios-swap" type="success" @click="openPubSubTab()">
+          发布订阅
+        </Button>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <Button size="small" v-if="currentConnectionId != ''" icon="md-laptop" type="warning" @click="showJsonModal = true">CLI</Button>
+        <Button size="small" v-if="currentConnectionId != ''" icon="md-laptop" type="warning"
+                @click="showJsonModal = true">CLI
+        </Button>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <Button size="small" v-if="currentConnectionId != ''" icon="md-alert" type="info" @click="openInfoTab()">服务信息</Button>
+        <Button size="small" v-if="currentConnectionId != ''" icon="md-alert" type="info" @click="openInfoTab()">服务信息
+        </Button>
       </Header>
 
       <Layout :style="{height: '100%'}">
-        <Sider hide-trigger :style="{background: '#fff', width:'300px',maxWidth:'300px', minWidth:'300px' , 'overflow-y': 'auto', 'overflow-x': 'hidden'}" v-if="!isQtWebView()">
+        <Sider hide-trigger
+               :style="{background: '#fff', width:'300px',maxWidth:'300px', minWidth:'300px' , 'overflow-y': 'auto', 'overflow-x': 'hidden'}"
+               v-if="!isQtWebView()">
           <Tree :data="connectionTreeList" :load-data="loadData" empty-text="" @on-select-change="selectChange"></Tree>
         </Sider>
         <Layout>
           <Content :style="{ height: '100%', background: '#fff', borderLeft: '1px solid #ccc'}">
-          <Spin size="large" fix v-if="keyLoading">
-          </Spin>
-            <div v-if="currentConnectionId && currentDbIndex > -1 && typeof tabs[getTabsKey()] !== 'undefined' && !isEmptyObj(tabs[getTabsKey()]['keys'])" :style="{height: '100%' }">
-            <Tabs @on-tab-remove="handleTabRemove" type="card" :value="currentKey" :animated="false" :style="{ background: '#fff', height: '100%' }">
-              <TabPane v-for="(data, key) in tabs[getTabsKey()]['keys']" closable :name="key" :key="key" :label="smllKey(key)" >
-                <Row type="flex">
-                  <Col span="12">
-                    <Input v-model="key" readonly>
-                      <span slot="prepend">{{data.type.toUpperCase() }}:</span>
-                      <span slot="append">TTL: {{data.ttl}}</span>
-                    </Input>
-                  </Col>
-                  <Col span="12" style="text-align: right;">
-                    <ButtonGroup>
-                      <Button :loading="buttonLoading" @click="removeKey(key)">删除</Button>
-                      <Button :loading="buttonLoading" @click="flushKey(key)">刷新</Button>
-                      <Button :loading="buttonLoading" @click="setTTL(key, data)">重置TTL</Button>
-                    </ButtonGroup>
-                  </Col>
-                </Row>
-                <div v-if="data.type === 'string'" style="margin-top: 4px; height: 600px; overflow: auto">
-                  <Input v-model="data.data" v-if="!textType" type="textarea" :style="{height: '575px'}" :autosize="{ minRows: 25, maxRows: 25 }" placeholder="Enter something..."></Input>
-                  <vue-json-pretty
-                    v-if="textType"
-                    :path="'res'"
-                    :data="formatJson(data.data, key)"
-                  >
-                  </vue-json-pretty>
-
+            <Spin size="large" fix v-if="keyLoading">
+               <span style="color: firebrick; font-size: 16px;">正在读取: {{currentLoadingKey}}</span>
+            </Spin>
+            <div
+              v-if="currentConnectionId && currentDbIndex > -1 && typeof tabs[getTabsKey()] !== 'undefined' && !isEmptyObj(tabs[getTabsKey()]['keys'])"
+              :style="{height: '100%' }">
+              <Tabs @on-tab-remove="handleTabRemove" :type="!isQtWebView() ? 'card' : 'line'" :value="currentKey" :animated="false"
+                    :style="{ background: '#fff', height: '100%' }">
+                <TabPane v-for="(data, key) in tabs[getTabsKey()]['keys']" closable :name="key" :key="key"
+                         :label="isQtWebView() ? key : smllKey(key)">
                   <Row type="flex">
-                    <Col span="24" style="text-align: right">
-                      <i-switch size="large" v-model="textType" style="height: 24px; line-height: 23px;margin-right: 5px;">
-                        <span slot="open" >Json</span>
-                        <span slot="close">Text</span>
-                      </i-switch>
-                      <Button style="float: right" size="small" type="info" @click="updateValue(key, data, 'value')" :loading="buttonLoading">保存</Button>
+                    <Col span="12">
+                      <Input v-model="key" readonly>
+                        <span slot="prepend">{{data.type.toUpperCase() }}:</span>
+                        <span slot="append">TTL: {{data.ttl}}</span>
+                      </Input>
+                    </Col>
+                    <Col span="12" style="text-align: right;">
+                      <ButtonGroup>
+                        <Button :loading="buttonLoading" @click="removeKey(key)">删除</Button>
+                        <Button :loading="buttonLoading" @click="flushKey(key)">刷新</Button>
+                        <Button :loading="buttonLoading" @click="setTTL(key, data)">重置TTL</Button>
+                      </ButtonGroup>
                     </Col>
                   </Row>
-                </div>
-                <div v-else style="margin-top: 4px; height: 100%">
-                  <Row type="flex">
-                    <Col span="16">
-                      <Table highlight-row @on-row-click="getRowData" ref="currentRowTable" border height="250" :columns="getColumns(data.type)" :data="formatItem(data.type,data.data)"></Table>
-                    </Col>
-                    <Col span="8">
-                      <Card style="height:250px;border-left: none;" dis-hover>
-                        <p slot="title">
-                          操作
-                        </p>
-                        <Button long @click="addRow(key, data)">插入行</Button>
-                        <br/>
-                        <br/>
-                        <Button long @click="removeRow(key,data)">删除行</Button>
-                        <br/><br/>
-                        <Input placeholder="列表中查询..." v-model="searchKey"></Input>
-                        <i-switch size="large" v-model="textType" style="right: 3px;position: absolute;bottom: 3px;">
-                          <span slot="open" >Json</span>
-                          <span slot="close">Text</span>
-                        </i-switch>
-                      </Card>
-                    </Col>
-                  </Row>
-                  <div style="height: 350px; overflow:hidden;">
-                    <Input v-if="!textType"
-                           v-model="currentSelectRowData.value"
-                           type="textarea"
-                           style="margin-top: 4px;" :autosize="{minRows:14, maxRows: 14}" placeholder="列值"></Input>
-                    <Button
-                      v-if="!textType"
-                      style="float: right"
-                      @click="updateValue(key, data, 'updateRowValue')"
-                      :loading="buttonLoading"
-                    >保存</Button>
-
+                  <div v-if="data.type === 'string'" style="margin-top: 4px; height: 600px; overflow: auto">
+                    <Input v-model="data.data" v-if="!textType" type="textarea" :style="{height: '575px'}"
+                           :autosize="{ minRows: 25, maxRows: 25 }" placeholder="Enter something..."></Input>
                     <vue-json-pretty
                       v-if="textType"
                       :path="'res'"
-                      style="height: 350px; overflow:auto;"
-                      :data="formatJson(currentSelectRowData.value, key)"
+                      :data="formatJson(data.data, key)"
                     >
                     </vue-json-pretty>
+
+                    <Row type="flex">
+                      <Col span="24" style="text-align: right">
+                        <i-switch size="large" v-model="textType"
+                                  style="height: 24px; line-height: 23px;margin-right: 5px;">
+                          <span slot="open">Json</span>
+                          <span slot="close">Text</span>
+                        </i-switch>
+                        <Button style="float: right" size="small" type="info" @click="updateValue(key, data, 'value')"
+                                :loading="buttonLoading">保存
+                        </Button>
+                      </Col>
+                    </Row>
                   </div>
-                </div>
-              </TabPane>
-            </Tabs>
+                  <div v-else style="margin-top: 4px; height: 100%">
+                    <Row type="flex">
+                      <Col span="16">
+                        <Table highlight-row @on-row-click="getRowData" ref="currentRowTable" border height="250"
+                               :columns="getColumns(data.type)" :data="formatItem(data.type,data.data)"></Table>
+                      </Col>
+                      <Col span="8">
+                        <Card style="height:250px;border-left: none;" dis-hover>
+                          <p slot="title">
+                            操作
+                          </p>
+                          <Button long @click="addRow(key, data)">插入行</Button>
+                          <br/>
+                          <br/>
+                          <Button long @click="removeRow(key,data)">删除行</Button>
+                          <br/><br/>
+                          <Input placeholder="列表中查询..." v-model="searchKey"></Input>
+                          <i-switch size="large" v-model="textType" style="right: 3px;position: absolute;bottom: 3px;">
+                            <span slot="open">Json</span>
+                            <span slot="close">Text</span>
+                          </i-switch>
+                        </Card>
+                      </Col>
+                    </Row>
+                    <div style="height: 350px; overflow:hidden;">
+                      <Input v-if="!textType"
+                             v-model="currentSelectRowData.value"
+                             type="textarea"
+                             style="margin-top: 4px;" :autosize="{minRows:14, maxRows: 14}" placeholder="列值"></Input>
+                      <Button
+                        v-if="!textType"
+                        style="float: right"
+                        @click="updateValue(key, data, 'updateRowValue')"
+                        :loading="buttonLoading"
+                      >保存
+                      </Button>
+
+                      <vue-json-pretty
+                        v-if="textType"
+                        :path="'res'"
+                        style="height: 350px; overflow:auto;"
+                        :data="formatJson(currentSelectRowData.value, key)"
+                      >
+                      </vue-json-pretty>
+                    </div>
+                  </div>
+                </TabPane>
+              </Tabs>
             </div>
             <div v-else style="text-align: center;">
               <img draggable="false" src="static/rdm_logo.png" style="width: 20%; margin-top: 100px;"/>
-              <p style="font-size: 16px; font-weight: bold;  margin-top:100px;color: #000;">RedisDesktop - Redis客户端管理工具</p>
+              <p style="font-size: 16px; font-weight: bold;  margin-top:100px;color: #000;">RedisDesktop -
+                Redis客户端管理工具</p>
             </div>
 
-            <div v-if="currentConnectionId != '' && pubsubModal" style="position:absolute; z-index: 10;  top: 64px;background: #fff;width: 100%;height: 100%; padding:10px;">
-                <ul class="infinite-list" style="position:relative; top: 30px;">
-                  <li class="infinite-list-item"  v-for="(item, index) in chanMegs[getPubSubTabKey()]">{{item}}</li>
-                </ul>
+            <div v-if="currentConnectionId != '' && pubsubModal"
+                 :style="'position:absolute; z-index: 10; background: #fff;width: 100%;height: 100%; padding:10px;' + (isQtWebView() ? 'top: 0px':'top: 64px') ">
+              <ul class="infinite-list" style="position:relative; top: 30px;">
+                <li class="infinite-list-item" v-for="(item, index) in chanMegs[getPubSubTabKey()]">{{item}}</li>
+              </ul>
 
-                 <div style="position:absolute; top:8px; left:20px; width:100%">
-                   <Row>
-                  <Col span="6" >
+              <div style="position:absolute; top:8px; left:20px; width:100%">
+                <Row>
+                  <Col span="6">
                     <Input :name="currentConnection + 'addinput'" v-model="customChannel" placeholder="如果填写则选项失效">
-                            <span slot="prepend">自定义频道</span>
+                      <span slot="prepend">自定义频道</span>
                     </Input>
                   </Col>
                   <Col span="10" offset="1">
-                    <Input :name="currentConnection + 'input'" @keyup.enter.native="sendToChannel"  v-model="channelMsg" placeholder="发布内容到订阅的频道">
-                            <span slot="prepend"><Select v-model="selectedChannel" style="width:120px" placeholder="选择频道">
+                    <Input :name="currentConnection + 'input'" @keyup.enter.native="sendToChannel" v-model="channelMsg"
+                           placeholder="发布内容到订阅的频道">
+                            <span slot="prepend"><Select v-model="selectedChannel" style="width:120px"
+                                                         placeholder="选择频道">
                               <Option v-for="(item, index) in channels" :key="'channel_' + item"
                                       :label="item"
                                       :value="item">
                               </Option>
                             </Select></span>
-                          </Input>
+                    </Input>
                   </Col>
                 </Row>
               </div>
             </div>
-            <div v-if="currentConnectionId != '' && infoModal" style="position:absolute; z-index: 10;  top: 64px;background: #fff;width: 100%;height: 100%; padding:10px;">
+            <div v-if="currentConnectionId != '' && infoModal"
+                 :style="'position:absolute; z-index: 10;  background: #fff;width: 100%;height: 100%; padding:10px;' + (isQtWebView() ? 'top: 0px;' : 'top: 64px' ) ">
               <Tabs value="first" :animated="false" style="height: 100%">
                 <TabPane label="慢日志" name="first" style="height: 100%">
-                  <Table size="small" :columns="slowLogColumns" :data="slowLogs" :stripe="true" :border="true" style="height: 100%"></Table>
+                  <Table size="small" :columns="slowLogColumns" :data="slowLogs" :stripe="true" :border="true"
+                         style="height: 100%"></Table>
                 </TabPane>
-                <TabPane label="配置信息" name="second" style="height: 100%"><Table size="small" :columns="serverConfigColumns" :data="serverConfig" :stripe="true" :border="true" style="height: 100%"></Table></TabPane>
+                <TabPane label="配置信息" name="second" style="height: 100%">
+                  <Table size="small" :columns="serverConfigColumns" :data="serverConfig" :stripe="true" :border="true"
+                         style="height: 100%"></Table>
+                </TabPane>
                 <TabPane label="服务器信息" name="three" style="height: 100%">
                   <Collapse v-model="infoCollapse">
                     <Panel v-for="(val11, key11) in serverInfo" :key="key11">
@@ -247,7 +274,9 @@
       <div slot="footer">
         <Row :gutter="24">
           <Col span="24">
-            <Button type="primary" style="float: right" size="small" :loading="modal_loading" @click="updateValue(ttlValue.key, ttlValue.data, 'ttl')">确定</Button>
+            <Button type="primary" style="float: right" size="small" :loading="modal_loading"
+                    @click="updateValue(ttlValue.key, ttlValue.data, 'ttl')">确定
+            </Button>
           </Col>
         </Row>
       </div>
@@ -279,7 +308,7 @@
             <Input v-model="newValue.keyorscore" placeholder=""></Input>
           </FormItem>
           <FormItem label="值:">
-            <Input v-model="newValue.data" type="textarea" :autosize="{minRows: 5,maxRows: 5}" ></Input>
+            <Input v-model="newValue.data" type="textarea" :autosize="{minRows: 5,maxRows: 5}"></Input>
           </FormItem>
         </Form>
       </div>
@@ -292,7 +321,8 @@
               size="small"
               :loading="buttonLoading"
               @click="addNewKey"
-            >确定</Button>
+            >确定
+            </Button>
           </Col>
         </Row>
       </div>
@@ -304,14 +334,18 @@
         <span>{{rowValue.key}} 添加行操作</span>
       </p>
       <div>
-        <Input v-model="rowValue.newRowKey" style="margin-bottom: 5px" v-if="rowValue.data.type === 'hash'" placeholder="请输入新key"></Input>
-        <Input v-model="rowValue.newRowKey" style="margin-bottom: 5px" v-if="rowValue.data.type === 'zset'" placeholder="请输入分值"></Input>
+        <Input v-model="rowValue.newRowKey" style="margin-bottom: 5px" v-if="rowValue.data.type === 'hash'"
+               placeholder="请输入新key"></Input>
+        <Input v-model="rowValue.newRowKey" style="margin-bottom: 5px" v-if="rowValue.data.type === 'zset'"
+               placeholder="请输入分值"></Input>
         <Input v-model="rowValue.newRowValue" type="textarea" placeholder="请输入数据"></Input>
       </div>
       <div slot="footer">
         <Row :gutter="24">
           <Col span="24">
-            <Button type="primary" style="float: right" size="small" :loading="modal_loading" @click="updateValue(rowValue.key, rowValue, 'addrow')">确定</Button>
+            <Button type="primary" style="float: right" size="small" :loading="modal_loading"
+                    @click="updateValue(rowValue.key, rowValue, 'addrow')">确定
+            </Button>
           </Col>
         </Row>
       </div>
@@ -333,10 +367,11 @@
       </div>
     </Modal>
 
-    <Modal v-model="showJsonModal" fullscreen footer-hide :title="getTerminalTitle()" :on-visible-change="showJsonModalOkClick">
-        <VueTerminal ref="child" v-bind:id="currentConnectionId"
-                     @command="onCliCommand"
-                     console-sign="redis-cli $"  style="height: 100%; font-size:14px"></VueTerminal>
+    <Modal v-model="showJsonModal" fullscreen footer-hide
+           :on-visible-change="showJsonModalOkClick">
+      <VueTerminal ref="child" v-bind:id="currentConnectionId"
+                   @command="onCliCommand"
+                   console-sign="redis-cli $" style="height: 100%; font-size:14px"></VueTerminal>
     </Modal>
 
   </div>
@@ -348,6 +383,7 @@
   import Api from '../api'
   import $ from 'jquery'
   import CryptoJS from 'crypto-js'
+
   export default {
     name: 'MainPage',
     components: {
@@ -405,6 +441,7 @@
         buttonLoading: false,
         currentKey: '',
         currentConnection: '',
+        currentTitle: '',
         currentDbIndex: -1,
         currentSelectRowData: {}, // 用于行列选择
         currentHandleNodeData: {}, // 用于基于当前操作数据的节点
@@ -436,6 +473,7 @@
         infoModal: false,
         connectionListData: [],
         connectionTreeList: [],
+        currentLoadingKey: '缓存',
         tabs: {},
         connectionModal: false,
         ttlModal: false,
@@ -443,13 +481,13 @@
         addRowModal: false,
         modal_loading: false,
         buttonProps: {
-          // type: 'ghost',
           size: 'small'
         },
         keyLoading: false,
         confirmModal: false,
         confirmModalText: '',
-        confirmModalEvent: () => {}
+        confirmModalEvent: () => {
+        }
       }
     },
     created () {
@@ -487,8 +525,47 @@
           this.channelWs()
         }, 300)
       }
-      window.changeValue = (nodes) => {
-        this.selectChange(nodes)
+      if (this.isQtWebView()) {
+        window.changeValue = (nodes) => {
+          this.selectChange(nodes)
+        }
+        window.removeKey = (key) => {
+          this.removeKey(key)
+        }
+        window.showSlowLog = (serverIdx) => {
+          this.currentConnectionId = serverIdx
+          this.openInfoTab()
+        }
+        window.flushDB = (serverIdx, dbIdx) => {
+          this.currentConnectionId = serverIdx
+          this.currentDbIndex = dbIdx
+          Api.flushDB({
+            id: serverIdx,
+            index: dbIdx
+          }, (res) => {
+            this.confirmModal = false
+            // if (res.status !== 200) {
+            //   this.$Message.error(res.msg)
+            // } else {
+            this.tabs[this.getTabsKey()]['keys'] = {}
+            // }
+          })
+        }
+        window.showAddKeyModal = (serverIdx, dbIdx) => {
+          this.newValue.db = dbIdx
+          this.newValue.redis_id = serverIdx
+          this.newValue.key = ''
+          this.newValue.keyorscore = ''
+          this.newValue.data = ''
+          this.addKeyModal = true
+          this.currentHandleNodeData = {data: {}}
+        }
+        window.showCliModal = (serverIdx, dbIdx) => {
+          this.showJsonModal = false
+          this.currentConnectionId = serverIdx
+          this.currentDbIndex = dbIdx
+          this.showJsonModal = true
+        }
       }
     },
     methods: {
@@ -623,10 +700,12 @@
             let config = []
             let srvConfig = data.data.config
             for (let i = 0; i < srvConfig.length; i = i + 2) {
-              config.push({
-                'key': srvConfig[i],
-                'value': srvConfig[i + 1]
-              })
+              if (srvConfig[i] !== 'requirepass') {
+                config.push({
+                  'key': srvConfig[i],
+                  'value': srvConfig[i + 1]
+                })
+              }
             }
             this.serverConfig = config // config
             this.slowLogs = data.data.slowLogs
@@ -729,7 +808,8 @@
             }
             isremove = false
             data.data = tmp
-          } if (data.type === 'zset') {
+          }
+          if (data.type === 'zset') {
             for (let i = 0; i < data.data.length; i++) {
               if (!isremove && data.data[i].score === this.currentSelectRowData.key) {
                 isremove = true
@@ -835,8 +915,6 @@
         })
       },
       removeKey (key, callback, tips) {
-        this.confirmModalText = '是否要删除"' + key + '"吗?'
-        this.confirmModal = true
         this.confirmModalEvent = () => {
           this.buttonLoading = true
           Api.removeKey({
@@ -867,6 +945,12 @@
               }
             }
           })
+        }
+        if (!this.isQtWebView()) {
+          this.confirmModalText = '是否要删除"' + key + '"吗?'
+          this.confirmModal = true
+        } else {
+          this.confirmModalEvent()
         }
       },
       flushKey (key) {
@@ -914,17 +998,25 @@
         if (nodes.length === 0) return
         let node = nodes[0]
         if (node.action !== 'get_value') return
-        if (window.isQtWebView) {
+        this.currentLoadingKey = node.title
+        if (this.isQtWebView()) {
           this.currentConnectionId = node.redis_id
           this.currentConnection = node.index
+        }
+        if (!this.tabs[this.getTabsKey()]) {
+          this.tabs[this.getTabsKey()] = {keys: {}}
         }
         this.pubsubModal = false
         this.infoModal = false
         let key = (node.group ? node.group + ':' : '') + node.title
-        if (!this.tabs[this.getTabsKey()]) {
-          this.tabs[this.getTabsKey()] = {keys: {}}
+        let flag = !this.tabs[this.getTabsKey()].keys || !Object.keys(this.tabs[this.getTabsKey()].keys).includes(key)
+        if (this.isQtWebView()) {
+          flag = this.currentKey !== key
         }
-        if (!Object.keys(this.tabs[this.getTabsKey()].keys).includes(key)) {
+        if (flag) {
+          if (node.prefix) {
+            this.currentTitle = node.prefix
+          }
           this.keyLoading = true
           Api.connectionServer({
             id: node.redis_id,  // 连接数
@@ -943,14 +1035,14 @@
             }
             this.currentDbIndex = node.index
             this.currentConnectionId = node.redis_id
+            if (this.isQtWebView()) {
+              this.tabs[this.getTabsKey()] = {keys: {}}
+            }
             this.tabs[this.getTabsKey()].keys[key] = res.data
             this.tabs = Object.assign({}, this.tabs) // 绑定为动态变量,否则页面不会动态渲染
-            this.currentKey = key
           })
-        } else {
-          this.currentKey = key
         }
-        // 清空输入框数据
+        this.currentKey = key
         this.currentSelectRowData = {}
       },
       formatItem (type, data) {
@@ -1163,7 +1255,7 @@
           }
         })
       },
-      connectionRenderFunc (h, { root, node, data }) {
+      connectionRenderFunc (h, {root, node, data}) {
         return h('span', {
           style: {
             display: 'inline-block',
@@ -1367,7 +1459,7 @@
                     selected: false,
                     redis_id: item.data.id, // 继续redis_id
                     action: 'select_db',
-                    render: (h, { root, node, data }) => {
+                    render: (h, {root, node, data}) => {
                       return h('span', {
                         style: {
                           display: 'inline-block',
@@ -1574,7 +1666,7 @@
             break
         }
       },
-      keyRenderFunc (h, { root, node, data }) {
+      keyRenderFunc (h, {root, node, data}) {
         // console.log(data.title)
         return h('span', {
           style: {
@@ -1648,7 +1740,7 @@
   }
 </script>
 
-<style >
+<style>
 
   .infinite-list .infinite-list-item {
     display: flex;
@@ -1661,6 +1753,7 @@
   .ivu-btn-icon-only.ivu-btn-small {
     border-radius: 0;
   }
+
   /* .ivu-table {
     overflow-y: auto;
     overflow-x: hidden;
