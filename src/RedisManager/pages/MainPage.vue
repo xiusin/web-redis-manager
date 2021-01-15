@@ -37,6 +37,15 @@
   .ivu-tabs-nav-container {
     font-size: 12px;
   }
+
+  .ivu-tabs-nav .ivu-tabs-tab-active {
+    outline: none;
+  }
+
+  .ivu-modal-body {
+    padding: 0;
+  }
+
 </style>
 <template>
   <div class="layout">
@@ -63,7 +72,7 @@
           <Tree :data="connectionTreeList" :load-data="loadData" empty-text="" @on-select-change="selectChange"></Tree>
         </Sider>
         <Layout>
-          <Content :style="{ height: '100%', background: '#fff', borderLeft: '1px solid #ccc'}">
+          <Content :style="!isQtWebView() ? { height: '100%', background: '#fff', borderLeft: '1px solid #ccc'} : { height: '100%', background: '#fff'}">
             <Spin size="large" fix v-if="keyLoading">
                <span style="color: firebrick; font-size: 16px;">正在读取: {{currentLoadingKey}}</span>
             </Spin>
@@ -71,7 +80,7 @@
               v-if="currentConnectionId && currentDbIndex > -1 && typeof tabs[getTabsKey()] !== 'undefined' && !isEmptyObj(tabs[getTabsKey()]['keys'])"
               :style="{height: '100%' }">
               <Tabs @on-tab-remove="handleTabRemove" :type="!isQtWebView() ? 'card' : 'line'" :value="currentKey" :animated="false"
-                    :style="{ background: '#fff', height: '100%' }">
+                    :style="{ background: '#fff', height: '100%', outline: 'none' }">
                 <TabPane v-for="(data, key) in tabs[getTabsKey()]['keys']" closable :name="key" :key="key"
                          :label="isQtWebView() ? key : smllKey(key)">
                   <Row type="flex">
@@ -370,8 +379,7 @@
     <Modal v-model="showJsonModal" fullscreen footer-hide
            :on-visible-change="showJsonModalOkClick">
       <VueTerminal ref="child" v-bind:id="currentConnectionId"
-                   @command="onCliCommand"
-                   console-sign="redis-cli $" style="height: 100%; font-size:14px"></VueTerminal>
+                   @command="onCliCommand" console-sign="redis-cli $" style="height: 100%; font-size:14px"></VueTerminal>
     </Modal>
 
   </div>
