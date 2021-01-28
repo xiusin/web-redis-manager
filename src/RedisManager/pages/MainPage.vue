@@ -1169,9 +1169,10 @@
       initWs (callback) {
         if (callback) {
           window.astilectron = {}
-          window.$websocket = new WebSocket('ws://localhost:18998/redis/connection/pubsub')
+          let domain = window.location.origin
+          window.$websocket = new WebSocket(domain.replace('http', 'ws') + '/redis/connection/pubsub')
           window.astilectron.post = (url, data, c) => {
-            $.post('http://localhost:18998' + url, data, (message) => {
+            $.post(domain + url, data, (message) => {
               this.buttonLoading = false
               this.$Message.destroy()
               try {
@@ -1182,7 +1183,7 @@
             })
           }
           window.astilectron.get = (url, data, c) => {
-            $.getJSON('http://localhost:18998' + url, data, (message) => {
+            $.getJSON(domain + url, data, (message) => {
               this.buttonLoading = false
               this.$Message.destroy()
               if (typeof message === 'string') {
