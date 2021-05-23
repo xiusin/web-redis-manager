@@ -41,10 +41,10 @@
   .ivu-tabs-nav .ivu-tabs-tab-active {
     outline: none;
   }
-
-  .ivu-modal-body {
+  /** webview时需要取消注释 **/
+  /* .ivu-modal-body {
     padding: 0;
-  }
+  } */
 
 </style>
 <template>
@@ -520,7 +520,7 @@
       }
     },
     mounted () {
-      window.isQtWebView = true
+      window.isQtWebView = false
       if (!window.require) {
         this.initWs(() => {
           this.getConnectionList()
@@ -1169,7 +1169,7 @@
       initWs (callback) {
         if (callback) {
           window.astilectron = {}
-          let domain = window.location.origin
+          let domain = 'http://localhost:18998' // window.location.origin
           window.$websocket = new WebSocket(domain.replace('http', 'ws') + '/redis/connection/pubsub')
           window.astilectron.post = (url, data, c) => {
             $.post(domain + url, data, (message) => {
