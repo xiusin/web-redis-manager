@@ -72,9 +72,9 @@
         </Sider>
         <Layout>
           <Content :style="!isQtWebView() ? { height: '100%', background: '#fff', borderLeft: '1px solid #ccc'} : { height: '100%', background: '#fff'}">
-            <!-- <Spin size="large" fix v-if="keyLoading">
+            <Spin size="large" fix v-if="keyLoading && isQtWebView()">
                <span style="color: firebrick; font-size: 16px;">正在读取: {{currentLoadingKey}}</span>
-            </Spin> -->
+            </Spin>
             <div
               v-if="currentConnectionId && currentDbIndex > -1 && typeof tabs[getTabsKey()] !== 'undefined' && !isEmptyObj(tabs[getTabsKey()]['keys'])"
               :style="{height: '100%' }">
@@ -1168,7 +1168,8 @@
       initWs (callback) {
         if (callback) {
           window.astilectron = {}
-          let domain = 'http://localhost:18998' // window.location.origin
+          let domain = process.env.API_DOMAIN
+
           window.$websocket = new WebSocket(domain.replace('http', 'ws') + '/redis/connection/pubsub')
           window.astilectron.post = (url, data, c) => {
             $.post(domain + url, data, (message) => {
@@ -1383,6 +1384,10 @@
       connectionSaveHandler () {
         this.modal_loading = true
         Api.connectionSave(this.formItem, (res) => {
+          if (this.formItem.title === '') {
+            this.$Message.error('请填写服务器名称')
+            return false
+          }
           this.modal_loading = false
           if (res.status !== 200) {
             this.$Message.error(res.msg)

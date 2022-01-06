@@ -1,8 +1,10 @@
 package main
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
+	"io/fs"
 	"math/rand"
 	"net/http"
 	"net/url"
@@ -79,6 +81,17 @@ func init() {
 	}
 }
 
+//go:embed resources
+var embededFiles embed.FS
+
+func getFileSystem(useOS bool) http.FileSystem {
+	fsys, err := fs.Sub(embededFiles, "resources/app")
+	if err != nil {
+		panic(err)
+	}
+	return http.FS(fsys)
+}
+
 func main() {
 	var upgrader = websocket.Upgrader{
 		ReadBufferSize:  10240,
@@ -119,9 +132,11 @@ func main() {
 		}
 	})
 
+	mux.Handle("/", http.FileServer(getFileSystem(true)))
+
 	handler := cors.Default().Handler(mux)
-	fmt.Println("start rdm server in http://0.0.0.0:18998")
-	_ = http.ListenAndServe(":18998", handler)
+	fmt.Println("start rdm server in http://0.0.0.0:8787")
+	_ = http.ListenAndServe(":8787", handler)
 }
 func GetCacheDir() string {
 	once.Do(func() {
