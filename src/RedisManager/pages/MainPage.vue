@@ -4,7 +4,7 @@
     background: #f5f7f9;
     position: relative;
     border-radius: 0px;
-    /* overflow: hidden; */
+    overflow: hidden;
     height: 100%;
   }
 </style>
@@ -32,7 +32,6 @@
   .header {
     display: none;
   }
-
 
   .ivu-tabs-nav-container {
     font-size: 12px;
@@ -73,16 +72,16 @@
         </Sider>
         <Layout>
           <Content :style="!isQtWebView() ? { height: '100%', background: '#fff', borderLeft: '1px solid #ccc'} : { height: '100%', background: '#fff'}">
-            <Spin size="large" fix v-if="keyLoading">
+            <!-- <Spin size="large" fix v-if="keyLoading">
                <span style="color: firebrick; font-size: 16px;">正在读取: {{currentLoadingKey}}</span>
-            </Spin>
+            </Spin> -->
             <div
               v-if="currentConnectionId && currentDbIndex > -1 && typeof tabs[getTabsKey()] !== 'undefined' && !isEmptyObj(tabs[getTabsKey()]['keys'])"
               :style="{height: '100%' }">
               <Tabs @on-tab-remove="handleTabRemove" :type="!isQtWebView() ? 'card' : 'line'" :value="currentKey" :animated="false"
                     :style="{ background: '#fff', height: '100%', outline: 'none' }">
                 <TabPane v-for="(data, key) in tabs[getTabsKey()]['keys']" closable :name="key" :key="key"
-                         :label="isQtWebView() ? key : smllKey(key)">
+                         :label="isQtWebView() ? key : smllKey(key)" style="padding:3px;">
                   <Row type="flex">
                     <Col span="12">
                       <Input v-model="key" readonly>
@@ -98,7 +97,7 @@
                       </ButtonGroup>
                     </Col>
                   </Row>
-                  <div v-if="data.type === 'string'" style="margin-top: 4px; height: 600px; overflow: auto">
+                  <div v-if="data.type === 'string'" style="margin-top: 3px; height: 600px; overflow: auto">
                     <Input v-model="data.data" v-if="!textType" type="textarea" :style="{height: '575px'}"
                            :autosize="{ minRows: 25, maxRows: 25 }" placeholder="Enter something..."></Input>
                     <vue-json-pretty
@@ -177,9 +176,9 @@
             </div>
 
             <div v-if="currentConnectionId != '' && pubsubModal"
-                 :style="'position:absolute; z-index: 10; background: #fff;width: 100%;height: 100%; padding:10px;' + (isQtWebView() ? 'top: 0px':'top: 64px') ">
+                 :style="'position:absolute; z-index: 10; background: #fff; width: calc(100% - 300px); height: 100%; padding:10px;' + (isQtWebView() ? 'top: 0px':'top: 64px') ">
               <ul class="infinite-list" style="position:relative; top: 30px;">
-                <li class="infinite-list-item" v-for="(item, index) in chanMegs[getPubSubTabKey()]">{{item}}</li>
+                <li class="infinite-list-item" :key="index" v-for="(item, index) in chanMegs[getPubSubTabKey()]">{{item}}</li>
               </ul>
 
               <div style="position:absolute; top:8px; left:20px; width:100%">
@@ -194,7 +193,7 @@
                            placeholder="发布内容到订阅的频道">
                             <span slot="prepend"><Select v-model="selectedChannel" style="width:120px"
                                                          placeholder="选择频道">
-                              <Option v-for="(item, index) in channels" :key="'channel_' + item"
+                              <Option v-for="(item, index) in channels" :key="'channel_' + index"
                                       :label="item"
                                       :value="item">
                               </Option>
@@ -204,8 +203,8 @@
                 </Row>
               </div>
             </div>
-            <div v-if="currentConnectionId != '' && infoModal"
-                 :style="'position:absolute; z-index: 10;  background: #fff;width: 100%;height: 100%; padding:10px;' + (isQtWebView() ? 'top: 0px;' : 'top: 64px' ) ">
+            <div class="info" v-if="currentConnectionId != '' && infoModal"
+                 :style="'position:absolute; z-index: 10;  background: #fff; width: calc(100% - 300px); height: 100%; padding:10px;' + (isQtWebView() ? 'top: 0px;' : 'top: 64px' ) ">
               <Tabs value="first" :animated="false" style="height: 100%">
                 <TabPane label="慢日志" name="first" style="height: 100%">
                   <Table size="small" :columns="slowLogColumns" :data="slowLogs" :stripe="true" :border="true"
@@ -215,7 +214,7 @@
                   <Table size="small" :columns="serverConfigColumns" :data="serverConfig" :stripe="true" :border="true"
                          style="height: 100%"></Table>
                 </TabPane>
-                <TabPane label="服务器信息" name="three" style="height: 100%">
+                <TabPane label="服务器信息" name="three" style="height: 100%; overflow-y: auto;">
                   <Collapse v-model="infoCollapse">
                     <Panel v-for="(val11, key11) in serverInfo" :key="key11">
                       {{key11}}
@@ -1763,10 +1762,10 @@
     border-radius: 0;
   }
 
-  /* .ivu-table {
+  .info .ivu-table {
     overflow-y: auto;
     overflow-x: hidden;
-  } */
+  } 
 
   .ivu-table {
     overflow: hidden;
