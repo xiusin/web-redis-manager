@@ -1168,7 +1168,7 @@
       initWs (callback) {
         if (callback) {
           window.astilectron = {}
-          let domain = process.env.API_DOMAIN
+          let domain = process.env.NODE_ENV === 'production' ? window.location.origin : process.env.API_DOMAIN
 
           window.$websocket = new WebSocket(domain.replace('http', 'ws') + '/redis/connection/pubsub')
           window.astilectron.post = (url, data, c) => {

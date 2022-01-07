@@ -1,4 +1,4 @@
 module.exports = {
   NODE_ENV: '"production"',
-  API_DOMAIN: '"http://localhost:8787/"'
+  API_DOMAIN: '"http://localhost:8787"'
 }

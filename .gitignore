@@ -15,3 +15,7 @@ server/resources/dist/
 bind_*.go
 windows.syso
 /server/error.log
+/server/rdm
+/server/vbuild
+.lh
+.idea
