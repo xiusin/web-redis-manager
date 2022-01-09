@@ -9,6 +9,9 @@ import (
 	"path/filepath"
 
 	"github.com/rs/cors"
+	"github.com/xiusin/logger"
+	"github.com/xiusin/pine"
+	"github.com/xiusin/pine/di"
 	"github.com/xiusin/redis_manager/server/router"
 	"github.com/xiusin/redis_manager/server/src"
 )
@@ -36,6 +39,15 @@ func init() {
 }
 
 func main() {
+
+	app := pine.New()
+
+	di.Instance(di.ServicePineLogger, logger.New())
+
+	app.StaticFS("/", embededFiles, "resources/app")
+
+	app.Run(pine.Addr(":8787"))
+
 	mux.Handle("/", http.FileServer(getFileSystem(true)))
 	handler := cors.Default().Handler(mux)
 
