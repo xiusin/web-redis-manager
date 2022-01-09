@@ -3,34 +3,23 @@ package main
 import (
 	"embed"
 	"fmt"
+	"github.com/kataras/basicauth"
+	"github.com/rs/cors"
+	"github.com/xiusin/redis_manager/server/router"
+	"github.com/xiusin/redis_manager/server/src"
 	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
-
-	"github.com/rs/cors"
-	"github.com/xiusin/logger"
-	"github.com/xiusin/pine"
-	"github.com/xiusin/pine/di"
-	"github.com/xiusin/redis_manager/server/router"
-	"github.com/xiusin/redis_manager/server/src"
 )
 
 var cacheDir string
 var mux = http.NewServeMux()
 
 //go:embed resources
-var embededFiles embed.FS
+var embedFiles embed.FS
 
 var port = ":8787"
-
-func getFileSystem(useOS bool) http.FileSystem {
-	fsys, err := fs.Sub(embededFiles, "resources/app")
-	if err != nil {
-		panic(err)
-	}
-	return http.FS(fsys)
-}
 
 func init() {
 	cacheDir, _ = os.Getwd()
@@ -39,17 +28,20 @@ func init() {
 }
 
 func main() {
+	fsys, err := fs.Sub(embedFiles, "resources/app")
+	if err != nil {
+		panic(err)
+	}
 
-	app := pine.New()
-
-	di.Instance(di.ServicePineLogger, logger.New())
-
-	app.StaticFS("/", embededFiles, "resources/app")
-
-	app.Run(pine.Addr(":8787"))
-
-	mux.Handle("/", http.FileServer(getFileSystem(true)))
+	mux.Handle("/", http.FileServer(http.FS(fsys)))
 	handler := cors.Default().Handler(mux)
+	if basicauthPass := os.Getenv("RDM_PASS"); len(basicauthPass) > 0 {
+		basicauthName := "admin"
+		auth := basicauth.Default(map[string]string{
+			basicauthName: basicauthPass,
+		})
+		handler = auth(handler)
+	}
 
 	fmt.Println("start rdm server in http://0.0.0.0" + port)
 	_ = http.ListenAndServe(port, handler)
