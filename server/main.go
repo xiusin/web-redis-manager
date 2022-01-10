@@ -2,19 +2,23 @@ package main
 
 import (
 	"embed"
+	"flag"
 	"fmt"
-	"github.com/kataras/basicauth"
-	"github.com/rs/cors"
-	"github.com/xiusin/redis_manager/server/router"
-	"github.com/xiusin/redis_manager/server/src"
 	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
+
+	"github.com/kataras/basicauth"
+	"github.com/rs/cors"
+	"github.com/xiusin/redis_manager/server/router"
+	"github.com/xiusin/redis_manager/server/src"
 )
 
 var cacheDir string
 var mux = http.NewServeMux()
+var basicauthName string
+var basicauthPass string
 
 //go:embed resources
 var embedFiles embed.FS
@@ -28,6 +32,12 @@ func init() {
 }
 
 func main() {
+
+	flag.StringVar(&basicauthName, "username", "admin", "basicauth 名称")
+	flag.StringVar(&basicauthPass, "password", "", "basicauth 验证密码")
+
+	flag.Parse()
+
 	fsys, err := fs.Sub(embedFiles, "resources/app")
 	if err != nil {
 		panic(err)
@@ -35,8 +45,7 @@ func main() {
 
 	mux.Handle("/", http.FileServer(http.FS(fsys)))
 	handler := cors.Default().Handler(mux)
-	if basicauthPass := os.Getenv("RDM_PASS"); len(basicauthPass) > 0 {
-		basicauthName := "admin"
+	if len(basicauthName) > 0 && len(basicauthPass) > 0 {
 		auth := basicauth.Default(map[string]string{
 			basicauthName: basicauthPass,
 		})

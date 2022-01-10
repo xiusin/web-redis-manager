@@ -21,7 +21,7 @@
 </template>
 
 <script>
-  import MainPage from './pages/MainPage.vueb'
+  import MainPage from './pages/MainPage.vue'
 
   export default {
     name: 'RedisManager',
