@@ -552,8 +552,14 @@ func RedisManagerConnectionServer(data RequestData) string {
 		_, _ = client.Do("SELECT", index) //选择数据库
 		var nextCur = "0"
 		var resKeys = map[string][]string{}
+
+		filter := data["filter"].(string)
+		if filter == "" {
+		  filter = "*"
+    }
+
 		for {
-			repl, _ := client.Do("SCAN", nextCur)
+			repl, _ := client.Do("SCAN", nextCur, "MATCH", filter, "COUNT", 100)
 			nextCur = string(repl.([]interface{})[0].([]byte))
 			keys, err := redis.Strings(repl.([]interface{})[1], nil)
 			if err != nil {

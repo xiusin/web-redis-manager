@@ -61,6 +61,7 @@ func RegisterRouter(mux *http.ServeMux) {
 						data[param] = nil
 					}
 				}
+				writer.Header().Set("Content-Type", "application/json")
 				writer.Write([]byte(handle(data)))
 			}
 		}(handle))
