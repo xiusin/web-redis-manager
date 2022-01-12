@@ -94,7 +94,7 @@
             </List>
           </div>
           <div style="margin-top: 10px; text-align: center; width: 100%;">
-            <Page :current="keyPage" :total="currentTotalKeyNum" size="small" :page-size="100" simple />
+            <Page :current.sync="keyPage" :total="currentTotalKeyNum" size="small" :page-size="100" simple />
           </div>
         </Content>
         <Layout>
@@ -1493,7 +1493,8 @@ export default {
         id: item.redis_id,
         index: item.db,
         action: item.action,
-        filter: this.keyFilter
+        filter: this.keyFilter,
+        page: this.keyPage
       }, (res) => {
         if (res.status !== 200) {
           this.$Message.error(res.msg)
@@ -1723,8 +1724,8 @@ export default {
     }
   },
   watch: {
-    keyPage: (newVal) => {
-      console.log(newVal)
+    keyPage (newVal) {
+      this.clickEvent(this.currentDbNode)
     },
     currentConnectionId: (newVal) => {
       window.document.querySelector('#terminal .content').innerHTML = ''

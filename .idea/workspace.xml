@@ -3,8 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="793cbf15-d83f-409e-b59b-b4d6dcb70aca" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/MainPage.vueb" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/router/router.go" beforeDir="false" afterPath="$PROJECT_DIR$/server/router/router.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/src/actions.go" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/actions.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/RedisManager/pages/MainPage.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/RedisManager/pages/MainPage.vue" afterDir="false" />
     </list>
@@ -33,6 +31,9 @@
   <component name="GoLibraries">
     <option name="indexEntireGoPath" value="false" />
   </component>
+  <component name="GoVcsConfiguration">
+    <option name="GO_FMT" value="false" />
+  </component>
   <component name="MacroExpansionManager">
     <option name="directoryName" value="99xqii22" />
   </component>
@@ -59,5 +60,11 @@
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="VcsManagerConfiguration">
+    <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
+    <option name="CHECK_NEW_TODO" value="false" />
+    <MESSAGE value="新版调整" />
+    <option name="LAST_COMMIT_MESSAGE" value="新版调整" />
   </component>
 </project>
