@@ -132,15 +132,19 @@
                             操作
                           </p>
                           <Button long @click="addRow(key, data)">插入行</Button>
-                          <br/>
-                          <br/>
+                          <div style="height: 5px;"></div>
                           <Button long @click="removeRow(key,data)">删除行</Button>
-                          <br/><br/>
+                           <div style="height: 5px;"></div>
                           <Input placeholder="列表中查询..." v-model="searchKey"></Input>
+
                           <i-switch size="large" v-model="textType" style="right: 3px;position: absolute;bottom: 3px;">
                             <span slot="open">Json</span>
                             <span slot="close">Text</span>
                           </i-switch>
+                          <div style="height: 10px;"></div>
+                          <div style="float: right;">
+                              <Page :total="data.totalPage || 1" :current="1" size="small" show-sizer ></Page>
+                          </div>
                         </Card>
                       </Col>
                     </Row>

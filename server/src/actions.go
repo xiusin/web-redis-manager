@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"math"
 	"os"
 	"reflect"
 	"regexp"
@@ -467,16 +468,21 @@ func RedisManagerConnectionServer(data RequestData) string {
 			return JSON(ResponseData{5001, FailedMsg, nil})
 		}
 		ttl, _ := redis.Int64(client.Do("TTL", key))
+		size := 500
 		switch typeStr {
-		case "list":
-			val, err := redis.Strings(client.Do("LRANGE", key, 0, 1000))
+		case "list": // 读取总长度
+			llen, _ := redis.Int64(client.Do("LLEN", key))
+			val, err := redis.Strings(client.Do("LRANGE", key, 0, size))
+			totalPage := int64(math.Ceil(float64(llen) / float64(size)))
 			if err != nil {
 				return JSON(ResponseData{FailedCode, "读取数据错误", err.Error()})
 			} else {
 				return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{
-					"type": typeStr,
-					"data": val,
-					"ttl":  ttl,
+					"type":      typeStr,
+					"data":      val,
+					"ttl":       ttl,
+					"totalPage": totalPage,
+					"size":      size,
 				}})
 			}
 		case "set":
