@@ -16,11 +16,13 @@
   "dependencies": {
     "browser-update": "^2.1.4",
     "crypto-js": "^3.3.0",
+    "echarts": "^5.2.2",
     "iview": "^3.5.5-rc.1",
     "jquery": "^3.4.1",
     "md5": "^2.2.1",
     "sass-loader": "^7.1.0",
     "vue": "^2.5.21",
+    "vue-echarts": "^6.0.0",
     "vue-json-pretty": "^1.4.1",
     "vue-resource": "^1.5.1",
     "vue-router": "^2.3.1",
@@ -30,6 +32,7 @@
     "x-particles": "^1.0.8"
   },
   "devDependencies": {
+    "@vue/composition-api": "^1.4.3",
     "autoprefixer": "^6.7.2",
     "babel-core": "^6.22.1",
     "babel-eslint": "^7.1.1",

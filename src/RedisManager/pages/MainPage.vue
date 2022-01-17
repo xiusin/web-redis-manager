@@ -75,12 +75,14 @@
           class="key-list"
           :style="{background: '#fff', width:'200px',maxWidth:'200px', minWidth:'200px' , 'overflow-y': 'auto', 'overflow-x': 'hidden', 'position': 'relative'}"
         >
-          <Input placeholder="输入过滤规则: 默认为*" v-model="keyFilter" style="width: 100%;">
-            <Icon @click="clickEvent(currentDbNode)" type="ios-search" slot="suffix"/>
+          <Input placeholder="过滤规则: *" v-model="keyFilter" style="width: 100%;">
+            <Icon @click="clickEvent(currentDbNode)" type="ios-search" slot="suffix" style="cursor: pointer"/>
           </Input>
-          <div style='height: calc(100% - 140px); overflow-y: auto; overflow-x: hidden; border-bottom: 1px solid #e8eaec;'>
-            <List size="small" >
-              <ListItem v-for="keyItem in keysList" :key="keyItem.title" style="width: 100%">
+          <div
+            style='height: calc(100% - 100px); overflow-y: auto; overflow-x: hidden; border-bottom: 1px solid #e8eaec;'>
+            <List size="small">
+              <ListItem v-for="keyItem in keysList" :key="keyItem.title"
+                        style="width: 100%; height: 30px; line-height: 30px;">
                 <ListItemMeta :title="keyItem.title"/>
                 <template slot="action">
                   <li @click="selectChange([keyItem])">
@@ -92,9 +94,6 @@
                 </template>
               </ListItem>
             </List>
-          </div>
-          <div style="margin-top: 10px; text-align: center; width: 100%;">
-            <Page :current.sync="keyPage" :total="currentTotalKeyNum" size="small" :page-size="100" simple />
           </div>
         </Content>
         <Layout>
@@ -122,6 +121,7 @@
                       <ButtonGroup>
                         <Button :loading="buttonLoading" @click="removeKey(key)">删除</Button>
                         <Button :loading="buttonLoading" @click="flushKey(key)">刷新</Button>
+                        <Button :loading="buttonLoading" @click="renameKey(key)">重命名</Button>
                         <Button :loading="buttonLoading" @click="setTTL(key, data)">重置TTL</Button>
                       </ButtonGroup>
                     </Col>
@@ -205,7 +205,7 @@
               </p>
             </div>
 
-            <div v-if="currentConnectionId != '' && pubsubModal"
+            <div v-if="currentConnectionId !== '' && pubsubModal"
                  :style="'position:absolute; z-index: 10; background: #fff; width: calc(100% - 300px); height: 100%; padding:10px;' + (isQtWebView() ? 'top: 0px':'top: 64px') ">
               <ul class="infinite-list" style="position:relative; top: 30px;">
                 <li class="infinite-list-item" :key="index" v-for="(item, index) in chanMegs[getPubSubTabKey()]">
@@ -235,26 +235,9 @@
                 </Row>
               </div>
             </div>
-            <div class="info" v-if="currentConnectionId != '' && infoModal"
+            <div class="info" v-if="currentConnectionId !== '' && infoModal"
                  :style="'position:absolute; z-index: 10;  background: #fff; width: calc(100% - 300px); height: 100%; padding:10px;' + (isQtWebView() ? 'top: 0px;' : 'top: 64px' ) ">
-              <Tabs value="first" :animated="false" style="height: 100%">
-                <TabPane label="慢日志" name="first" style="height: 100%">
-                  <Table size="small" :columns="slowLogColumns" :data="slowLogs" :stripe="true" :border="true"
-                         style="height: 100%"></Table>
-                </TabPane>
-                <TabPane label="配置信息" name="second" style="height: 100%">
-                  <Table size="small" :columns="serverConfigColumns" :data="serverConfig" :stripe="true" :border="true"
-                         style="height: 100%"></Table>
-                </TabPane>
-                <TabPane label="服务器信息" name="three" style="height: 100%; overflow-y: auto;">
-                  <Collapse v-model="infoCollapse">
-                    <Panel v-for="(val11, key11) in serverInfo" :key="key11">
-                      {{ key11 }}
-                      <pre slot="content">{{ val11 }}</pre>
-                    </Panel>
-                  </Collapse>
-                </TabPane>
-              </Tabs>
+              <info-tabs ref="infoTabs" :current-connection-id.sync="this.currentConnectionId" :current-connection-index="this.currentDbIndex"/>
             </div>
           </Content>
         </Layout>
@@ -264,7 +247,7 @@
     <Modal v-model="connectionModal" width="360">
       <p slot="header" style="color:#f60;">
         <Icon type="ios-information-circle"></Icon>
-        <span>配置Redis连接信息</span>
+        <span>配置Redis连接</span>
       </p>
       <div>
         <Form :model="formItem" :label-width="80">
@@ -407,11 +390,8 @@
       </div>
     </Modal>
 
-    <Modal v-model="showJsonModal" fullscreen footer-hide
-           :on-visible-change="showJsonModalOkClick">
-      <VueTerminal ref="child" v-bind:id="currentConnectionId"
-                   @command="onCliCommand" console-sign="redis-cli $"
-                   style="height: 100%; font-size:14px"></VueTerminal>
+    <Modal class="showJsonModal" v-model="showJsonModal" fullscreen footer-hide :on-visible-change="showJsonModalOkClick">
+      <VueTerminal ref="child" v-bind:id="currentConnectionId" @command="onCliCommand" console-sign="redis-cli $" style="height: 100%; font-size:14px; font-weight: bold"></VueTerminal>
     </Modal>
 
   </div>
@@ -424,47 +404,20 @@ import Api from '../api'
 import $ from 'jquery'
 import CryptoJS from 'crypto-js'
 
+import InfoTabs from './components/infoTabs'
+import AddRowModal from './components/modals/addRowModal'
+
 export default {
   name: 'MainPage',
   components: {
+    AddRowModal,
     VueJsonPretty,
-    VueTerminal
+    VueTerminal,
+    InfoTabs
   },
   data () {
     return {
-      infoCollapse: '',
-      slowLogColumns: [
-        {
-          title: '时间',
-          key: 'time',
-          width: 170 // 不加这东西
-        },
-        {
-          title: '耗时(μs)',
-          key: 'used_time',
-          width: 120,
-          sortable: true
-        },
-        {
-          title: '命令',
-          key: 'command'
-        }
-      ],
-      slowLogs: [],
-      serverConfig: [],
       keysList: [], // DB的key列表
-      serverConfigColumns: [
-        {
-          title: '配置项',
-          key: 'key',
-          width: 200 // 不加这东西
-        },
-        {
-          title: '值',
-          key: 'value'
-        }
-      ],
-      serverInfo: {},
       customChannel: '',
       chanMegs: {}, // 消息内容
       channelMsg: '',
@@ -486,30 +439,10 @@ export default {
       currentDbIndex: -1,
       currentSelectRowData: {}, // 用于行列选择
       currentHandleNodeData: {}, // 用于基于当前操作数据的节点
-      formItem: {
-        title: '',
-        ip: '127.0.0.1',
-        port: '6379',
-        auth: ''
-      },
-      ttlValue: {
-        'data': {},
-        'key': ''
-      },
-      rowValue: {
-        'data': {},
-        'key': '',
-        'score': 100,
-        'newRowKey': '',
-        'newRowValue': ''
-      },
-      newValue: {
-        'data': '',
-        'key': '',
-        'keyorscore': '',
-        'db': -1,
-        'redis_id': 0
-      },
+      formItem: {title: '', ip: '127.0.0.1', port: '6379', auth: ''},
+      ttlValue: {'data': {}, 'key': ''},
+      rowValue: {'data': {}, 'key': '', 'score': 100, 'newRowKey': '', 'newRowValue': ''},
+      newValue: {'data': '', 'key': '', 'keyorscore': '', 'db': -1, 'redis_id': 0},
       sk: '',
       infoModal: false,
       connectionListData: [],
@@ -527,8 +460,9 @@ export default {
       keyLoading: false,
       confirmModal: false,
       confirmModalText: '',
-      confirmModalEvent: () => {},
-      keyFilter: '*', // key过滤
+      confirmModalEvent: () => {
+      },
+      keyFilter: '', // key过滤
       keyPage: 1, // 当页码
       currentTotalKeyNum: 0, // 当前DB的key总数, 结合filter
       currentDbNode: null // 当前打开的DB节点
@@ -613,6 +547,9 @@ export default {
     }
   },
   methods: {
+    renameKey () {
+      console.log(arguments)
+    },
     isQtWebView () {
       return window.isQtWebView
     },
@@ -714,50 +651,7 @@ export default {
       }
       this.infoModal = true
       this.pubsubModal = false
-      this.loadInfo()
-    },
-    loadInfo () {
-      Api.info({
-        id: this.currentConnectionId
-      }, (data) => {
-        if (data.status === 200) {
-          let dataStrs = data.data.data.split('\n')
-          let infos = []
-          let objVal = []
-          let objKey = ''
-          this.infoCollapse = ''
-          for (let i = 0; i < dataStrs.length; i++) {
-            if (dataStrs[i].indexOf('# ') > -1) {
-              if (objVal.length > 0 && objKey !== '') {
-                infos[objKey] = objVal.join('\n')
-                if (this.infoCollapse === '') {
-                  this.infoCollapse = objKey
-                }
-              }
-              objKey = dataStrs[i]
-              objVal = []
-            } else {
-              objVal.push(dataStrs[i])
-            }
-          }
-          this.serverInfo = Object.assign({}, infos)
-          let config = []
-          let srvConfig = data.data.config
-          for (let i = 0; i < srvConfig.length; i = i + 2) {
-            if (srvConfig[i] !== 'requirepass') {
-              config.push({
-                'key': srvConfig[i],
-                'value': srvConfig[i + 1]
-              })
-            }
-          }
-          this.serverConfig = config // config
-          this.slowLogs = data.data.slowLogs
-          // console.log(this.slowLogs, data.data)
-        } else {
-          this.$Message.error(data.msg)
-        }
-      })
+      // this.loadInfo() TODO 如何初始化组件时请求组件接口
     },
     loadPubSubChannels () {
       Api.pubSub({
@@ -1521,6 +1415,7 @@ export default {
         }
         this.currentTotalKeyNum = count
         item.count = count
+        this.currentConnectionId = item.redis_id
         item.title = 'DB' + item.db + ' (' + item.count + ')'
       })
     },
@@ -1727,7 +1622,12 @@ export default {
     keyPage (newVal) {
       this.clickEvent(this.currentDbNode)
     },
-    currentConnectionId: (newVal) => {
+    currentConnectionId (newVal) {
+      if (typeof this.$refs['infoTabs'] !== 'undefined') {
+        this.$nextTick(() => {
+          this.$refs.infoTabs.$forceUpdate()
+        })
+      }
       window.document.querySelector('#terminal .content').innerHTML = ''
     },
     currentDbIndex: (newVal) => {
@@ -1789,6 +1689,10 @@ export default {
 .key-list .ivu-list-small .ivu-list-item-meta-title {
   font-size: 12px;
   font-weight: normal;
+  width: 150px;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
 }
 
 .key-list .ivu-list-small .ivu-list-item-action > li {
@@ -1805,6 +1709,9 @@ export default {
 
 .key-list .ivu-list-item-action {
   margin-left: 0;
+}
+.showJsonModal .ivu-modal-body {
+  padding: 0;
 }
 </style>
 

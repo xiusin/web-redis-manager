@@ -1,0 +1,364 @@
+<template>
+  <Tabs v-model="tab" :animated="false" style="height: 100%; width: calc(100% - 95px)">
+    <TabPane label="服务器信息" name="first" style="height: 100%; overflow-y: auto;">
+      <div class='serverInfo'>
+        <Row :gutter="3">
+          <Col span="4">
+            <div>
+              <Card :bordered="false">
+                <p slot="title">版本</p>
+                <p>{{ info.version }}</p>
+              </Card>
+            </div>
+          </Col>
+          <Col span="4">
+            <div>
+              <Card :bordered="false">
+                <p slot="title">内存使用</p>
+                <p>{{ info.memory }}</p>
+              </Card>
+            </div>
+          </Col>
+          <Col span="4">
+            <div>
+              <Card :bordered="false">
+                <p slot="title">客户端数</p>
+                <p>{{ info.clientNum }}</p>
+              </Card>
+            </div>
+          </Col>
+          <Col span="4">
+            <div>
+              <Card :bordered="false">
+                <p slot="title">Key总数</p>
+                <p>{{ info.keyNum }}</p>
+              </Card>
+            </div>
+          </Col>
+          <Col span="4">
+            <div>
+              <Card :bordered="false">
+                <p slot="title">CPU占用</p>
+                <p>{{ info.cpuSys }}</p>
+              </Card>
+            </div>
+          </Col>
+          <Col span="4">
+            <div>
+              <Card :bordered="false">
+                <p slot="title">命中率</p>
+                <p>{{ info.ratio }}</p>
+              </Card>
+            </div>
+          </Col>
+        </Row>
+      </div>
+      <server-info :serverInfo="serverInfo"/>
+    </TabPane>
+    <TabPane label="配置信息" name="second" style="height: 100%">
+      <Table size="small"
+             :columns="serverConfigColumns"
+             :data="serverConfig"
+             :stripe="true"
+             :border="true"
+             style="height: 100%"></Table>
+    </TabPane>
+    <TabPane label="慢日志" name="three" style="height: 100%">
+      <slow-log :slow-logs="slowLogs"/>
+    </TabPane>
+    <TabPane label="客户端" name="four" style="height: 100%; overflow-y: auto;">
+      <Table size="small"
+             :columns="clientColumns"
+             :data="clientData"
+             :stripe="true"
+             :border="true"
+             style="height: 100%"></Table>
+    </TabPane>
+    <TabPane label="图表" name="five" style="height: 100%; overflow-y: auto;">
+      <div style="width: 500px; height: 300px">
+        <v-chart class="chart" :option="option"/>
+      </div>
+    </TabPane>
+    <TabPane label="Stream" name="six" style="height: 100%; overflow-y: auto;">
+      <Table size="small"
+             :columns="clientColumns"
+             :data="clientData"
+             :stripe="true"
+             :border="true"
+             style="height: 100%"></Table>
+    </TabPane>
+  </Tabs>
+</template>
+
+<script>
+
+import {use} from 'echarts/core'
+import {CanvasRenderer} from 'echarts/renderers'
+import {PieChart} from 'echarts/charts'
+import {LegendComponent, TitleComponent, TooltipComponent} from 'echarts/components'
+import VChart, {THEME_KEY} from 'vue-echarts'
+import ServerInfo from './serverInfo'
+import SlowLog from './SlowLog'
+import Api from '../../api'
+
+use([
+  CanvasRenderer,
+  PieChart,
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent
+])
+
+export default {
+  name: 'infoTabs',
+  props: {
+    currentConnectionId: {
+      type: Number,
+      default: () => -1
+    },
+    currentConnectionIndex: {
+      type: Number,
+      default: () => 0
+    }
+  },
+  provide: {
+    [THEME_KEY]: 'dark'
+  },
+  components: {
+    VChart,
+    ServerInfo,
+    SlowLog
+  },
+  data () {
+    return {
+      infoCollapse: 'Server',
+      clientTimer: null,
+      tab: 'first',
+      info: {version: '-', memory: '-', keyNum: 0, clientNum: 0, cpuSys: 0, process: 0, ratio: 0},
+      option: {
+        title: {
+          text: '内存使用情况',
+          left: 'center'
+        },
+        tooltip: {
+          trigger: 'item',
+          formatter: '{a} <br/>{b} : {c} ({d}%)'
+        },
+        legend: {
+          orient: 'vertical',
+          left: 'left',
+          data: [
+            '总内存',
+            '已用内存'
+          ]
+        },
+        series: [
+          {
+            name: 'Traffic Sources',
+            type: 'pie',
+            radius: '55%',
+            center: ['50%', '60%'],
+            data: [
+              {value: 335, name: '总内存'},
+              {value: 310, name: '已用内存'},
+              {value: 234, name: 'Ad Networks'},
+              {value: 135, name: 'Video Ads'},
+              {value: 1548, name: 'Search Engines'}
+            ],
+            emphasis: {
+              itemStyle: {
+                shadowBlur: 10,
+                shadowOffsetX: 0,
+                shadowColor: 'rgba(0, 0, 0, 0.5)'
+              }
+            }
+          }
+        ]
+      },
+      slowLogs: [],
+      serverConfig: [],
+      serverConfigColumns: [
+        {
+          title: '配置项',
+          key: 'key',
+          width: 250
+        },
+        {
+          title: '值',
+          key: 'value'
+        }
+      ],
+      clientColumns: [
+        {
+          title: '客户端地址',
+          key: 'addr',
+          width: 150
+        },
+        {
+          title: '名称',
+          key: 'name'
+        },
+        {
+          title: '数据库ID',
+          key: 'db'
+        },
+        {
+          title: '最近命令',
+          key: 'cmd'
+        },
+        {
+          title: '连接时长(s)',
+          key: 'age'
+        },
+        {
+          title: '空闲时长(s)',
+          key: 'idle'
+        },
+        {
+          title: 'Flags',
+          key: 'flags'
+        },
+        {
+          title: '关闭',
+          key: 'action',
+          fixed: 'right',
+          width: 80,
+          render: (h, params) => {
+            return h('div', [
+              h('Button', {
+                props: {
+                  type: 'text',
+                  size: 'small'
+                },
+                on: {
+                  click: () => {
+                    console.log('点击删除按钮', params)
+                  }
+                }
+              }, '关闭')
+            ])
+          }
+        }
+      ],
+      clientData: [],
+      serverInfo: {}
+    }
+  },
+  mounted () {
+    this.loadInfo()
+  },
+  destroyed () {
+    if (this.clientTimer != null) {
+      clearInterval(this.clientTimer)
+    }
+  },
+  methods: {
+    loadInfo () {
+      Api.info({
+        id: this.currentConnectionId
+      }, (data) => {
+        if (data.status === 200) {
+          let dataStrs = data.data.data.split('\r\n')
+          let infos = {}
+          let objVal = []
+          let objKey = ''
+          this.infoCollapse = ''
+          for (let i = 0; i < dataStrs.length; i++) {
+            if (dataStrs[i].indexOf('# ') > -1) {
+              if (objVal.length > 0 && objKey !== '') {
+                infos[objKey] = objVal.join('\r\n')
+              }
+              objKey = dataStrs[i].replace('#', '').replace(' ', '')
+              if (this.infoCollapse === '') {
+                this.infoCollapse = objKey
+              }
+              objVal = []
+            } else {
+              objVal.push(dataStrs[i])
+            }
+          }
+          infos[objKey] = objVal.join('\r\n')
+          this.serverInfo = Object.assign({}, infos)
+          this.infoCard(infos)
+          let config = []
+          let srvConfig = data.data.config
+          for (let i = 0; i < srvConfig.length; i = i + 2) {
+            if (srvConfig[i] !== 'requirepass') {
+              // eslint-disable-next-line standard/object-curly-even-spacing
+              config.push({'key': srvConfig[i], 'value': srvConfig[i + 1]})
+            }
+          }
+          this.serverConfig = config
+
+          for (let i = 0; i < data.data.slowLogs.length; i++) {
+            data.data.slowLogs[i].used_time_s = (data.data.slowLogs[i].used_time / 1000 / 1000).toFixed(3)
+          }
+
+          this.slowLogs = data.data.slowLogs
+        } else {
+          this.$Message.error(data.msg)
+        }
+      })
+    },
+    loopEvent () { // 获取客户端信息
+      Api.sendCommand({
+        command: '["CLIENT", "LIST"]',
+        id: this.currentConnectionId
+      }, (data) => {
+        let clientData = []
+        data.data.split('\n').forEach((value) => {
+          if (value) {
+            let vd = {}
+            value.split(' ').forEach((vv) => {
+              let ss = vv.split('=')
+              vd[ss[0]] = ss[1]
+            })
+            clientData.push(vd)
+          }
+        })
+        this.clientData = clientData
+      })
+    },
+    infoCard () {
+      this.info.version = this.serverInfo.Server.split('\r\n')[0].replace(/redis_version:/, '')
+      this.info.memory = this.serverInfo.Memory.split('\r\n')[1].replace(/used_memory_human:/, '')
+      this.info.keyNum = 0
+      this.serverInfo.Keyspace.split('\r\n').forEach((item) => {
+        if (item) {
+          this.info.keyNum += parseInt(item.match(/db\d+:keys=(\d+),/)[1])
+        }
+      })
+      this.info.clientNum = this.serverInfo.Clients.split('\r\n')[0].replace(/connected_clients:/, '')
+      this.info.cpuSys = parseFloat(this.serverInfo.CPU.split('\r\n')[0].replace(/used_cpu_sys:/, '')).toFixed(2) + '%'
+
+      let keyspaceHits = parseFloat(this.serverInfo.Stats.match(/keyspace_hits:(\d+)/)[1])
+      let keyspaceMisses = parseFloat(this.serverInfo.Stats.match(/keyspace_misses:(\d+)/)[1])
+      console.log(keyspaceMisses, keyspaceHits)
+      this.info.ratio = (keyspaceHits * 100 / (keyspaceHits + keyspaceMisses)).toFixed(2) + '%'
+    }
+  },
+  watch: {
+    currentConnectionId () {
+      this.loadInfo()
+    },
+    tab (newVal) {
+      if (newVal === 'four') {
+        if (!this.clientTimer) {
+          this.loopEvent()
+          this.clientTimer = setInterval(this.loopEvent, 2000)
+        }
+      }
+    }
+  }
+}
+</script>
+
+<style>
+.serverInfo .ivu-card-head {
+  text-align: center;
+}
+
+.serverInfo .ivu-card-body {
+  text-align: center;
+}
+</style>
