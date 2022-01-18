@@ -397,7 +397,7 @@ export default {
     infoCard () {
       this.info.version = this.serverInfo.Server.split('\r\n')[0].replace(/redis_version:/, '')
       this.info.memory = this.serverInfo.Memory.split('\r\n')[1].replace(/used_memory_human:/, '')
-      let rssMemory = this.serverInfo.Memory.match(/used_memory_rss_human:([0-9]+(\.?[0-9]+)?)/)[1]
+      let peakMemory = this.serverInfo.Memory.match(/used_memory_peak_human:([0-9]+(\.?[0-9]+)?)/)[1]
       this.info.keyNum = 0
       this.serverInfo.Keyspace.split('\r\n').forEach((item) => {
         if (item) {
@@ -417,7 +417,7 @@ export default {
       let m = d.getMinutes()
       this.timeLineData.push((h > 9 ? h : '0' + h) + ':' + (m > 9 ? m : '0' + m) + ':' + (s > 9 ? s : '0' + s))
       this.cpuData.push(parseFloat(this.serverInfo.CPU.split('\r\n')[0].replace(/used_cpu_sys:/, '')).toFixed(2))
-      this.memData1.push(rssMemory.replace('M', ''))
+      this.memData1.push(peakMemory.replace('M', ''))
       this.memData2.push(this.info.memory.replace('M', ''))
       this.connData.push(this.info.clientNum)
       this.timeLineData = this.timeLineData.slice(-30)
