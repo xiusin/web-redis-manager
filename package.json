@@ -1,5 +1,5 @@
 {
-  "name": "RedisDesktop",
+  "name": "redisdesktop",
   "version": "2.0.0",
   "description": "redis database mamager",
   "author": "xiusin",
@@ -7,11 +7,7 @@
   "scripts": {
     "dev": "node build/dev-server.js",
     "start": "node build/dev-server.js",
-    "build": "node build/build.js",
-    "unit": "cross-env BABEL_ENV=test karma start test/unit/karma.conf.js --single-run",
-    "e2e": "node test/e2e/runner.js",
-    "test": "npm run unit && npm run e2e",
-    "lint": "eslint --ext .js,.vue src test/unit/specs test/e2e/specs"
+    "build": "node build/build.js"
   },
   "dependencies": {
     "browser-update": "^2.1.4",
@@ -22,8 +18,8 @@
     "md5": "^2.2.1",
     "sass-loader": "^7.1.0",
     "vue": "^2.5.21",
+    "vue-codemirror": "^4.0.6",
     "vue-echarts": "^6.0.0",
-    "vue-json-pretty": "^1.4.1",
     "vue-resource": "^1.5.1",
     "vue-router": "^2.3.1",
     "vuex": "^2.3.1",

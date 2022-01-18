@@ -5,6 +5,8 @@ import (
   "encoding/json"
   "errors"
   "fmt"
+  "github.com/gorilla/websocket"
+  "github.com/xiusin/logger"
   "math"
   "math/rand"
   "os"
@@ -18,8 +20,7 @@ import (
   "github.com/gomodule/redigo/redis"
 )
 
-//var Window *astilectron.Window
-//var pubSubs = map[string]bool{}
+var pubSubs = map[string]bool{}
 var cliClients = cliConns{conns: map[string]redis.Conn{}}
 
 type slowLog struct {
@@ -52,10 +53,6 @@ func RedisManagerGetInfo(data RequestData) string {
   if err != nil {
     return JSON(ResponseData{FailedCode, "读取慢日志失败:" + err.Error(), nil})
   }
-  //1：每个慢查询条目的唯一的递增标识符。
-  //2：处理记录命令的unix时间戳。
-  //3：命令执行所需的总时间，以微秒为单位。
-  //4：组成该命令的参数的数组。
   structLogs := []slowLog{}
   for _, log := range logs {
     var sl slowLog
@@ -177,100 +174,98 @@ func RedisManagerRenameKey(data RequestData) string {
 }
 
 func RedisPubSub(data RequestData) string {
-  return JSON(ResponseData{FailedCode, "暂停使用", nil})
-  //wsIntf, _ := data["ws"]
-  //channelPrefix := "channel-"
-  //var ws *websocket.Conn
-  //if wsIntf != nil {
-  //  channelPrefix = "ws-channel-"
-  //  ws = wsIntf.(*websocket.Conn)
-  //} else {
-  //  ws = nil
-  //}
-  //client, _ := getRedisClient(data, false, false)
-  //id := getFromInterfaceOrFloat64ToInt(data["id"])
-  //channels, err := redis.Strings(client.Do("PUBSUB", "channels"))
-  //if err != nil {
-  //  return JSON(ResponseData{FailedCode, "获取订阅列表失败", err.Error()})
-  //}
-  //ok, _ := pubSubs[fmt.Sprintf("%s%d", channelPrefix, id)]
-  //
-  //// 检查订阅所有通道
-  //if (Window != nil || ws != nil) && !ok {
-  //  pubSubs[fmt.Sprintf("%s%d", channelPrefix, id)] = true
-  //  go func() {
-  //    defer func(id int) {
-  //      pubSubs[fmt.Sprintf("%s%d", channelPrefix, id)] = false
-  //      defer client.Close()
-  //    }(id)
-  //    fmt.Printf("ID为%d开始订阅所有频道\n", id)
-  //    pubsub := redis.PubSubConn{Conn: client}
-  //    if err := pubsub.PSubscribe("*"); err != nil {
-  //      panic(err)
-  //    }
-  //    for {
-  //      message := pubsub.Receive()
-  //      switch v := message.(type) {
-  //      case redis.Message: //单个订阅subscribe
-  //        retData := map[string]string{
-  //          "data":    string(v.Data),
-  //          "id":      strconv.Itoa(id),
-  //          "channel": v.Channel,
-  //          "time":    time.Now().In(loc).Format("15:04:05"),
-  //        }
-  //        if ws != nil {
-  //          resultValue, _ := json.Marshal(&retData)
-  //          if err := ws.WriteMessage(websocket.TextMessage, resultValue); err != nil {
-  //            logger.Error(err)
-  //            return
-  //          }
-  //        } else if Window != nil {
-  //          _ = Window.SendMessage(retData, func(m *astilectron.EventMessage) {})
-  //        }
-  //      case error:
-  //        panic(v)
-  //      default:
-  //      }
-  //    }
-  //  }()
-  //}
-  //
-  //// 获取所有通道列表, 如果通道还没订阅那么就开启订阅协程
-  //if channel, ok := data["channel"]; ok {
-  //  msg := data["msg"]
-  //  if msg == "" || channel == "" {
-  //    return JSON(ResponseData{FailedCode, "发布内容失败", nil})
-  //  }
-  //  // 先查看是否有消费者订阅频道
-  //  var flag bool
-  //  for _, ch := range channels {
-  //    if ch == channel {
-  //      flag = true
-  //      break
-  //    }
-  //  }
-  //  if !flag {
-  //    go func() {
-  //      client, _ := getRedisClient(data, false, false)
-  //      defer client.Close()
-  //      pubsub := redis.PubSubConn{Conn: client}
-  //      if err := pubsub.Subscribe(channel); err != nil {
-  //        panic(err)
-  //      }
-  //      for range time.Tick(time.Second * 10) {
-  //        pubsub.ReceiveWithTimeout(time.Second)
-  //      }
-  //    }()
-  //  }
-  //  _, err := client.Do("PUBLISH", channel, msg)
-  //  if err != nil {
-  //    return JSON(ResponseData{FailedCode, "发布内容失败", err.Error()})
-  //  } else {
-  //    return JSON(ResponseData{SuccessCode, "发布内容成功", nil})
-  //  }
-  //}
-  //
-  //return JSON(ResponseData{SuccessCode, SuccessMsg, channels})
+  wsIntf, _ := data["ws"]
+  channelPrefix := "channel-"
+  var ws *websocket.Conn
+  if wsIntf != nil {
+    channelPrefix = "ws-channel-"
+    ws = wsIntf.(*websocket.Conn)
+  } else {
+    ws = nil
+  }
+  client, _ := getRedisClient(data, false, false)
+  id := getFromInterfaceOrFloat64ToInt(data["id"])
+  channels, err := redis.Strings(client.Do("PUBSUB", "channels"))
+  if err != nil {
+    return JSON(ResponseData{FailedCode, "获取订阅列表失败", err.Error()})
+  }
+  ok, _ := pubSubs[fmt.Sprintf("%s%d", channelPrefix, id)]
+
+  // 检查订阅所有通道
+  if (ws != nil) && !ok {
+    pubSubs[fmt.Sprintf("%s%d", channelPrefix, id)] = true
+    go func() {
+      defer func(id int) {
+        pubSubs[fmt.Sprintf("%s%d", channelPrefix, id)] = false
+        defer client.Close()
+      }(id)
+      fmt.Printf("ID为%d开始订阅所有频道\n", id)
+      pubsub := redis.PubSubConn{Conn: client}
+      if err := pubsub.PSubscribe("*"); err != nil {
+        panic(err)
+      }
+      for {
+        message := pubsub.Receive()
+        fmt.Println("message", message)
+        switch v := message.(type) {
+        case redis.Message: //单个订阅subscribe
+          retData := map[string]string{
+            "data":    string(v.Data),
+            "id":      strconv.Itoa(id),
+            "channel": v.Channel,
+            "time":    time.Now().In(loc).Format("15:04:05"),
+          }
+          if ws != nil {
+            resultValue, _ := json.Marshal(&retData)
+            if err := ws.WriteMessage(websocket.TextMessage, resultValue); err != nil {
+              logger.Error(err)
+              return
+            }
+          }
+        case error:
+          panic(v)
+        default:
+        }
+      }
+    }()
+  }
+
+  // 获取所有通道列表, 如果通道还没订阅那么就开启订阅协程
+  if channel, ok := data["channel"]; ok {
+    msg := data["msg"]
+    if msg == "" || channel == "" {
+      return JSON(ResponseData{FailedCode, "发布内容失败", nil})
+    }
+    // 先查看是否有消费者订阅频道
+    var flag bool
+    for _, ch := range channels {
+      if ch == channel {
+        flag = true
+        break
+      }
+    }
+    if !flag {
+      go func() {
+        client, _ := getRedisClient(data, false, false)
+        defer client.Close()
+        pubsub := redis.PubSubConn{Conn: client}
+        if err := pubsub.Subscribe(channel); err != nil {
+          panic(err)
+        }
+        for range time.Tick(time.Second * 10) {
+          pubsub.ReceiveWithTimeout(time.Second)
+        }
+      }()
+    }
+    _, err := client.Do("PUBLISH", channel, msg)
+    if err != nil {
+      return JSON(ResponseData{FailedCode, "发布内容失败", err.Error()})
+    } else {
+      return JSON(ResponseData{SuccessCode, "发布内容成功", nil})
+    }
+  }
+
+  return JSON(ResponseData{SuccessCode, SuccessMsg, channels})
 }
 
 func RedisManagerCommand(data RequestData) string {
@@ -446,10 +441,7 @@ func getRedisClient(data RequestData, getSelectedIndexClient bool, getKey bool) 
         _, err := c.Do("PING")
         return err
       },
-      MaxIdle:     10,
-      MaxActive:   0,
-      IdleTimeout: time.Hour,
-      Wait:        true,
+      MaxIdle: 3, MaxActive: 0, IdleTimeout: time.Minute * 10, Wait: true,
     }
     redisPools[config.ID] = pool
   }

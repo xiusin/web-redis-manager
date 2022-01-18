@@ -126,23 +126,11 @@
                       </ButtonGroup>
                     </Col>
                   </Row>
-                  <div v-if="data.type === 'string'" style="margin-top: 3px; height: 600px; overflow: auto">
-                    <Input v-model="data.data" v-if="!textType" type="textarea" :style="{height: '575px'}"
-                           :autosize="{ minRows: 25, maxRows: 25 }" placeholder="Enter something..."></Input>
-                    <vue-json-pretty
-                      v-if="textType"
-                      :path="'res'"
-                      :data="formatJson(data.data, key)"
-                    >
-                    </vue-json-pretty>
-
+                  <div v-if="data.type === 'string'" style="margin-top: 3px; height: 800px; overflow: auto">
+                    <codemirror v-model="data.data" :options="editorOpt" />
                     <Row type="flex">
                       <Col span="24" style="text-align: right">
-                        <i-switch size="large" v-model="textType"
-                                  style="height: 24px; line-height: 23px;margin-right: 5px;">
-                          <span slot="open">Json</span>
-                          <span slot="close">Text</span>
-                        </i-switch>
+
                         <Button style="float: right" size="small" type="info" @click="updateValue(key, data, 'value')"
                                 :loading="buttonLoading">保存
                         </Button>
@@ -166,18 +154,11 @@
                           <Button long @click="removeRow(key,data)">删除行</Button>
                           <br/><br/>
                           <Input placeholder="列表中查询..." v-model="searchKey"></Input>
-                          <i-switch size="large" v-model="textType" style="right: 3px;position: absolute;bottom: 3px;">
-                            <span slot="open">Json</span>
-                            <span slot="close">Text</span>
-                          </i-switch>
                         </Card>
                       </Col>
                     </Row>
                     <div style="height: 350px; overflow:hidden;">
-                      <Input v-if="!textType"
-                             v-model="currentSelectRowData.value"
-                             type="textarea"
-                             style="margin-top: 4px;" :autosize="{minRows:14, maxRows: 14}" placeholder="列值"></Input>
+                      <codemirror v-model="currentSelectRowData.value" :options="editorOpt" />
                       <Button
                         v-if="!textType"
                         style="float: right"
@@ -185,14 +166,6 @@
                         :loading="buttonLoading"
                       >保存
                       </Button>
-
-                      <vue-json-pretty
-                        v-if="textType"
-                        :path="'res'"
-                        style="height: 350px; overflow:auto;"
-                        :data="formatJson(currentSelectRowData.value, key)"
-                      >
-                      </vue-json-pretty>
                     </div>
                   </div>
                 </TabPane>
@@ -424,7 +397,7 @@
 </template>
 <script>
 import Vue from 'vue'
-import VueJsonPretty from 'vue-json-pretty'
+import {codemirror} from 'vue-codemirror'
 import VueTerminal from '../../vue-terminal-ui'
 import Api from '../api'
 import $ from 'jquery'
@@ -433,16 +406,21 @@ import CryptoJS from 'crypto-js'
 import InfoTabs from './components/infoTabs'
 import AddRowModal from './components/modals/addRowModal'
 
+import 'codemirror/lib/codemirror.css'
+import 'codemirror/mode/javascript/javascript.js'
+import 'codemirror/theme/material.css'
+
 export default {
   name: 'MainPage',
   components: {
     AddRowModal,
-    VueJsonPretty,
+    codemirror,
     VueTerminal,
     InfoTabs
   },
   data () {
     return {
+      editorOpt: {tabSize: 4, mode: 'text/javascript', theme: 'material', height: '600px', lineNumbers: true, line: true, smartIndent: true},
       keysList: [], // DB的key列表
       customChannel: '',
       chanMegs: {}, // 消息内容
@@ -547,11 +525,7 @@ export default {
           index: dbIdx
         }, (res) => {
           this.confirmModal = false
-          // if (res.status !== 200) {
-          //   this.$Message.error(res.msg)
-          // } else {
           this.tabs[this.getTabsKey()]['keys'] = {}
-          // }
         })
       }
       window.showAddKeyModal = (serverIdx, dbIdx) => {
@@ -1217,7 +1191,6 @@ export default {
       return data ? '___::___' + CryptoJS.AES.encrypt(JSON.stringify(data), this.sk).toString() : ''
     },
     decryptData (data) {
-      // TODO 解码,目前没找到类库可以对称解密go字符串
       return CryptoJS.AES.decrypt(data, this.sk).toString()
     },
     getConnectionList () {

@@ -80,12 +80,6 @@
       </div>
     </TabPane>
     <TabPane label="Stream" name="six" style="height: 100%; overflow-y: auto;">
-      <Table size="small"
-             :columns="clientColumns"
-             :data="clientData"
-             :stripe="true"
-             :border="true"
-             style="height: 100%"></Table>
     </TabPane>
   </Tabs>
 </template>
@@ -133,6 +127,7 @@ export default {
     return {
       infoCollapse: 'Server',
       clientTimer: null,
+      stopInterval: false,
       tab: 'first',
       info: {version: '-', memory: '-', keyNum: 0, clientNum: 0, cpuSys: 0, process: 0, ratio: 0},
       option: {
@@ -192,14 +187,17 @@ export default {
         {
           title: '客户端地址',
           key: 'addr',
+          sortable: true,
           width: 150
         },
         {
           title: '名称',
+          sortable: true,
           key: 'name'
         },
         {
           title: '数据库ID',
+          sortable: true,
           key: 'db'
         },
         {
@@ -208,35 +206,64 @@ export default {
         },
         {
           title: '连接时长(s)',
+          sortable: true,
           key: 'age'
         },
         {
           title: '空闲时长(s)',
+          sortable: true,
           key: 'idle'
         },
         {
           title: 'Flags',
+          sortable: true,
           key: 'flags'
         },
         {
-          title: '关闭',
+          renderHeader: (h, params) => {
+            return h('Button', {
+              props: {
+                type: 'primary',
+                size: 'small'
+              },
+              on: {
+                click: () => {
+                  this.stopInterval = !this.stopInterval
+                }
+              }
+            }, this.stopInterval ? '开始刷新' : '停止刷新')
+          },
           key: 'action',
           fixed: 'right',
-          width: 80,
+          width: 95,
           render: (h, params) => {
-            return h('div', [
+            let isLocal = params.row.name.indexOf('RDM-') > -1
+            return !isLocal ? h('div', {
+              style: {
+                textAlign: 'center'
+              }
+            }, [
               h('Button', {
                 props: {
-                  type: 'text',
+                  type: 'primary',
                   size: 'small'
                 },
                 on: {
                   click: () => {
-                    console.log('点击删除按钮', params)
+                    Api.sendCommand({
+                      command: '["CLIENT", "KILL", "' + params.row.addr + '"]',
+                      id: this.currentConnectionId
+                    }, (data) => {
+                      if (data.status === 200 && data.data === 'OK') {
+                        this.$Message.success('关闭客户端连接成功')
+                      } else {
+                        this.$Message.error('关闭客户端失败' + data.msg)
+                      }
+                    })
                   }
                 }
               }, '关闭')
-            ])
+            ]) : ''
           }
         }
       ],
@@ -301,6 +328,7 @@ export default {
       })
     },
     loopEvent () { // 获取客户端信息
+      if (this.stopInterval) return
       Api.sendCommand({
         command: '["CLIENT", "LIST"]',
         id: this.currentConnectionId
@@ -333,7 +361,6 @@ export default {
 
       let keyspaceHits = parseFloat(this.serverInfo.Stats.match(/keyspace_hits:(\d+)/)[1])
       let keyspaceMisses = parseFloat(this.serverInfo.Stats.match(/keyspace_misses:(\d+)/)[1])
-      console.log(keyspaceMisses, keyspaceHits)
       this.info.ratio = (keyspaceHits * 100 / (keyspaceHits + keyspaceMisses)).toFixed(2) + '%'
     }
   },

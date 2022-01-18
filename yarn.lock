@@ -1822,6 +1822,11 @@ code-point-at@^1.0.0:
   resolved "https://registry.yarnpkg.com/code-point-at/-/code-point-at-1.1.0.tgz#0d070b4d043a5bea33a2f1a40e2edb3d9a4ccf77"
   integrity sha1-DQcLTQQ6W+ozovGkDi7bPZpMz3c=
 
+codemirror@^5.41.0:
+  version "5.65.0"
+  resolved "https://registry.npmmirror.com/codemirror/download/codemirror-5.65.0.tgz#50344359393579f526ca53797e510ff75477117f"
+  integrity sha512-gWEnHKEcz1Hyz7fsQWpK7P0sPI2/kSkRX2tc7DFA6TmZuDN75x/1ejnH/Pn8adYKrLEA1V2ww6L00GudHZbSKw==
+
 collection-visit@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/collection-visit/-/collection-visit-1.0.0.tgz#4bc0373c164bc3291b4d368c829cf1a80a59dca0"
@@ -2500,6 +2505,11 @@ di@^0.0.1:
   version "0.0.1"
   resolved "https://registry.yarnpkg.com/di/-/di-0.0.1.tgz#806649326ceaa7caa3306d75d985ea2748ba913c"
   integrity sha1-gGZJMmzqp8qjMG112YXqJ0i6kTw=
+
+diff-match-patch@^1.0.0:
+  version "1.0.5"
+  resolved "https://registry.nlark.com/diff-match-patch/download/diff-match-patch-1.0.5.tgz?cache=0&sync_timestamp=1624608107067&other_urls=https%3A%2F%2Fregistry.nlark.com%2Fdiff-match-patch%2Fdownload%2Fdiff-match-patch-1.0.5.tgz#abb584d5f10cd1196dfc55aa03701592ae3f7b37"
+  integrity sha1-q7WE1fEM0Rlt/FWqA3AVkq4/ezc=
 
 diff@3.5.0, diff@^3.1.0:
   version "3.5.0"
@@ -8565,6 +8575,14 @@ void-elements@^2.0.0:
   resolved "https://registry.yarnpkg.com/void-elements/-/void-elements-2.0.1.tgz#c066afb582bb1cb4128d60ea92392e94d5e9dbec"
   integrity sha1-wGavtYK7HLQSjWDqkjkulNXp2+w=
 
+vue-codemirror@^4.0.6:
+  version "4.0.6"
+  resolved "https://registry.npmmirror.com/vue-codemirror/download/vue-codemirror-4.0.6.tgz#b786bb80d8d762a93aab8e46f79a81006f0437c4"
+  integrity sha512-ilU7Uf0mqBNSSV3KT7FNEeRIxH4s1fmpG4TfHlzvXn0QiQAbkXS9lLfwuZpaBVEnpP5CSE62iGJjoliTuA8poQ==
+  dependencies:
+    codemirror "^5.41.0"
+    diff-match-patch "^1.0.0"
+
 vue-demi@^0.11.2:
   version "0.11.4"
   resolved "https://registry.npmmirror.com/vue-demi/download/vue-demi-0.11.4.tgz?cache=0&sync_timestamp=1637503318064&other_urls=https%3A%2F%2Fregistry.npmmirror.com%2Fvue-demi%2Fdownload%2Fvue-demi-0.11.4.tgz#6101992fe4724cf5634018a16e953f3052e94e2a"
@@ -8582,11 +8600,6 @@ vue-hot-reload-api@^2.1.0:
   version "2.3.4"
   resolved "https://registry.yarnpkg.com/vue-hot-reload-api/-/vue-hot-reload-api-2.3.4.tgz#532955cc1eb208a3d990b3a9f9a70574657e08f2"
   integrity sha512-BXq3jwIagosjgNVae6tkHzzIk6a8MHFtzAdwhnV5VlvPTFxDCvIttgSiHWjdGoTJvXtmRu5HacExfdarRcFhog==
-
-vue-json-pretty@^1.4.1:
-  version "1.7.1"
-  resolved "https://registry.yarnpkg.com/vue-json-pretty/-/vue-json-pretty-1.7.1.tgz#c7cd0ef9e85d89025a8bf87a0da14b0fc7d19913"
-  integrity sha512-D7aHQ5XPooSAEndTkb/RvXXJdmuCjaj14IMRdJwO4q+yJMpzPv87FT2gz4Dt2mCr1EzFyat7z7Qv9R+l/1as+w==
 
 vue-loader@^12.1.0:
   version "12.2.2"

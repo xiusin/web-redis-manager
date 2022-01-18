@@ -5,12 +5,11 @@ go 1.17
 require (
 	github.com/gomodule/redigo v1.8.8
 	github.com/gorilla/websocket v1.4.2
+	github.com/kataras/basicauth v0.0.1
 	github.com/rs/cors v1.7.0
 	github.com/xiusin/logger v0.0.10-0.20220103084022-9cb8378d9b03
 	golang.org/x/sys v0.0.0-20211113001501-0c823b97ae02 // indirect
 )
-
-require github.com/kataras/basicauth v0.0.1
 
 require (
 	github.com/fatih/color v1.13.0 // indirect

@@ -1,16 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="793cbf15-d83f-409e-b59b-b4d6dcb70aca" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+    <list default="true" id="793cbf15-d83f-409e-b59b-b4d6dcb70aca" name="Default Changelist" comment="rename, 数据监控">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/package.json" beforeDir="false" afterPath="$PROJECT_DIR$/package.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/server/go.mod" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/router/router.go" beforeDir="false" afterPath="$PROJECT_DIR$/server/router/router.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/src/actions.go" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/actions.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/RedisManager/Index.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/RedisManager/Index.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/RedisManager/api.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/RedisManager/api.js" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/RedisManager/pages/MainPage.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/RedisManager/pages/MainPage.vue" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/RedisManager/store/actions.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/RedisManager/store/actions.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/RedisManager/store/index.js" beforeDir="false" afterPath="$PROJECT_DIR$/src/RedisManager/store/index.js" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/RedisManager/pages/components/infoTabs.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/RedisManager/pages/components/infoTabs.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/yarn.lock" beforeDir="false" afterPath="$PROJECT_DIR$/yarn.lock" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -106,7 +105,8 @@
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_NEW_TODO" value="false" />
     <MESSAGE value="新版调整" />
-    <option name="LAST_COMMIT_MESSAGE" value="新版调整" />
+    <MESSAGE value="rename, 数据监控" />
+    <option name="LAST_COMMIT_MESSAGE" value="rename, 数据监控" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
@@ -116,14 +116,8 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/server/src/actions.go</url>
-          <line>593</line>
+          <line>585</line>
           <option name="timeStamp" value="1" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="javascript">
-          <url>file://$PROJECT_DIR$/src/RedisManager/pages/components/infoTabs.vue</url>
-          <line>254</line>
-          <properties lambdaOrdinal="-1" />
-          <option name="timeStamp" value="2" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
