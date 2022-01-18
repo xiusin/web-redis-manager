@@ -431,11 +431,10 @@ export default {
       terminalTabs: {},
       cliOpen: false,
       channels: [],
-      inited: false,
       newKeyType: 'string',
       searchKey: '',
       textType: false,
-      currentConnectionId: 0,
+      currentConnectionId: '',
       buttonLoading: false,
       currentKey: '',
       currentConnection: '',
@@ -466,30 +465,8 @@ export default {
       confirmModalText: '',
       confirmModalEvent: () => {},
       keyFilter: '', // key过滤
-      keyPage: 1, // 当页码
       currentTotalKeyNum: 0, // 当前DB的key总数, 结合filter
       currentDbNode: null // 当前打开的DB节点
-    }
-  },
-  created () {
-    let commandOrControlKeyDown = false
-    document.onkeydown = (e) => {
-      let key = window.event.keyCode
-      if (key === 93) {
-        commandOrControlKeyDown = true
-      }
-      // 屏蔽command+r f12的刷新行为
-      if ((key === 82 && commandOrControlKeyDown) || key === 123) {
-        e.preventDefault()
-        return false
-      }
-      return true
-    }
-    document.onkeyup = (e) => {
-      let key = window.event.keyCode
-      if (key === 93) {
-        commandOrControlKeyDown = false
-      }
     }
   },
   mounted () {
@@ -1260,11 +1237,10 @@ export default {
                 this.confirmModalEvent = () => {
                   this.confirmModal = false
                   data.expand = false
-                  this.currentConnectionId = 0
+                  this.currentConnectionId = ''
                   this.currentConnection = ''
                   this.currentDbNode = null
-                  this.keyFilter = '*'
-                  this.keyPage = 1
+                  this.keyFilter = ''
                   this.keysList = []
 
                   this.clearAll(data)
@@ -1303,7 +1279,7 @@ export default {
                       }
                     }
                     if (getIndex > -1) {
-                      this.currentConnectionId = 0
+                      this.currentConnectionId = ''
                       this.currentConnection = ''
                       this.connectionTreeList.splice(getIndex, 1)
                     }
@@ -1411,8 +1387,7 @@ export default {
         id: item.redis_id,
         index: item.db,
         action: item.action,
-        filter: this.keyFilter,
-        page: this.keyPage
+        filter: this.keyFilter
       }, (res) => {
         if (res.status !== 200) {
           this.$Message.error(res.msg)
@@ -1736,6 +1711,9 @@ export default {
 }
 .showJsonModal .ivu-modal-body {
   padding: 0;
+}
+.vue-codemirror {
+  margin-top: 10px;
 }
 </style>
 
