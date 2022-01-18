@@ -23,7 +23,6 @@ export default {
   },
   // 保存配置
   'removeKey': async ({ commit }, payload) => {
-    // 调接口
     return await Api.removeKey(payload)
   },
   // 保存配置
@@ -52,5 +51,9 @@ export default {
   // 发布订阅
   'pubSub': async ({ commit }, payload) => {
     return await Api.pubSub(payload)
+  },
+  // 重命名key
+  'renameKey': async ({ commit }, payload) => {
+    return await Api.renameKey(payload)
   }
 }

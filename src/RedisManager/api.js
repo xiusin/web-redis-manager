@@ -31,6 +31,9 @@ export default {
   deleteKey: async (data, callback) => {
     return await Vue.prototype.$Websocket.post('/redis/connection/deleteKey', data, callback)
   },
+  renameKey: async (data, callback) => {
+    return await Vue.prototype.$Websocket.post('/redis/connection/renameKey', data, callback)
+  },
   flushDB: async (data, callback) => {
     return await Vue.prototype.$Websocket.post('/redis/connection/flushDB', data, callback)
   },

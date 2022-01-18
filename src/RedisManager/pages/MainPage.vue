@@ -305,6 +305,32 @@
       </div>
     </Modal>
 
+    <Modal v-model="renameModal" width="360">
+      <p slot="header" style="color:#f60;">
+        <Icon type="ios-information-circle"></Icon>
+        <span>重命名key</span>
+      </p>
+      <div>
+        <Form :label-width="80">
+          <FormItem label="原名称:">
+            <Input v-model="renameValue.old" readonly></Input>
+          </FormItem>
+          <FormItem label="新名称:">
+            <Input v-model="renameValue.new" placeholder=""></Input>
+          </FormItem>
+        </Form>
+      </div>
+      <div slot="footer">
+        <Row :gutter="24">
+          <Col span="24">
+            <Button type="primary" style="float: right" size="small" :loading="modal_loading"
+                    @click="renameKey(renameValue)">确定
+            </Button>
+          </Col>
+        </Row>
+      </div>
+    </Modal>
+
     <Modal v-model="addKeyModal" width="500">
       <p slot="header" style="color:#f60;">
         <Icon type="ios-information-circle"></Icon>
@@ -440,6 +466,7 @@ export default {
       currentSelectRowData: {}, // 用于行列选择
       currentHandleNodeData: {}, // 用于基于当前操作数据的节点
       formItem: {title: '', ip: '127.0.0.1', port: '6379', auth: ''},
+      ttlModal: false,
       ttlValue: {'data': {}, 'key': ''},
       rowValue: {'data': {}, 'key': '', 'score': 100, 'newRowKey': '', 'newRowValue': ''},
       newValue: {'data': '', 'key': '', 'keyorscore': '', 'db': -1, 'redis_id': 0},
@@ -450,18 +477,16 @@ export default {
       currentLoadingKey: '缓存',
       tabs: {},
       connectionModal: false,
-      ttlModal: false,
+      renameModal: false,
+      renameValue: {'new': '', 'old': ''},
       addKeyModal: false,
       addRowModal: false,
       modal_loading: false,
-      buttonProps: {
-        size: 'small'
-      },
+      buttonProps: {'size': 'small'},
       keyLoading: false,
       confirmModal: false,
       confirmModalText: '',
-      confirmModalEvent: () => {
-      },
+      confirmModalEvent: () => {},
       keyFilter: '', // key过滤
       keyPage: 1, // 当页码
       currentTotalKeyNum: 0, // 当前DB的key总数, 结合filter
@@ -547,8 +572,34 @@ export default {
     }
   },
   methods: {
-    renameKey () {
-      console.log(arguments)
+    renameKey (key) {
+      if (typeof key === 'object') {
+        Api.renameKey({
+          id: this.currentConnectionId,
+          index: this.currentDbIndex,
+          key: this.renameValue.old,
+          newKey: this.renameValue.new
+        }, (data) => {
+          if (data.status === 200) {
+            this.renameModal = false
+            this.keysList.forEach((item, index) => {
+              if (item.title === this.renameValue.old) {
+                delete this.tabs[this.getTabsKey()].keys[this.renameValue.old]
+                this.tabs = Object.assign({}, this.tabs)
+                this.keysList[index].title = this.renameValue.new
+                this.selectChange([this.keysList[index]])
+              }
+            })
+            this.renameValue = {'old': '', 'new': ''}
+          } else {
+            this.$Message.error(data.msg)
+          }
+        })
+      } else {
+        this.renameModal = true
+        this.renameValue.old = key
+        this.renameValue.new = ''
+      }
     },
     isQtWebView () {
       return window.isQtWebView

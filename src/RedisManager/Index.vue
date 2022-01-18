@@ -7,7 +7,7 @@
   }
 
   .ivu-btn-icon-only.ivu-btn-small {
-    border-radius: 0px;
+    border-radius: 0;
   }
 
 

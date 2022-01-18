@@ -32,7 +32,8 @@ func RegisterRouter(mux *http.ServeMux) {
 		"/redis/connection/updatekey":   src.RedisManagerUpdateKey,
 		"/redis/connection/addkey":      src.RedisManagerAddKey,
 		"/redis/connection/flushDB":     src.RedisManagerFlushDB,
-		"/redis/connection/remove":      src.RedisManagerRemoveConnection,
+    "/redis/connection/remove":      src.RedisManagerRemoveConnection,
+    "/redis/connection/renameKey":      src.RedisManagerRenameKey,
 		"/redis/connection/command":     src.RedisManagerCommand,
 		"/redis/connection/info":        src.RedisManagerGetInfo,
 		"/redis/connection/get-command": src.RedisManagerGetCommandList,
@@ -49,7 +50,7 @@ func RegisterRouter(mux *http.ServeMux) {
 				var params url.Values
 				data := make(map[string]interface{})
 				if request.Method == http.MethodPost {
-					request.ParseForm()
+					_ = request.ParseForm()
 					params = request.PostForm
 				} else {
 					params = request.URL.Query()
@@ -75,7 +76,7 @@ func RegisterRouter(mux *http.ServeMux) {
 		}()
 		if request.Method == http.MethodPost {
 			data := make(map[string]interface{})
-			request.ParseForm()
+			_ = request.ParseForm()
 			params := request.PostForm
 			for param, values := range params {
 				if len(values) > 0 {
