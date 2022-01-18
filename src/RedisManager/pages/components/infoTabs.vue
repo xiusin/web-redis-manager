@@ -75,9 +75,27 @@
              style="height: 100%"></Table>
     </TabPane>
     <TabPane label="图表" name="five" style="height: 100%; overflow-y: auto;">
-      <div style="width: 500px; height: 300px">
-        <v-chart class="chart" :option="option"/>
-      </div>
+      <Row :gutter="1">
+        <Col span="12">
+          <div style="width: 100%; height: 300px">
+            <h3>CPU</h3>
+            <v-chart class="chart" :option="cpuOption"/>
+          </div>
+        </Col>
+        <Col span="12">
+          <div style="width: 100%; height: 300px">
+            <h3>内存使用</h3>
+            <v-chart class="chart" :option="memOption"/>
+          </div>
+        </Col>
+        <Col span="12">
+          <div style="width: 100%; height: 300px">
+            <h3>连接数</h3>
+            <v-chart class="chart" :option="connOption"/>
+          </div>
+        </Col>
+      </Row>
+
     </TabPane>
     <TabPane label="Stream" name="six" style="height: 100%; overflow-y: auto;">
     </TabPane>
@@ -88,15 +106,17 @@
 
 import {use} from 'echarts/core'
 import {CanvasRenderer} from 'echarts/renderers'
-import {PieChart} from 'echarts/charts'
-import {LegendComponent, TitleComponent, TooltipComponent} from 'echarts/components'
-import VChart, {THEME_KEY} from 'vue-echarts'
+import {PieChart, LineChart} from 'echarts/charts'
+import {GridComponent, LegendComponent, TitleComponent, TooltipComponent} from 'echarts/components'
+import VChart from 'vue-echarts'
 import ServerInfo from './serverInfo'
 import SlowLog from './SlowLog'
 import Api from '../../api'
 
 use([
   CanvasRenderer,
+  LineChart,
+  GridComponent,
   PieChart,
   TitleComponent,
   TooltipComponent,
@@ -115,9 +135,6 @@ export default {
       default: () => 0
     }
   },
-  provide: {
-    [THEME_KEY]: 'dark'
-  },
   components: {
     VChart,
     ServerInfo,
@@ -127,46 +144,78 @@ export default {
     return {
       infoCollapse: 'Server',
       clientTimer: null,
+      infoTimer: null,
       stopInterval: false,
       tab: 'first',
       info: {version: '-', memory: '-', keyNum: 0, clientNum: 0, cpuSys: 0, process: 0, ratio: 0},
-      option: {
-        title: {
-          text: '内存使用情况',
-          left: 'center'
+      timeLineData: [],
+      cpuData: [],
+      memData1: [],
+      memData2: [],
+      connData: [],
+      connOption: {
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: this.connData
         },
-        tooltip: {
-          trigger: 'item',
-          formatter: '{a} <br/>{b} : {c} ({d}%)'
-        },
-        legend: {
-          orient: 'vertical',
-          left: 'left',
-          data: [
-            '总内存',
-            '已用内存'
-          ]
+        yAxis: {
+          type: 'value'
         },
         series: [
           {
-            name: 'Traffic Sources',
-            type: 'pie',
-            radius: '55%',
-            center: ['50%', '60%'],
-            data: [
-              {value: 335, name: '总内存'},
-              {value: 310, name: '已用内存'},
-              {value: 234, name: 'Ad Networks'},
-              {value: 135, name: 'Video Ads'},
-              {value: 1548, name: 'Search Engines'}
-            ],
-            emphasis: {
-              itemStyle: {
-                shadowBlur: 10,
-                shadowOffsetX: 0,
-                shadowColor: 'rgba(0, 0, 0, 0.5)'
-              }
-            }
+            data: [],
+            type: 'line',
+            smooth: true
+          }
+        ]
+      },
+      cpuOption: {
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: this.timeLineData
+        },
+        yAxis: {
+          type: 'value'
+        },
+        series: [
+          {
+            data: [],
+            type: 'line',
+            smooth: true
+          }
+        ]
+      },
+      memOption: {
+        tooltip: {
+          trigger: 'axis'
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '3%',
+          containLabel: true
+        },
+
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: this.timeLineData
+        },
+        yAxis: {
+          type: 'value'
+        },
+        series: [
+          {
+            name: '峰值',
+            type: 'line',
+            data: this.memData1
+          },
+          {
+            name: '当前',
+            type: 'line',
+            data: this.memData2
           }
         ]
       },
@@ -275,9 +324,8 @@ export default {
     this.loadInfo()
   },
   destroyed () {
-    if (this.clientTimer != null) {
-      clearInterval(this.clientTimer)
-    }
+    clearInterval(this.clientTimer)
+    clearInterval(this.infoTimer)
   },
   methods: {
     loadInfo () {
@@ -311,7 +359,6 @@ export default {
           let srvConfig = data.data.config
           for (let i = 0; i < srvConfig.length; i = i + 2) {
             if (srvConfig[i] !== 'requirepass') {
-              // eslint-disable-next-line standard/object-curly-even-spacing
               config.push({'key': srvConfig[i], 'value': srvConfig[i + 1]})
             }
           }
@@ -350,6 +397,7 @@ export default {
     infoCard () {
       this.info.version = this.serverInfo.Server.split('\r\n')[0].replace(/redis_version:/, '')
       this.info.memory = this.serverInfo.Memory.split('\r\n')[1].replace(/used_memory_human:/, '')
+      let rssMemory = this.serverInfo.Memory.match(/used_memory_rss_human:([0-9]+(\.?[0-9]+)?)/)[1]
       this.info.keyNum = 0
       this.serverInfo.Keyspace.split('\r\n').forEach((item) => {
         if (item) {
@@ -362,10 +410,33 @@ export default {
       let keyspaceHits = parseFloat(this.serverInfo.Stats.match(/keyspace_hits:(\d+)/)[1])
       let keyspaceMisses = parseFloat(this.serverInfo.Stats.match(/keyspace_misses:(\d+)/)[1])
       this.info.ratio = (keyspaceHits * 100 / (keyspaceHits + keyspaceMisses)).toFixed(2) + '%'
+
+      let d = new Date()
+      let h = d.getHours()
+      let s = d.getSeconds()
+      let m = d.getMinutes()
+      this.timeLineData.push((h > 9 ? h : '0' + h) + ':' + (m > 9 ? m : '0' + m) + ':' + (s > 9 ? s : '0' + s))
+      this.cpuData.push(parseFloat(this.serverInfo.CPU.split('\r\n')[0].replace(/used_cpu_sys:/, '')).toFixed(2))
+      this.memData1.push(rssMemory.replace('M', ''))
+      this.memData2.push(this.info.memory.replace('M', ''))
+      this.connData.push(this.info.clientNum)
+      this.timeLineData = this.timeLineData.slice(-30)
+      this.cpuData = this.cpuData.slice(-30)
+      this.memData1 = this.memData1.slice(-30)
+      this.memData2 = this.memData2.slice(-30)
+      this.connData = this.connData.slice(-30)
+      this.cpuOption.series[0].data = this.cpuData
+      this.connOption.series[0].data = this.connData
+      this.memOption.series[0].data = this.memData1
+      this.memOption.series[1].data = this.memData2
+      this.cpuOption.xAxis.data = this.timeLineData
+      this.memOption.xAxis.data = this.timeLineData
+      this.connOption.xAxis.data = this.timeLineData
     }
   },
   watch: {
     currentConnectionId () {
+      clearInterval(this.infoTimer)
       this.loadInfo()
     },
     tab (newVal) {
@@ -373,6 +444,11 @@ export default {
         if (!this.clientTimer) {
           this.loopEvent()
           this.clientTimer = setInterval(this.loopEvent, 2000)
+        }
+      }
+      if (newVal === 'five') {
+        if (!this.infoTimer) {
+          this.infoTimer = setInterval(this.loadInfo, 2000)
         }
       }
     }
