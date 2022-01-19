@@ -3,13 +3,45 @@
 redis的web管理客户, 支持同时管理多个redis实例, 慢日志, 服务器信息, 配置信息, CLI模式.
 
 > 演示案例: https://rdm.xiusin.cn
+>
+> 账号: admin 密码:123456 乞丐服务器, 不要自己使用,随时删除
+
 # 特性 #
 
 - basicauth
-- 支持redis常用数据类型管理: `list`, `string`, `hashmap`, `set`, `sorted set`等.  
+- 支持redis常用数据类型管理: `list`, `string`, `hashmap`, `set`, `sorted set`, `stream`等.
 - CLI提醒模式
 - 慢日志查询打印
 - `channel` 订阅发布
+- 服务信息
+- 客户端连接查看以及关闭
+- pubsub模式
+- 图表监控
+
+# 使用方法 #
+```shell
+git clone --depth=1 https://github.com/xiusin/web-redis-manager.git
+cd web-redis-manager
+git checkout develop
+
+yarn # 安装前端依赖
+yarn build # 打包前端代码
+
+cd server
+
+go mod tidy # 下载go依赖包
+
+go build -o rdm.exe # 编译 windows
+go build -o rdm # *nix
+
+# 非basic auth启动
+./rdm.exe
+
+# basic auth启动
+./rdm.exe --username=admin --password=123456
+
+```
+
 
 # 示意图 #
 
