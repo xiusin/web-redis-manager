@@ -83,7 +83,11 @@
             <List size="small">
               <ListItem v-for="keyItem in keysList" :key="keyItem.title"
                         style="width: 100%; height: 30px; line-height: 30px;">
-                <ListItemMeta :title="keyItem.title"/>
+                <ListItemMeta>
+                  <template slot="title">
+                    {{ keyItem.title }} <!-- <Badge color="#2db7f5" :text="'S'" />  -->
+                  </template>
+                </ListItemMeta>
                 <template slot="action">
                   <li @click="selectChange([keyItem])">
                     <Icon type="ios-eye-outline" slot="suffix"/>
@@ -127,7 +131,7 @@
                     </Col>
                   </Row>
                   <div v-if="data.type === 'string'" style="margin-top: 3px; height: 800px; overflow: auto">
-                    <codemirror v-model="data.data" :options="editorOpt" />
+                    <codemirror v-model="data.data" :options="editorOpt"/>
                     <Row type="flex">
                       <Col span="24" style="text-align: right">
 
@@ -140,8 +144,8 @@
                   <div v-else style="margin-top: 4px; height: 100%">
                     <Row type="flex">
                       <Col span="16">
-                        <Table highlight-row @on-row-click="getRowData" ref="currentRowTable" border height="250"
-                               :columns="getColumns(data.type)" :data="formatItem(data.type,data.data)"></Table>
+                        <Table :highlightRow="true" @on-row-click="getRowData" ref="currentRowTable" border height="250"
+                               :columns="getColumns(data.type)" :data="formatItem(data.type,data.data)" />
                       </Col>
                       <Col span="8">
                         <Card style="height:250px;border-left: none;" dis-hover>
@@ -157,15 +161,15 @@
                         </Card>
                       </Col>
                     </Row>
-                    <div style="height: 350px; overflow:hidden;">
-                      <codemirror v-model="currentSelectRowData.value" :options="editorOpt" />
+                    <div style="height: 350px; overflow:hidden;" class="moreKeyBox">
                       <Button
-                        v-if="!textType"
                         style="float: right"
+                        size="small"
                         @click="updateValue(key, data, 'updateRowValue')"
                         :loading="buttonLoading"
                       >保存
                       </Button>
+                      <codemirror v-model="currentSelectRowData.value" :options="editorOpt"/>
                     </div>
                   </div>
                 </TabPane>
@@ -210,7 +214,8 @@
             </div>
             <div class="info" v-if="currentConnectionId !== '' && infoModal"
                  :style="'position:absolute; z-index: 10;  background: #fff; width: calc(100% - 300px); height: 100%; padding:10px;' + (isQtWebView() ? 'top: 0px;' : 'top: 64px' ) ">
-              <info-tabs ref="infoTabs" :current-connection-id.sync="this.currentConnectionId" :current-connection-index="this.currentDbIndex"/>
+              <info-tabs ref="infoTabs" :current-connection-id.sync="this.currentConnectionId"
+                         :current-connection-index="this.currentDbIndex"/>
             </div>
           </Content>
         </Layout>
@@ -321,6 +326,7 @@
               <Radio label="set"></Radio>
               <Radio label="zset"></Radio>
               <Radio label="hash"></Radio>
+              <Radio label="stream"></Radio>
             </RadioGroup>
           </FormItem>
           <FormItem label="分值:" v-if="newKeyType === 'zset'">
@@ -328,6 +334,9 @@
           </FormItem>
           <FormItem label="键:" v-if="newKeyType === 'hash'">
             <Input v-model="newValue.keyorscore" placeholder=""></Input>
+          </FormItem>
+          <FormItem label="ID:" v-if="newKeyType === 'stream'">
+            <Input v-model="newValue.keyorscore" placeholder="*(自动生成)"></Input>
           </FormItem>
           <FormItem label="值:">
             <Input v-model="newValue.data" type="textarea" :autosize="{minRows: 5,maxRows: 5}"></Input>
@@ -360,6 +369,8 @@
                placeholder="请输入新key"></Input>
         <Input v-model="rowValue.newRowKey" style="margin-bottom: 5px" v-if="rowValue.data.type === 'zset'"
                placeholder="请输入分值"></Input>
+        <Input v-model="rowValue.newRowKey" style="margin-bottom: 5px" v-if="rowValue.data.type === 'stream'"
+               placeholder="请输入新ID: *(自动生成)"></Input>
         <Input v-model="rowValue.newRowValue" type="textarea" placeholder="请输入数据"></Input>
       </div>
       <div slot="footer">
@@ -389,8 +400,10 @@
       </div>
     </Modal>
 
-    <Modal class="showJsonModal" v-model="showJsonModal" fullscreen footer-hide :on-visible-change="showJsonModalOkClick">
-      <VueTerminal ref="child" v-bind:id="currentConnectionId" @command="onCliCommand" console-sign="redis-cli $" style="height: 100%; font-size:14px; font-weight: bold"></VueTerminal>
+    <Modal class="showJsonModal" v-model="showJsonModal" fullscreen footer-hide
+           :on-visible-change="showJsonModalOkClick">
+      <VueTerminal ref="child" v-bind:id="currentConnectionId" @command="onCliCommand" console-sign="redis-cli $"
+                   style="height: 100%; font-size:14px; font-weight: bold"></VueTerminal>
     </Modal>
 
   </div>
@@ -408,7 +421,6 @@ import AddRowModal from './components/modals/addRowModal'
 
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/mode/javascript/javascript.js'
-import 'codemirror/theme/material.css'
 
 export default {
   name: 'MainPage',
@@ -420,7 +432,15 @@ export default {
   },
   data () {
     return {
-      editorOpt: {tabSize: 4, mode: 'text/javascript', theme: 'material', height: '600px', lineNumbers: true, line: true, smartIndent: true},
+      editorOpt: {
+        tabSize: 4,
+        mode: 'text/javascript',
+        theme: 'default',
+        height: '800px',
+        lineNumbers: true,
+        line: true,
+        smartIndent: true
+      },
       keysList: [], // DB的key列表
       customChannel: '',
       chanMegs: {}, // 消息内容
@@ -463,7 +483,8 @@ export default {
       keyLoading: false,
       confirmModal: false,
       confirmModalText: '',
-      confirmModalEvent: () => {},
+      confirmModalEvent: () => {
+      },
       keyFilter: '', // key过滤
       currentTotalKeyNum: 0, // 当前DB的key总数, 结合filter
       currentDbNode: null // 当前打开的DB节点
@@ -716,6 +737,7 @@ export default {
     },
     getRowData (data, index) {
       let fullValue = typeof data.fullValue === 'object' ? data.fullValue.value : data.fullValue
+      fullValue = Array.isArray(data.fullValue) ? data.fullValue.join('\n') : data.fullValue
       this.currentSelectRowData = {
         value: fullValue,
         key: data.key,
@@ -725,9 +747,10 @@ export default {
     },
     removeRow (key, data) {
       this.buttonLoading = true
+      let delKey = data.type === 'hash' || data.type === 'stream' ? this.currentSelectRowData.key : this.currentSelectRowData.value
       Api.removeRow({
         key: key,
-        data: data.type === 'hash' ? this.currentSelectRowData.key : this.currentSelectRowData.value,
+        data: delKey,
         type: data.type,
         id: this.currentConnectionId,
         index: this.currentDbIndex
@@ -738,7 +761,7 @@ export default {
         }
         let tmp = []
         let isremove = false
-        if (data.type !== 'hash' && data.type !== 'zset') {
+        if (data.type !== 'hash' && data.type !== 'zset' && data.type !== 'stream') {
           for (let i = 0; i < data.data.length; i++) {
             if (!isremove && data.data[i] === this.currentSelectRowData.value) {
               isremove = true
@@ -759,10 +782,20 @@ export default {
           }
           data.data = tmp
           isremove = false
+        } else if (data.type === 'stream') {
+          for (let i = 0; i < data.data.length; i++) {
+            for (let id in data.data[i]) {
+              if (!isremove && id !== this.currentSelectRowData.key) {
+                tmp.push(data.data[i])
+              }
+            }
+          }
+          data.data = tmp
+          isremove = false
         } else {
           delete data.data[this.currentSelectRowData.key]
         }
-        this.currentSelectRowData = {}
+        this.currentSelectRowData = {'value': ''}
       })
     },
     addRow (key, data) {
@@ -796,6 +829,7 @@ export default {
           }
         }
         type = data.data.type
+        if (!data.data.data) data.data.data = []
         rowIndex = data.data.data.length
         let rowKey = type === 'zset' ? rowIndex : (newRowKey || rowIndex)
         this.$set(data.data, rowKey, data.newRowValue)
@@ -806,6 +840,10 @@ export default {
         }
       }
       if (action === 'updateRowValue') {
+        if (type === 'stream') {
+          this.$Message.error('Stream类型不可修改')
+          return
+        }
         rowIndex = this.currentSelectRowData.index
         newRowKey = this.currentSelectRowData.key
         newRowValue = this.currentSelectRowData.value
@@ -847,6 +885,10 @@ export default {
               data.data.data[newRowKey] = data.newRowValue
             } else if (type === 'zset') {
               data.data.data.push({'score': newRowKey, 'value': data.newRowValue})
+            } else if (type === 'stream') {
+              let item = {}
+              item[res.data.id] = data.newRowValue.split('\n')
+              data.data.data.push(item)
             } else {
               data.data.data.push(data.newRowValue)
             }
@@ -994,6 +1036,19 @@ export default {
             }
           }
           break
+        case 'stream':
+          for (let i in data) {
+            if ((this.searchKey && (i.indexOf(this.searchKey) > -1 || data[i].indexOf(this.searchKey) > -1)) || !this.searchKey) {
+              for (let datumKey in data[i]) {
+                res.push({
+                  key: datumKey,
+                  value: data[i][datumKey].join(' '),
+                  fullValue: data[i][datumKey]
+                })
+              }
+            }
+          }
+          break
         case 'zset':
           for (let i in data) {
             if ((this.searchKey && (data[i]['score'].indexOf(this.searchKey) > -1 || data[i]['value'].indexOf(this.searchKey) > -1)) || !this.searchKey) {
@@ -1034,6 +1089,24 @@ export default {
             },
             {
               title: '值',
+              key: 'value'
+            }
+          ]
+          break
+        case 'stream':
+          cols = [
+            {
+              type: 'index',
+              width: 60,
+              align: 'center'
+            },
+            {
+              title: 'ID',
+              width: 160,
+              key: 'key'
+            },
+            {
+              title: '内容 (field1 value1 [fieldN valueN]...)',
               key: 'value'
             }
           ]
@@ -1709,11 +1782,21 @@ export default {
 .key-list .ivu-list-item-action {
   margin-left: 0;
 }
+
 .showJsonModal .ivu-modal-body {
   padding: 0;
 }
+
 .vue-codemirror {
   margin-top: 10px;
+}
+
+.CodeMirror {
+  height: 550px;
+}
+
+.moreKeyBox .CodeMirror {
+  height: 350px;
 }
 </style>
 

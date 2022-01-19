@@ -75,11 +75,17 @@
              style="height: 100%"></Table>
     </TabPane>
     <TabPane label="图表" name="five" style="height: 100%; overflow-y: auto;">
-      <Row :gutter="1">
+      <Row :gutter="1" class="chartBox">
         <Col span="12">
           <div style="width: 100%; height: 300px">
             <h3>CPU</h3>
             <v-chart class="chart" :option="cpuOption"/>
+          </div>
+        </Col>
+        <Col span="12">
+          <div style="width: 100%; height: 300px">
+            <h3>Key数</h3>
+            <v-chart class="chart" :option="keyOption"/>
           </div>
         </Col>
         <Col span="12">
@@ -95,9 +101,6 @@
           </div>
         </Col>
       </Row>
-
-    </TabPane>
-    <TabPane label="Stream" name="six" style="height: 100%; overflow-y: auto;">
     </TabPane>
   </Tabs>
 </template>
@@ -153,6 +156,7 @@ export default {
       memData1: [],
       memData2: [],
       connData: [],
+      keyNumData: [],
       connOption: {
         xAxis: {
           type: 'category',
@@ -165,6 +169,23 @@ export default {
         series: [
           {
             data: [],
+            type: 'line',
+            smooth: true
+          }
+        ]
+      },
+      keyOption: {
+        xAxis: {
+          type: 'category',
+          boundaryGap: false,
+          data: this.timeLineData
+        },
+        yAxis: {
+          type: 'value'
+        },
+        series: [
+          {
+            data: this.keyNumData,
             type: 'line',
             smooth: true
           }
@@ -191,13 +212,6 @@ export default {
         tooltip: {
           trigger: 'axis'
         },
-        grid: {
-          left: '3%',
-          right: '4%',
-          bottom: '3%',
-          containLabel: true
-        },
-
         xAxis: {
           type: 'category',
           boundaryGap: false,
@@ -420,17 +434,21 @@ export default {
       this.memData1.push(peakMemory.replace('M', ''))
       this.memData2.push(this.info.memory.replace('M', ''))
       this.connData.push(this.info.clientNum)
+      this.keyNumData.push(this.info.keyNum)
       this.timeLineData = this.timeLineData.slice(-30)
       this.cpuData = this.cpuData.slice(-30)
       this.memData1 = this.memData1.slice(-30)
       this.memData2 = this.memData2.slice(-30)
       this.connData = this.connData.slice(-30)
+      this.keyNumData = this.keyNumData.slice(-30)
       this.cpuOption.series[0].data = this.cpuData
       this.connOption.series[0].data = this.connData
+      this.keyOption.series[0].data = this.keyNumData
       this.memOption.series[0].data = this.memData1
       this.memOption.series[1].data = this.memData2
       this.cpuOption.xAxis.data = this.timeLineData
       this.memOption.xAxis.data = this.timeLineData
+      this.keyOption.xAxis.data = this.timeLineData
       this.connOption.xAxis.data = this.timeLineData
     }
   },
@@ -463,5 +481,19 @@ export default {
 
 .serverInfo .ivu-card-body {
   text-align: center;
+}
+.chartBox {
+  text-align: center;
+}
+.chartBox > div {
+  border: 1px solid #ccc;
+  margin: 10px 2.5%;
+  width: 45%;
+}
+.chartBox h3 {
+  height: 30px;
+  line-height: 30px;
+  text-align: center;
+  border-bottom: 1px solid #ccc;
 }
 </style>
