@@ -79,13 +79,13 @@
             <Icon @click="clickEvent(currentDbNode)" type="ios-search" slot="suffix" style="cursor: pointer"/>
           </Input>
           <div
-            style='height: calc(100% - 100px); overflow-y: auto; overflow-x: hidden; border-bottom: 1px solid #e8eaec;'>
+            style='height: calc(100% - 32px); overflow-y: auto; overflow-x: hidden; border-bottom: 1px solid #e8eaec;'>
             <List size="small">
               <ListItem v-for="keyItem in keysList" :key="keyItem.title"
-                        style="width: 100%; height: 30px; line-height: 30px;">
+                        style="width: 100%; height: 30px; line-height: 30px; background: red">
                 <ListItemMeta>
                   <template slot="title">
-                    {{ keyItem.title }} <!-- <Badge color="#2db7f5" :text="'S'" />  -->
+                    {{ keyItem.title }}
                   </template>
                 </ListItemMeta>
                 <template slot="action">
@@ -1488,7 +1488,17 @@ export default {
         this.currentTotalKeyNum = count
         item.count = count
         this.currentConnectionId = item.redis_id
-        item.title = 'DB' + item.db + ' (' + item.count + ')'
+        for (let i in this.connectionTreeList) {
+          if (this.currentConnectionId === this.connectionTreeList[i].data.id) {
+            let reNode = this.connectionTreeList[i].children[this.currentDbIndex]
+            if (reNode) {
+              reNode.title = 'DB' + this.currentDbIndex + ' (' + reNode.count + ')'
+            }
+            break
+          }
+        }
+        this.currentDbIndex = item.db
+        item.title = 'DB' + item.db + ' (' + item.count + ') 🔴'
       })
     },
     loadData (item, callback) {
