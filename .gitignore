@@ -19,3 +19,4 @@ windows.syso
 /server/vbuild
 .lh
 .idea
+*.exe

@@ -4,10 +4,14 @@ import (
 	"embed"
 	"flag"
 	"fmt"
+	"github.com/xiusin/redis_manager/server/windows"
 	"io/fs"
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/kataras/basicauth"
 	"github.com/rs/cors"
@@ -24,6 +28,8 @@ var basicauthPass string
 var embedFiles embed.FS
 
 var port = ":8787"
+
+var IsBuildStr string
 
 func init() {
 	cacheDir, _ = os.Getwd()
@@ -52,6 +58,12 @@ func main() {
 		handler = auth(handler)
 	}
 
-	fmt.Println("start rdm server in http://0.0.0.0" + port)
-	_ = http.ListenAndServe(port, handler)
+	go func() {
+		fmt.Println("start rdm server in http://0.0.0.0" + port)
+		_ = http.ListenAndServe(port, handler)
+	}()
+
+	time.Sleep(time.Millisecond * 100)
+	isBuild, _ := strconv.ParseBool(IsBuildStr)
+	windows.InitWebview(strings.Trim(port, ":"), isBuild)
 }

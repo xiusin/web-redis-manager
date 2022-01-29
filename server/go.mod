@@ -11,8 +11,11 @@ require (
 	golang.org/x/sys v0.0.0-20211113001501-0c823b97ae02 // indirect
 )
 
+require github.com/jchv/go-webview2 v0.0.0-20220126075714-57bc3a5985d6
+
 require (
 	github.com/fatih/color v1.13.0 // indirect
+	github.com/jchv/go-winloader v0.0.0-20200815041850-dec1ee9a7fd5 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	golang.org/x/crypto v0.0.0-20201117144127-c1f2f97bffc9 // indirect

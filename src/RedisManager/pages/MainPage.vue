@@ -53,10 +53,9 @@
       <Header style="padding: 0 10px;" v-if="!isQtWebView()">
         <Button @click="showLoginModal()" size="small" icon="ios-download-outline" type="primary">连接服务器</Button>
         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-        <Button size="small" v-if="currentConnectionId !== ''" icon="ios-swap" type="success" @click="openPubSubTab()">
-          发布订阅
-        </Button>
-        &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+<!--        <Button size="small" v-if="currentConnectionId !== ''" icon="ios-swap" type="success" @click="openPubSubTab()">-->
+<!--          发布订阅-->
+<!--        </Button>-->
         <Button size="small" v-if="currentConnectionId !== ''" icon="md-laptop" type="warning"
                 @click="showJsonModal = true">CLI
         </Button>
@@ -82,7 +81,7 @@
             style='height: calc(100% - 32px); overflow-y: auto; overflow-x: hidden; border-bottom: 1px solid #e8eaec;'>
             <List size="small">
               <ListItem v-for="keyItem in keysList" :key="keyItem.title"
-                        style="width: 100%; height: 30px; line-height: 30px; background: red">
+                        style="width: 100%; height: 30px; line-height: 30px;">
                 <ListItemMeta>
                   <template slot="title">
                     {{ keyItem.title }}
