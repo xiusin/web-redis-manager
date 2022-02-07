@@ -414,7 +414,6 @@ func getRedisClient(data RequestData, getSelectedIndexClient bool, getKey bool) 
     }
   }
   if config.Title == "" {
-    fmt.Println(config)
     panic(errors.New("no connection"))
   }
 
@@ -423,23 +422,22 @@ func getRedisClient(data RequestData, getSelectedIndexClient bool, getKey bool) 
       Dial: func() (conn redis.Conn, err error) {
         conn, err = redis.Dial("tcp", config.Ip+":"+config.Port)
         if err != nil {
-          return nil, err
+          panic(err)
         }
         if config.Auth != "" {
           if _, err := conn.Do("AUTH", config.Auth); err != nil {
             conn.Close()
-            return nil, err
+            panic(err)
           }
         }
         conn.Do("CLIENT", "SETNAME", fmt.Sprintf("RDM-%s-%d-%d", config.Title, config.ID, rand.Intn(19999)))
         return conn, nil
       },
       TestOnBorrow: func(c redis.Conn, t time.Time) error {
-        if time.Since(t) < 3*time.Minute {
-          return nil
+        if time.Since(t) >= 3*time.Minute {
+          c.Do("PING")
         }
-        _, err := c.Do("PING")
-        return err
+        return nil
       },
       MaxIdle: 3, MaxActive: 0, IdleTimeout: time.Minute * 10, Wait: true,
     }

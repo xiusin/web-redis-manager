@@ -7,7 +7,6 @@ import (
   "net/url"
 
   "github.com/gorilla/websocket"
-  "github.com/xiusin/logger"
   "github.com/xiusin/redis_manager/server/src"
 )
 
@@ -42,9 +41,10 @@ func RegisterRouter(mux *http.ServeMux) {
   for route, handle := range routes {
     mux.HandleFunc(route, func(handle src.HandleFunc) func(writer http.ResponseWriter, request *http.Request) {
       return func(writer http.ResponseWriter, request *http.Request) {
+        writer.Header().Set("Content-Type", "application/json")
         defer func() {
           if err := recover(); err != nil {
-            logger.Errorf("Recovered Error: %s", err)
+            writer.Write([]byte(src.JSON(src.ResponseData{Status: src.FailedCode, Msg: err.(error).Error()})))
           }
         }()
         var params url.Values
@@ -62,7 +62,7 @@ func RegisterRouter(mux *http.ServeMux) {
             data[param] = nil
           }
         }
-        writer.Header().Set("Content-Type", "application/json")
+
         writer.Write([]byte(handle(data)))
       }
     }(handle))

@@ -4,20 +4,11 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="793cbf15-d83f-409e-b59b-b4d6dcb70aca" name="Default Changelist" comment="新增图表">
-      <change afterPath="$PROJECT_DIR$/server/icon.ico" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/main.manifest" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/note.syso" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/windows/webview_no.go" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/server/windows/webview_windows.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/redis_manager.iml" beforeDir="false" />
+    <list default="true" id="793cbf15-d83f-409e-b59b-b4d6dcb70aca" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/server/go.mod" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/go.sum" beforeDir="false" afterPath="$PROJECT_DIR$/server/go.sum" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/build.sh" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/server/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/server/main.go" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/router/router.go" beforeDir="false" afterPath="$PROJECT_DIR$/server/router/router.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/server/src/actions.go" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/actions.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/RedisManager/pages/MainPage.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/RedisManager/pages/MainPage.vue" afterDir="false" />
     </list>
@@ -80,7 +71,7 @@
     <property name="go.tried.to.enable.integration.vgo.integrator" value="true" />
     <property name="go.vendoring.notification.had.been.shown" value="true" />
     <property name="go.watchers.conflict.with.on.save.actions.check.performed" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$/server" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="node.js.detected.package.eslint" value="true" />
     <property name="node.js.detected.package.tslint" value="true" />
     <property name="node.js.path.for.package.eslint" value="project" />
@@ -142,6 +133,7 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
@@ -150,7 +142,8 @@
     <MESSAGE value="rename, 数据监控" />
     <MESSAGE value="键值编辑器, 移除依赖." />
     <MESSAGE value="新增图表" />
-    <option name="LAST_COMMIT_MESSAGE" value="新增图表" />
+    <MESSAGE value="添加webview, 隐藏发布订阅" />
+    <option name="LAST_COMMIT_MESSAGE" value="添加webview, 隐藏发布订阅" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
@@ -160,7 +153,7 @@
       <breakpoints>
         <line-breakpoint enabled="true" type="DlvLineBreakpoint">
           <url>file://$PROJECT_DIR$/server/src/actions.go</url>
-          <line>600</line>
+          <line>598</line>
           <option name="timeStamp" value="1" />
         </line-breakpoint>
       </breakpoints>

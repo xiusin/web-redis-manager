@@ -1510,73 +1510,74 @@ export default {
               this.currentConnectionId = item.data.id
               this.currentConnection = item.data.title
               let data = []
-
-              for (let i = 0; i < res.data.length; i++) {
-                data.push({
-                  title: 'DB' + i + ' (' + res.data[i] + ')',
-                  db: i,  // dbindex
-                  count: res.data[i],
-                  selected: false,
-                  redis_id: item.data.id, // 继续redis_id
-                  action: 'select_db',
-                  render: (h, {root, node, data}) => {
-                    return h('span', {style: {display: 'inline-block', width: '100%'}}, [
-                      h('span', [
-                        h('Icon', {props: {type: 'ios-trophy-outline'}, style: {marginRight: '5px'}}), // 图标
-                        h('span', {on: {click: () => this.clickEvent(node)}}, data.title) // 标题
-                      ]),
-                      h('span', {style: {display: 'inline-block', float: 'right', marginRight: '32px'}}, [
-                        // h('Button', {
-                        //   attrs: {title: '刷新'},
-                        //   style: {marginRight: '3px'},
-                        //   props: Object.assign({}, this.buttonProps, {icon: 'ios-sync'}),
-                        //   on: {click: () => this.clickEvent(node)}
-                        // }),
-                        h('Button', {
-                          attrs: {title: '添加新数据'},
-                          style: {marginRight: '3px'},
-                          props: Object.assign({}, this.buttonProps, {icon: 'ios-add'}),
-                          on: {
-                            click: () => {
-                              this.newValue.db = data.db
-                              this.newValue.redis_id = data.redis_id
-                              this.newValue.key = ''
-                              this.newValue.keyorscore = ''
-                              this.newValue.data = ''
-                              this.addKeyModal = true
-                              this.currentHandleNodeData = {root, node, data}
-                            }
-                          }
-                        }),
-                        h('Button', {
-                          attrs: {title: '清空数据库'},
-                          props: Object.assign({}, this.buttonProps, {icon: 'ios-trash-outline'}),
-                          on: {
-                            click: () => {
-                              this.confirmModalText = '是否要清空"' + this.currentConnection + '::DB(' + data.db + ')"数据库?'
-                              this.confirmModal = true
-                              this.confirmModalEvent = () => {
-                                Api.flushDB({
-                                  id: data.redis_id,
-                                  index: data.db
-                                }, (res) => {
-                                  this.confirmModal = false
-                                  if (res.status !== 200) {
-                                    this.$Message.error(res.msg)
-                                  } else {
-                                    this.clearAll(data)
-                                    this.tabs[this.getTabsKey()]['keys'] = {}
-                                    // todo DB节点的key统计数 需要方法!!!
-                                  }
-                                })
+              if (res.data) {
+                for (let i = 0; i < res.data.length; i++) {
+                  data.push({
+                    title: 'DB' + i + ' (' + res.data[i] + ')',
+                    db: i,  // dbindex
+                    count: res.data[i],
+                    selected: false,
+                    redis_id: item.data.id, // 继续redis_id
+                    action: 'select_db',
+                    render: (h, {root, node, data}) => {
+                      return h('span', {style: {display: 'inline-block', width: '100%'}}, [
+                        h('span', [
+                          h('Icon', {props: {type: 'ios-trophy-outline'}, style: {marginRight: '5px'}}), // 图标
+                          h('span', {on: {click: () => this.clickEvent(node)}}, data.title) // 标题
+                        ]),
+                        h('span', {style: {display: 'inline-block', float: 'right', marginRight: '32px'}}, [
+                          // h('Button', {
+                          //   attrs: {title: '刷新'},
+                          //   style: {marginRight: '3px'},
+                          //   props: Object.assign({}, this.buttonProps, {icon: 'ios-sync'}),
+                          //   on: {click: () => this.clickEvent(node)}
+                          // }),
+                          h('Button', {
+                            attrs: {title: '添加新数据'},
+                            style: {marginRight: '3px'},
+                            props: Object.assign({}, this.buttonProps, {icon: 'ios-add'}),
+                            on: {
+                              click: () => {
+                                this.newValue.db = data.db
+                                this.newValue.redis_id = data.redis_id
+                                this.newValue.key = ''
+                                this.newValue.keyorscore = ''
+                                this.newValue.data = ''
+                                this.addKeyModal = true
+                                this.currentHandleNodeData = {root, node, data}
                               }
                             }
-                          }
-                        })
+                          }),
+                          h('Button', {
+                            attrs: {title: '清空数据库'},
+                            props: Object.assign({}, this.buttonProps, {icon: 'ios-trash-outline'}),
+                            on: {
+                              click: () => {
+                                this.confirmModalText = '是否要清空"' + this.currentConnection + '::DB(' + data.db + ')"数据库?'
+                                this.confirmModal = true
+                                this.confirmModalEvent = () => {
+                                  Api.flushDB({
+                                    id: data.redis_id,
+                                    index: data.db
+                                  }, (res) => {
+                                    this.confirmModal = false
+                                    if (res.status !== 200) {
+                                      this.$Message.error(res.msg)
+                                    } else {
+                                      this.clearAll(data)
+                                      this.tabs[this.getTabsKey()]['keys'] = {}
+                                      // todo DB节点的key统计数 需要方法!!!
+                                    }
+                                  })
+                                }
+                              }
+                            }
+                          })
+                        ])
                       ])
-                    ])
-                  }
-                })
+                    }
+                  })
+                }
               }
               callback(data)
             }

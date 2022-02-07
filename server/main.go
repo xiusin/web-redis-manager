@@ -35,6 +35,7 @@ func init() {
 	cacheDir, _ = os.Getwd()
 	src.ConnectionFile = filepath.Join(cacheDir, "data.db")
 	router.RegisterRouter(mux)
+  IsBuildStr = "true"
 }
 
 func main() {
