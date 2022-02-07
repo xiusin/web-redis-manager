@@ -4,13 +4,9 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="793cbf15-d83f-409e-b59b-b4d6dcb70aca" name="Default Changelist" comment="">
+    <list default="true" id="793cbf15-d83f-409e-b59b-b4d6dcb70aca" name="Default Changelist" comment="添加webview, 隐藏发布订阅">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/build.sh" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/server/main.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/router/router.go" beforeDir="false" afterPath="$PROJECT_DIR$/server/router/router.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/server/src/actions.go" beforeDir="false" afterPath="$PROJECT_DIR$/server/src/actions.go" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/RedisManager/pages/MainPage.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/RedisManager/pages/MainPage.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/server/vbuild.vsh" beforeDir="false" afterPath="$PROJECT_DIR$/server/vbuild.vsh" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
