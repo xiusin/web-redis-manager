@@ -4,14 +4,14 @@ import (
 	"embed"
 	"flag"
 	"fmt"
-	"github.com/xiusin/redis_manager/server/windows"
 	"io/fs"
 	"net/http"
-	"os"
-	"path/filepath"
+	"runtime"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/xiusin/redis_manager/server/windows"
 
 	"github.com/kataras/basicauth"
 	"github.com/rs/cors"
@@ -32,10 +32,9 @@ var port = ":8787"
 var IsBuildStr string
 
 func init() {
-	cacheDir, _ = os.Getwd()
-	src.ConnectionFile = filepath.Join(cacheDir, "data.db")
+	src.ConnectionFile = windows.GetStorePath("rdm_" + runtime.GOOS + ".db")
 	router.RegisterRouter(mux)
-  IsBuildStr = "true"
+	IsBuildStr = "true"
 }
 
 func main() {
