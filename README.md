@@ -2,7 +2,7 @@
 
 redis的web管理客户, 支持同时管理多个redis实例, 慢日志, 服务器信息, 配置信息, CLI模式.
 
-> 演示案例: https://rdm.xiusin.cn
+> 演示案例: http://rdm.xiusin.cn
 >
 > 账号: admin 密码:123456
 
