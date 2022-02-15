@@ -66,9 +66,9 @@
 
       <Layout :style="{height: '100%'}">
         <Sider hide-trigger
-               :style="{background: '#fff', width:'200px',maxWidth:'200px', minWidth:'200px' , height: '100%', 'overflow-y': 'auto', 'overflow-x': 'hidden'}"
+               :style="getSiderStyle()"
                v-if="!isQtWebView()">
-          <Tree :data="connectionTreeList" :load-data="loadData" empty-text="" @on-select-change="selectChange"></Tree>
+          <Tree :data="connectionTreeList" :load-data="loadData" empty-text="暂无连接服务器" @on-select-change="selectChange"></Tree>
         </Sider>
         <Content
           class="key-list"
@@ -78,13 +78,13 @@
             <Icon @click="clickEvent(currentDbNode)" type="ios-search" slot="suffix" style="cursor: pointer"/>
           </Input>
           <div
-            style='height: calc(100% - 32px); overflow-y: auto; overflow-x: hidden; border-bottom: 1px solid #e8eaec;'>
+            style='height: calc(100% - 100px); overflow-y: auto; overflow-x: hidden;'>
             <List size="small">
               <ListItem v-for="keyItem in keysList" :key="keyItem.title"
                         style="width: 100%; height: 30px; line-height: 30px;">
                 <ListItemMeta>
                   <template slot="title">
-                    {{ keyItem.title }}
+                    {{ keyItem.title }} <!-- <Badge color="#2db7f5" :text="'S'" />  -->
                   </template>
                 </ListItemMeta>
                 <template slot="action">
@@ -160,7 +160,8 @@
                         </Card>
                       </Col>
                     </Row>
-                    <div style="height: 350px; overflow:hidden;" class="moreKeyBox">
+                    <div style="overflow:hidden;" class="moreKeyBox">
+                      <codemirror v-model="currentSelectRowData.value" :options="editorOpt"/>
                       <Button
                         style="float: right"
                         size="small"
@@ -168,7 +169,6 @@
                         :loading="buttonLoading"
                       >保存
                       </Button>
-                      <codemirror v-model="currentSelectRowData.value" :options="editorOpt"/>
                     </div>
                   </div>
                 </TabPane>
@@ -420,6 +420,7 @@ import AddRowModal from './components/modals/addRowModal'
 
 import 'codemirror/lib/codemirror.css'
 import 'codemirror/mode/javascript/javascript.js'
+import 'codemirror/theme/idea.css'
 
 export default {
   name: 'MainPage',
@@ -434,7 +435,7 @@ export default {
       editorOpt: {
         tabSize: 4,
         mode: 'text/javascript',
-        theme: 'default',
+        theme: 'idea',
         height: '800px',
         lineNumbers: true,
         line: true,
@@ -543,6 +544,16 @@ export default {
     }
   },
   methods: {
+    getSiderStyle () {
+      const style = {background: '#fff', width: '200px', maxWidth: '200px', minWidth: '200px', height: '100%', 'overflow-y': 'auto', 'overflow-x': 'hidden'}
+      if (this.connectionTreeList.length === 0) {
+        style.border = '1px solid #ccc'
+      } else {
+        style.border = 'none'
+      }
+      console.log(style)
+      return style
+    },
     renameKey (key) {
       if (typeof key === 'object') {
         Api.renameKey({
@@ -1799,6 +1810,8 @@ export default {
 
 .vue-codemirror {
   margin-top: 10px;
+  border: 1px solid #dcdee2;
+  margin-bottom: 10px;
 }
 
 .CodeMirror {
@@ -1806,7 +1819,7 @@ export default {
 }
 
 .moreKeyBox .CodeMirror {
-  height: 350px;
+  height: 500px;
 }
 </style>
 
