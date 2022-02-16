@@ -3,6 +3,7 @@ import Vuex from 'vuex'
 import { sync } from 'vuex-router-sync'
 import createPersistedState from 'vuex-persistedstate'
 import VueRouter from 'vue-router'
+import VueProcessbar from 'vue-progressbar'
 // 导入UI库
 import iView from 'iview'
 // 导入 App组件
@@ -24,6 +25,8 @@ Vue.config.productionTip = true
 Vue.use(Vuex)
 
 Vue.use(VueRouter)
+
+Vue.use(VueProcessbar)
 
 import './RedisManager/rdm.less'
 

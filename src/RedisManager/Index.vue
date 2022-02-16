@@ -17,6 +17,7 @@
 <template>
   <div class="app-main">
     <MainPage></MainPage>
+    <vue-progress-bar></vue-progress-bar>
   </div>
 </template>
 

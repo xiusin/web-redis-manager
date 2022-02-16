@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
-	"runtime"
 	"strconv"
 	"strings"
 	"time"
@@ -19,7 +18,6 @@ import (
 	"github.com/xiusin/redis_manager/server/src"
 )
 
-var cacheDir string
 var mux = http.NewServeMux()
 var basicauthName string
 var basicauthPass string
@@ -32,7 +30,7 @@ var port = ":8787"
 var IsBuildStr string
 
 func init() {
-	src.ConnectionFile = windows.GetStorePath("rdm_" + runtime.GOOS + ".db")
+	src.ConnectionFile = windows.GetStorePath("rdm.db")
 	router.RegisterRouter(mux)
 	IsBuildStr = "true"
 }
@@ -57,13 +55,18 @@ func main() {
 		})
 		handler = auth(handler)
 	}
-
-	go func() {
-		fmt.Println("start rdm server in http://0.0.0.0" + port)
-		_ = http.ListenAndServe(port, handler)
-	}()
-
-	time.Sleep(time.Millisecond * 100)
 	isBuild, _ := strconv.ParseBool(IsBuildStr)
-	windows.InitWebview(strings.Trim(port, ":"), isBuild)
+	if isBuild {
+		go func() {
+			fmt.Println("start rdm server in http://0.0.0.0" + port)
+			_ = http.ListenAndServe(port, handler)
+		}()
+
+		time.Sleep(time.Millisecond * 100)
+		windows.InitWebview(strings.Trim(port, ":"), isBuild)
+	} else {
+		fmt.Println("start rdm server in http://0.0.0.0" + port)
+		fmt.Println(http.ListenAndServe(port, handler))
+	}
+
 }

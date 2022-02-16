@@ -130,7 +130,8 @@
                     </Col>
                   </Row>
                   <div v-if="data.type === 'string'" style="margin-top: 3px; height: 800px; overflow: auto">
-                    <codemirror v-model="data.data" :options="editorOpt"/>
+                    <Button class="fullScreenBtn" size="small" @click="setFullScreen(1)">全屏</Button>
+                    <codemirror v-model="data.data" ref="stringCodeMirror" :options="editorOpt"/>
                     <Row type="flex">
                       <Col span="24" style="text-align: right">
 
@@ -161,7 +162,8 @@
                       </Col>
                     </Row>
                     <div style="overflow:hidden;" class="moreKeyBox">
-                      <codemirror v-model="currentSelectRowData.value" :options="editorOpt"/>
+                      <Button class="fullScreenBtn2" size="small" @click="setFullScreen(2)">全屏</Button>
+                      <codemirror ref="otherCodeMirror" v-model="currentSelectRowData.value" :options="editorOpt"/>
                       <Button
                         style="float: right"
                         size="small"
@@ -419,8 +421,28 @@ import InfoTabs from './components/infoTabs'
 import AddRowModal from './components/modals/addRowModal'
 
 import 'codemirror/lib/codemirror.css'
-import 'codemirror/mode/javascript/javascript.js'
 import 'codemirror/theme/idea.css'
+
+import 'codemirror/mode/javascript/javascript.js'
+
+// 全屏模式
+import 'codemirror/addon/display/fullscreen.js'
+import 'codemirror/addon/display/fullscreen.css'
+
+// 括号匹配
+import 'codemirror/addon/edit/matchbrackets.js'
+
+// 自动补全
+import 'codemirror/addon/hint/show-hint.css'
+import 'codemirror/addon/hint/show-hint.js'
+import 'codemirror/addon/hint/anyword-hint.js'
+
+// 支持代码折叠
+import 'codemirror/addon/fold/foldgutter.css'
+import 'codemirror/addon/fold/foldcode.js'
+import 'codemirror/addon/fold/foldgutter.js'
+import 'codemirror/addon/fold/brace-fold.js'
+import 'codemirror/addon/fold/comment-fold.js'
 
 export default {
   name: 'MainPage',
@@ -436,10 +458,15 @@ export default {
         tabSize: 4,
         mode: 'text/javascript',
         theme: 'idea',
-        height: '800px',
         lineNumbers: true,
+        fullScreen: false,
         line: true,
-        smartIndent: true
+        smartIndent: true,
+        matchBrackets: true,
+        extraKeys: {'Ctrl-Space': 'autocomplete'},
+        lineWrapping: true,
+        foldGutter: true,
+        gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter']
       },
       keysList: [], // DB的key列表
       customChannel: '',
@@ -487,7 +514,9 @@ export default {
       },
       keyFilter: '', // key过滤
       currentTotalKeyNum: 0, // 当前DB的key总数, 结合filter
-      currentDbNode: null // 当前打开的DB节点
+      currentDbNode: null, // 当前打开的DB节点
+      screenWidth: 0,
+      screenHeight: 0
     }
   },
   mounted () {
@@ -544,6 +573,16 @@ export default {
     }
   },
   methods: {
+    setFullScreen (type) {
+      switch (type) {
+        case 1:
+          this.$refs.stringCodeMirror[0].codemirror.setOption('fullScreen', !this.$refs.stringCodeMirror[0].codemirror.getOption('fullScreen'))
+          break
+        case 2:
+          this.$refs.otherCodeMirror[0].codemirror.setOption('fullScreen', !this.$refs.otherCodeMirror[0].codemirror.getOption('fullScreen'))
+          break
+      }
+    },
     getSiderStyle () {
       const style = {background: '#fff', width: '200px', maxWidth: '200px', minWidth: '200px', height: '100%', 'overflow-y': 'auto', 'overflow-x': 'hidden'}
       if (this.connectionTreeList.length === 0) {
@@ -551,7 +590,6 @@ export default {
       } else {
         style.border = 'none'
       }
-      console.log(style)
       return style
     },
     renameKey (key) {
@@ -1183,7 +1221,9 @@ export default {
 
         window.$websocket = new WebSocket(domain.replace('http', 'ws') + '/redis/connection/pubsub')
         window.astilectron.post = (url, data, c) => {
+          this.$Progress.start()
           $.post(domain + url, data, (message) => {
+            this.$Progress.finish()
             this.buttonLoading = false
             this.$Message.destroy()
             try {
@@ -1194,7 +1234,9 @@ export default {
           })
         }
         window.astilectron.get = (url, data, c) => {
+          this.$Progress.start()
           $.getJSON(domain + url, data, (message) => {
+            this.$Progress.finish()
             this.buttonLoading = false
             this.$Message.destroy()
             if (typeof message === 'string') {
@@ -1819,7 +1861,27 @@ export default {
 }
 
 .moreKeyBox .CodeMirror {
-  height: 500px;
+  height: 300px;
+}
+
+.ivu-layout-header {
+  height: 40px;
+  line-height: 38px;
+}
+.ivu-tabs-bar {
+  margin-bottom: 8px;
+}
+.fullScreenBtn {
+  position: absolute;
+  right: 20px;
+  top: 100px;
+  z-index: 9999;
+}
+.fullScreenBtn2 {
+  position: absolute;
+  right: 20px;
+  top: 360px;
+  z-index: 9999;
 }
 </style>
 

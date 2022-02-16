@@ -20,6 +20,7 @@
     "vue": "^2.5.21",
     "vue-codemirror": "^4.0.6",
     "vue-echarts": "^6.0.0",
+    "vue-progressbar": "^0.7.5",
     "vue-resource": "^1.5.1",
     "vue-router": "^2.3.1",
     "vuex": "^2.3.1",

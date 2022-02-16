@@ -11,7 +11,7 @@ import (
 
 func GetStorePath(path ...string) string {
 	userhome, _ := os.UserHomeDir()
-	dir := filepath.Join(userhome, "OneDrive", "个人保管库")
+	dir := filepath.Join(userhome, "OneDrive")
 	if _, err := os.Stat(dir); err != nil {
 		dir = filepath.Join(userhome, ".rdm")
 		os.MkdirAll(dir, os.ModePerm)

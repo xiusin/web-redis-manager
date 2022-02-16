@@ -23,7 +23,8 @@ term.clear()
 //     return
 // }
 
-system('go build -ldflags "-s -w -H windowsgui" -o rdm.exe')
+// system('CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-s -w" -o rdm')
+system('go build -ldflags "-H windowsgui -s -w" -o rdm.exe')
 
 system('upx -9 rdm.exe')
 
