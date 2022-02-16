@@ -130,7 +130,14 @@
                     </Col>
                   </Row>
                   <div v-if="data.type === 'string'" style="margin-top: 3px; height: 800px; overflow: auto">
-                    <Button class="fullScreenBtn" size="small" @click="setFullScreen(1)">全屏</Button>
+                    <Button class="fullScreenBtn" size="small" @click="setFullScreen(1)">
+                      <template v-if="isFullScreen(1)">
+                        <Icon type="ios-expand" />
+                      </template>
+                      <template v-else>
+                        <Icon type="ios-contract" />
+                      </template>
+                    </Button>
                     <codemirror v-model="data.data" ref="stringCodeMirror" :options="editorOpt"/>
                     <Row type="flex">
                       <Col span="24" style="text-align: right">
@@ -162,7 +169,14 @@
                       </Col>
                     </Row>
                     <div style="overflow:hidden;" class="moreKeyBox">
-                      <Button class="fullScreenBtn2" size="small" @click="setFullScreen(2)">全屏</Button>
+                      <Button class="fullScreenBtn2" size="small" @click="setFullScreen(2)">
+                        <template v-if="isFullScreen(2)">
+                          <Icon type="ios-expand" />
+                        </template>
+                        <template v-else>
+                          <Icon type="ios-contract" />
+                        </template>
+                      </Button>
                       <codemirror ref="otherCodeMirror" v-model="currentSelectRowData.value" :options="editorOpt"/>
                       <Button
                         style="float: right"
@@ -581,6 +595,22 @@ export default {
         case 2:
           this.$refs.otherCodeMirror[0].codemirror.setOption('fullScreen', !this.$refs.otherCodeMirror[0].codemirror.getOption('fullScreen'))
           break
+      }
+    },
+    isFullScreen (type) {
+      switch (type) {
+        case 1:
+          try {
+            return !this.$refs.stringCodeMirror[0].codemirror.getOption('fullScreen')
+          } catch (e) {
+            return true
+          }
+        case 2:
+          try {
+            return !this.$refs.otherCodeMirror[0].codemirror.getOption('fullScreen')
+          } catch (e) {
+            return true
+          }
       }
     },
     getSiderStyle () {

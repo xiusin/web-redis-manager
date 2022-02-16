@@ -17,6 +17,17 @@ redis的web管理客户, 支持同时管理多个redis实例, 慢日志, 服务�
 - pubsub模式
 - 图表监控
 
+# TODO #
+- 窗口模式 frameless
+- 活动key高亮
+- 非string类型搜索使用后端搜索过滤且最多范围1000条数据
+- 大key定位
+- 热key定位
+- 命令行窗口每次打开时优先执行一次 `select DB` 切换当前数据库
+- 发布订阅问题处理
+- 集群模式
+- 主从模式
+
 # 使用方法 #
 ```shell
 git clone --depth=1 https://github.com/xiusin/web-redis-manager.git
