@@ -14,7 +14,6 @@ require (
 require github.com/Tim-Paik/webview2 v0.1.9
 
 require (
-	github.com/Tim-Paik/go-webview2 v0.0.0-20220208102031-c6973f051ea5 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/gen2brain/dlgs v0.0.0-20210609125024-bf6c92aaa984 // indirect
 	github.com/gopherjs/gopherjs v0.0.0-20210621113107-84c6004145de // indirect
