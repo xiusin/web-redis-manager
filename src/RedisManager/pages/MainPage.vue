@@ -1064,7 +1064,7 @@ export default {
           childs[i].style.backgroundColor = '#fff'
         } catch (e) {}
       }
-      this.$refs[node.title].at(0).$el.style.backgroundColor = '#eeba4d'
+      this.$refs[node.title].at(0).$el.style.backgroundColor = '#f7f7f7'
       if (node.action !== 'get_value') return
       this.currentLoadingKey = node.title
       if (this.isQtWebView()) {
