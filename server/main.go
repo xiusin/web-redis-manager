@@ -6,7 +6,8 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
-	"strconv"
+  "os"
+  "strconv"
 	"strings"
 	"time"
 
@@ -36,6 +37,7 @@ func init() {
 }
 
 func main() {
+  IsBuildStr = strconv.FormatBool(!strings.Contains(os.Args[0], "build"))
 
 	flag.StringVar(&basicauthName, "username", "admin", "basicauth 名称")
 	flag.StringVar(&basicauthPass, "password", "", "basicauth 验证密码")

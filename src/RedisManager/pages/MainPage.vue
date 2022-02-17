@@ -80,17 +80,17 @@
           <div
             style='height: calc(100% - 100px); overflow-y: auto; overflow-x: hidden;'>
             <List size="small">
-              <ListItem v-for="keyItem in keysList" :key="keyItem.title"
+              <ListItem :ref="keyItem.title" v-for="keyItem in keysList" :key="keyItem.title"
                         style="width: 100%; height: 30px; line-height: 30px;">
-                <ListItemMeta>
+                <ListItemMeta @click.native="selectChange([keyItem])">
                   <template slot="title">
-                    {{ keyItem.title }} <!-- <Badge color="#2db7f5" :text="'S'" />  -->
+                    {{ keyItem.title }}
                   </template>
                 </ListItemMeta>
                 <template slot="action">
-                  <li @click="selectChange([keyItem])">
-                    <Icon type="ios-eye-outline" slot="suffix"/>
-                  </li>
+<!--                  <li @click="selectChange([keyItem])">-->
+<!--                    <Icon type="ios-eye-outline" slot="suffix"/>-->
+<!--                  </li>-->
                   <li @click="removeKey(keyItem.title)">
                     <Icon type="ios-trash-outline" slot="suffix"/>
                   </li>
@@ -417,8 +417,12 @@
 
     <Modal class="showJsonModal" v-model="showJsonModal" fullscreen footer-hide
            :on-visible-change="showJsonModalOkClick">
-      <VueTerminal ref="child" v-bind:id="currentConnectionId" @command="onCliCommand" console-sign="redis-cli $"
-                   style="height: 100%; font-size:14px; font-weight: bold"></VueTerminal>
+      <VueTerminal ref="child"
+                   v-bind:id="currentConnectionId"
+                   @command="onCliCommand"
+                   console-sign="redis-cli $"
+                   style="height: 100%; font-size:14px; font-weight: bold"
+      ></VueTerminal>
     </Modal>
 
   </div>
@@ -1049,9 +1053,18 @@ export default {
     getTabsKey () {
       return this.currentConnectionId + '-' + this.currentDbIndex
     },
-    selectChange (nodes) {
+    selectChange (nodes, e) {
       if (nodes.length === 0) return
       let node = nodes[0]
+
+      const childs = this.$refs[node.title].at(0).$el.parentElement.childNodes
+      console.log(childs)
+      for (let i in childs) {
+        try {
+          childs[i].style.backgroundColor = '#fff'
+        } catch (e) {}
+      }
+      this.$refs[node.title].at(0).$el.style.backgroundColor = '#eeba4d'
       if (node.action !== 'get_value') return
       this.currentLoadingKey = node.title
       if (this.isQtWebView()) {
@@ -1896,7 +1909,7 @@ export default {
 
 .ivu-layout-header {
   height: 40px;
-  line-height: 38px;
+  line-height: 34px;
 }
 .ivu-tabs-bar {
   margin-bottom: 8px;

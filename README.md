@@ -19,7 +19,6 @@ redis的web管理客户, 支持同时管理多个redis实例, 慢日志, 服务�
 
 # TODO #
 - 窗口模式 frameless
-- 活动key高亮
 - 非string类型搜索使用后端搜索过滤且最多范围1000条数据
 - 大key定位
 - 热key定位
