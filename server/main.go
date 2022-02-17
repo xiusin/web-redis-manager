@@ -58,7 +58,6 @@ func main() {
 	isBuild, _ := strconv.ParseBool(IsBuildStr)
 	if isBuild {
 		go func() {
-			fmt.Println("start rdm server in http://0.0.0.0" + port)
 			_ = http.ListenAndServe(port, handler)
 		}()
 
