@@ -6,8 +6,7 @@ import (
 	"fmt"
 	"io/fs"
 	"net/http"
-  "os"
-  "strconv"
+	"os"
 	"strings"
 	"time"
 
@@ -28,16 +27,13 @@ var embedFiles embed.FS
 
 var port = ":8787"
 
-var IsBuildStr string
-
 func init() {
 	src.ConnectionFile = windows.GetStorePath("rdm.db")
 	router.RegisterRouter(mux)
-	IsBuildStr = "true"
 }
 
 func main() {
-  IsBuildStr = strconv.FormatBool(!strings.Contains(os.Args[0], "build"))
+	isDebug := strings.Contains(os.Args[0], "build")
 
 	flag.StringVar(&basicauthName, "username", "admin", "basicauth 名称")
 	flag.StringVar(&basicauthPass, "password", "", "basicauth 验证密码")
@@ -57,14 +53,14 @@ func main() {
 		})
 		handler = auth(handler)
 	}
-	isBuild, _ := strconv.ParseBool(IsBuildStr)
-	if isBuild {
+
+	if !isDebug {
 		go func() {
 			_ = http.ListenAndServe(port, handler)
 		}()
 
 		time.Sleep(time.Millisecond * 100)
-		windows.InitWebview(strings.Trim(port, ":"), isBuild)
+		windows.InitWebview(strings.Trim(port, ":"), !isDebug)
 	} else {
 		fmt.Println("start rdm server in http://0.0.0.0" + port)
 		fmt.Println(http.ListenAndServe(port, handler))
