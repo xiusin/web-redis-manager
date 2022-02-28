@@ -251,7 +251,7 @@ export default {
           title: '客户端地址',
           key: 'addr',
           sortable: true,
-          width: 150
+          width: 170
         },
         {
           title: '名称',

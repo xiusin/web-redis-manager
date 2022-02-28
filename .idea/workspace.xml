@@ -4,11 +4,9 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e5acd14f-ed96-4e3e-b6f8-638a2b479196" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" afterDir="false" />
+    <list default="true" id="e5acd14f-ed96-4e3e-b6f8-638a2b479196" name="Changes" comment="添加进度条, 优化编辑器页面">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/RedisManager/pages/MainPage.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/RedisManager/pages/MainPage.vue" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/RedisManager/pages/components/infoTabs.vue" beforeDir="false" afterPath="$PROJECT_DIR$/src/RedisManager/pages/components/infoTabs.vue" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,6 +50,7 @@
     <property name="node.js.selected.package.eslint" value="(autodetect)" />
     <property name="node.js.selected.package.tslint" value="(autodetect)" />
     <property name="nodejs_package_manager_path" value="yarn" />
+    <property name="settings.editor.selected.configurable" value="preferences.lookFeel" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
@@ -61,8 +60,10 @@
   <component name="VcsManagerConfiguration">
     <option name="CHECK_CODE_SMELLS_BEFORE_PROJECT_COMMIT" value="false" />
     <option name="CHECK_NEW_TODO" value="false" />
+    <MESSAGE value="更换第三方库" />
     <MESSAGE value="添加进度条, 优化编辑器页面" />
-    <option name="LAST_COMMIT_MESSAGE" value="添加进度条, 优化编辑器页面" />
+    <MESSAGE value="高亮选中KEY" />
+    <option name="LAST_COMMIT_MESSAGE" value="高亮选中KEY" />
   </component>
   <component name="VgoProject">
     <integration-enabled>true</integration-enabled>
