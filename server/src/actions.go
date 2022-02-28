@@ -430,7 +430,7 @@ func getRedisClient(data RequestData, getSelectedIndexClient bool, getKey bool) 
             panic(err)
           }
         }
-        conn.Do("CLIENT", "SETNAME", fmt.Sprintf("RDM-%s-%d-%d", config.Title, config.ID, rand.Intn(19999)))
+        conn.Do("CLIENT", "SETNAME", fmt.Sprintf("RDM:(%d):CLIENT(%d)", config.ID, rand.Intn(19999)))
         return conn, nil
       },
       TestOnBorrow: func(c redis.Conn, t time.Time) error {
@@ -511,7 +511,7 @@ func RedisManagerConnectionServer(data RequestData) string {
         }})
       }
     case "stream":
-      val, err := client.Do("XRANGE", key, "-", "+", "COUNT", 1000)
+      val, err := client.Do("XRANGE", key, "-", "+", "COUNT", 200)
       if err != nil {
         return JSON(ResponseData{FailedCode, "读取数据错误", err.Error()})
       } else {
@@ -597,7 +597,7 @@ func RedisManagerConnectionServer(data RequestData) string {
       filter = "*"
     }
 
-    repl, err := client.Do("SCAN", nextCur, "MATCH", filter, "COUNT", 9999)
+    repl, err := client.Do("SCAN", nextCur, "MATCH", filter, "COUNT", 200)
     if err != nil {
       return JSON(ResponseData{FailedCode, err.Error(), nil})
     }
