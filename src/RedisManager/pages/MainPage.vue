@@ -72,7 +72,7 @@
         </Sider>
         <Content
           class="key-list"
-          :style="{background: '#fff', width:'200px',maxWidth:'200px', minWidth:'200px' , 'overflow-y': 'auto', 'overflow-x': 'hidden', 'position': 'relative'}"
+          :style="{background: '#fff', width:'300px',maxWidth:'300px', minWidth:'300px' , 'overflow-y': 'auto', 'overflow-x': 'hidden', 'position': 'relative'}"
         >
           <Input placeholder="过滤规则: *" v-model="keyFilter" style="width: 100%;">
             <Icon @click="clickEvent(currentDbNode)" type="ios-search" slot="suffix" style="cursor: pointer"/>
@@ -88,9 +88,11 @@
                   </template>
                 </ListItemMeta>
                 <template slot="action">
-<!--                  <li @click="selectChange([keyItem])">-->
-<!--                    <Icon type="ios-eye-outline" slot="suffix"/>-->
-<!--                  </li>-->
+                 <li>
+                   <Tooltip :content="keyItem.title" placement="left">
+                     <el-button><Icon type="ios-eye-outline" slot="suffix"/></el-button>
+                   </Tooltip>
+                  </li>
                   <li @click="removeKey(keyItem.title)">
                     <Icon type="ios-trash-outline" slot="suffix"/>
                   </li>
@@ -191,7 +193,8 @@
               </Tabs>
             </div>
             <div v-else style="text-align: center;">
-              <img draggable="false" src="static/rdm_logo.png" style="width: 20%; margin-top: 100px;"/>
+              <img draggable="false" src="static/redis.svg" style="width: 20%; margin-top: 100px;"/>
+              
               <p style="font-size: 16px; font-weight: bold;  margin-top:100px;color: #000;">
                 RedisDesktop - Redis客户端管理工具
               </p>
@@ -342,6 +345,8 @@
               <Radio label="zset"></Radio>
               <Radio label="hash"></Radio>
               <Radio label="stream"></Radio>
+              <Radio label="JSON"></Radio>
+              <Radio label="RediSearch"></Radio>
             </RadioGroup>
           </FormItem>
           <FormItem label="分值:" v-if="newKeyType === 'zset'">
@@ -1867,7 +1872,7 @@ export default {
 .key-list .ivu-list-small .ivu-list-item-meta-title {
   font-size: 12px;
   font-weight: normal;
-  width: 150px;
+  width: 250px;
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
