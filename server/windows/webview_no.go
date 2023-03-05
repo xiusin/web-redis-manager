@@ -5,10 +5,11 @@ package windows
 import (
 	"os"
 	"os/signal"
+	"syscall"
 )
 
 func InitWebview(port int, isBuild bool) {
-	signalCh := make(os.Signal)
-	signal.Notify(signalCh, os.Kill, os.Interrupt)
+	signalCh := make(chan os.Signal, 1)
+	signal.Notify(signalCh, syscall.SIGALRM)
 	<-signalCh
 }

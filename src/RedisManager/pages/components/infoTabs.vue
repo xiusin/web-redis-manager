@@ -4,101 +4,96 @@
       <div class='serverInfo'>
         <Row :gutter="3">
           <Col span="4">
-            <div>
-              <Card :bordered="false">
-                <p slot="title">版本</p>
-                <p>{{ info.version }}</p>
-              </Card>
-            </div>
+          <div>
+            <Card :bordered="false">
+              <p slot="title">版本</p>
+              <p>{{ info.version }}</p>
+            </Card>
+          </div>
           </Col>
           <Col span="4">
-            <div>
-              <Card :bordered="false">
-                <p slot="title">内存使用</p>
-                <p>{{ info.memory }}</p>
-              </Card>
-            </div>
+          <div>
+            <Card :bordered="false">
+              <p slot="title">内存使用</p>
+              <p>{{ info.memory }}</p>
+            </Card>
+          </div>
           </Col>
           <Col span="4">
-            <div>
-              <Card :bordered="false">
-                <p slot="title">客户端数</p>
-                <p>{{ info.clientNum }}</p>
-              </Card>
-            </div>
+          <div>
+            <Card :bordered="false">
+              <p slot="title">客户端数</p>
+              <p>{{ info.clientNum }}</p>
+            </Card>
+          </div>
           </Col>
           <Col span="4">
-            <div>
-              <Card :bordered="false">
-                <p slot="title">Key总数</p>
-                <p>{{ info.keyNum }}</p>
-              </Card>
-            </div>
+          <div>
+            <Card :bordered="false">
+              <p slot="title">Key总数</p>
+              <p>{{ info.keyNum }}</p>
+            </Card>
+          </div>
           </Col>
           <Col span="4">
-            <div>
-              <Card :bordered="false">
-                <p slot="title">CPU占用</p>
-                <p>{{ info.cpuSys }}</p>
-              </Card>
-            </div>
+          <div>
+            <Card :bordered="false">
+              <p slot="title">CPU占用</p>
+              <p>{{ info.cpuSys }}</p>
+            </Card>
+          </div>
           </Col>
           <Col span="4">
-            <div>
-              <Card :bordered="false">
-                <p slot="title">命中率</p>
-                <p>{{ info.ratio }}</p>
-              </Card>
-            </div>
+          <div>
+            <Card :bordered="false">
+              <p slot="title">命中率</p>
+              <p>{{ info.ratio }}</p>
+            </Card>
+          </div>
           </Col>
         </Row>
       </div>
-      <server-info :serverInfo="serverInfo"/>
+      <server-info :serverInfo="serverInfo" />
     </TabPane>
     <TabPane label="配置信息" name="second" style="height: 100%">
-      <Table size="small"
-             :columns="serverConfigColumns"
-             :data="serverConfig"
-             :stripe="true"
-             :border="true"
-             style="height: 100%"></Table>
+      <Table size="small" :columns="serverConfigColumns" :data="serverConfig" :stripe="true" :border="true"
+        style="height: 100%"></Table>
     </TabPane>
     <TabPane label="慢日志" name="three" style="height: 100%">
-      <slow-log :slow-logs="slowLogs"/>
+      <slow-log :slow-logs="slowLogs" />
     </TabPane>
     <TabPane label="客户端" name="four" style="height: 100%; overflow-y: auto;">
-      <Table size="small"
-             :columns="clientColumns"
-             :data="clientData"
-             :stripe="true"
-             :border="true"
-             style="height: 100%"></Table>
+      <div style="clear: both;">
+        <Table size="small" :columns="clientColumns" :data="clientData" :stripe="true" :border="true"
+          style="height: 100%">
+        </Table>
+      </div>
     </TabPane>
     <TabPane label="图表" name="five" style="height: 100%; overflow-y: auto;">
       <Row :gutter="1" class="chartBox">
         <Col span="12">
-          <div style="width: 100%; height: 300px">
-            <h3>CPU</h3>
-            <v-chart class="chart" :option="cpuOption"/>
-          </div>
+        <div style="width: 100%; height: 300px">
+          <h3>CPU</h3>
+          <v-chart class="chart" :option="cpuOption" />
+        </div>
         </Col>
         <Col span="12">
-          <div style="width: 100%; height: 300px">
-            <h3>Key数</h3>
-            <v-chart class="chart" :option="keyOption"/>
-          </div>
+        <div style="width: 100%; height: 300px">
+          <h3>Key数</h3>
+          <v-chart class="chart" :option="keyOption" />
+        </div>
         </Col>
         <Col span="12">
-          <div style="width: 100%; height: 300px">
-            <h3>内存使用</h3>
-            <v-chart class="chart" :option="memOption"/>
-          </div>
+        <div style="width: 100%; height: 300px">
+          <h3>内存使用</h3>
+          <v-chart class="chart" :option="memOption" />
+        </div>
         </Col>
         <Col span="12">
-          <div style="width: 100%; height: 300px">
-            <h3>连接数</h3>
-            <v-chart class="chart" :option="connOption"/>
-          </div>
+        <div style="width: 100%; height: 300px">
+          <h3>连接数</h3>
+          <v-chart class="chart" :option="connOption" />
+        </div>
         </Col>
       </Row>
     </TabPane>
@@ -107,10 +102,10 @@
 
 <script>
 
-import {use} from 'echarts/core'
-import {CanvasRenderer} from 'echarts/renderers'
-import {PieChart, LineChart} from 'echarts/charts'
-import {GridComponent, LegendComponent, TitleComponent, TooltipComponent} from 'echarts/components'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { PieChart, LineChart } from 'echarts/charts'
+import { GridComponent, LegendComponent, TitleComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
 import ServerInfo from './serverInfo'
 import SlowLog from './SlowLog'
@@ -143,14 +138,14 @@ export default {
     ServerInfo,
     SlowLog
   },
-  data () {
+  data() {
     return {
       infoCollapse: 'Server',
       clientTimer: null,
       infoTimer: null,
       stopInterval: false,
       tab: 'first',
-      info: {version: '-', memory: '-', keyNum: 0, clientNum: 0, cpuSys: 0, process: 0, ratio: 0},
+      info: { version: '-', memory: '-', keyNum: 0, clientNum: 0, cpuSys: 0, process: 0, ratio: 0 },
       timeLineData: [],
       cpuData: [],
       memData1: [],
@@ -334,15 +329,15 @@ export default {
       serverInfo: {}
     }
   },
-  mounted () {
+  mounted() {
     this.loadInfo()
   },
-  destroyed () {
+  destroyed() {
     clearInterval(this.clientTimer)
     clearInterval(this.infoTimer)
   },
   methods: {
-    loadInfo () {
+    loadInfo() {
       Api.info({
         id: this.currentConnectionId
       }, (data) => {
@@ -373,7 +368,7 @@ export default {
           let srvConfig = data.data.config
           for (let i = 0; i < srvConfig.length; i = i + 2) {
             if (srvConfig[i] !== 'requirepass') {
-              config.push({'key': srvConfig[i], 'value': srvConfig[i + 1]})
+              config.push({ 'key': srvConfig[i], 'value': srvConfig[i + 1] })
             }
           }
           this.serverConfig = config
@@ -388,7 +383,7 @@ export default {
         }
       })
     },
-    loopEvent () { // 获取客户端信息
+    loopEvent() { // 获取客户端信息
       if (this.stopInterval) return
       Api.sendCommand({
         command: '["CLIENT", "LIST"]',
@@ -408,7 +403,7 @@ export default {
         this.clientData = clientData
       })
     },
-    infoCard () {
+    infoCard() {
       this.info.version = this.serverInfo.Server.split('\r\n')[0].replace(/redis_version:/, '')
       this.info.memory = this.serverInfo.Memory.split('\r\n')[1].replace(/used_memory_human:/, '')
       let peakMemory = this.serverInfo.Memory.match(/used_memory_peak_human:([0-9]+(\.?[0-9]+)?)/)[1]
@@ -453,11 +448,11 @@ export default {
     }
   },
   watch: {
-    currentConnectionId () {
+    currentConnectionId() {
       clearInterval(this.infoTimer)
       this.loadInfo()
     },
-    tab (newVal) {
+    tab(newVal) {
       if (newVal === 'four') {
         if (!this.clientTimer) {
           this.loopEvent()
@@ -482,14 +477,17 @@ export default {
 .serverInfo .ivu-card-body {
   text-align: center;
 }
+
 .chartBox {
   text-align: center;
 }
-.chartBox > div {
+
+.chartBox>div {
   border: 1px solid #ccc;
   margin: 10px 2.5%;
   width: 45%;
 }
+
 .chartBox h3 {
   height: 30px;
   line-height: 30px;

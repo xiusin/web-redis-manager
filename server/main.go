@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -60,7 +61,8 @@ func main() {
 		}()
 
 		time.Sleep(time.Millisecond * 100)
-		windows.InitWebview(strings.Trim(port, ":"), !isDebug)
+		portInt, _ := strconv.Atoi(strings.Trim(port, ":"))
+		windows.InitWebview(portInt, !isDebug)
 	} else {
 		fmt.Println("start rdm server in http://0.0.0.0" + port)
 		fmt.Println(http.ListenAndServe(port, handler))
