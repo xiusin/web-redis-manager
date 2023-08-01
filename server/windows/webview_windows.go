@@ -2,6 +2,8 @@ package windows
 
 import (
 	"syscall"
+
+	"github.com/Tim-Paik/webview2"
 )
 
 var (
