@@ -4,6 +4,7 @@ import (
 	"embed"
 	"flag"
 	"fmt"
+	"github.com/xiusin/redis_manager/server/handler"
 	"io/fs"
 	"net/http"
 	"os"
@@ -16,56 +17,50 @@ import (
 	"github.com/kataras/basicauth"
 	"github.com/rs/cors"
 	"github.com/xiusin/redis_manager/server/router"
-	"github.com/xiusin/redis_manager/server/src"
 )
 
-var mux = http.NewServeMux()
-var basicauthName string
-var basicauthPass string
+var (
+	mux           = http.NewServeMux()
+	basicAuthName string
+	basicAuthPass string
+	port          = ":8787"
+)
 
 //go:embed resources
 var embedFiles embed.FS
 
-var port = ":8787"
-
 func init() {
-	src.ConnectionFile = windows.GetStorePath("rdm.db")
+	handler.ConnectionFile = windows.GetStorePath("rdm.db")
 	router.RegisterRouter(mux)
 }
 
 func main() {
 	isDebug := strings.Contains(os.Args[0], "build")
-
-	flag.StringVar(&basicauthName, "username", "admin", "basicauth 名称")
-	flag.StringVar(&basicauthPass, "password", "", "basicauth 验证密码")
-
+	flag.StringVar(&basicAuthName, "username", "admin", "basicAuth 名称")
+	flag.StringVar(&basicAuthPass, "password", "", "basicAuth 验证密码")
 	flag.Parse()
 
-	fsys, err := fs.Sub(embedFiles, "resources/app")
+	appAssets, err := fs.Sub(embedFiles, "resources/app")
 	if err != nil {
 		panic(err)
 	}
 
-	mux.Handle("/", http.FileServer(http.FS(fsys)))
-	handler := cors.Default().Handler(mux)
-	if len(basicauthName) > 0 && len(basicauthPass) > 0 {
-		auth := basicauth.Default(map[string]string{
-			basicauthName: basicauthPass,
-		})
-		handler = auth(handler)
+	mux.Handle("/", http.FileServer(http.FS(appAssets)))
+
+	_handler := cors.Default().Handler(mux)
+	if len(basicAuthName) > 0 && len(basicAuthPass) > 0 {
+		_handler = basicauth.Default(map[string]string{basicAuthName: basicAuthPass})(_handler)
 	}
 
 	if !isDebug {
-		go func() {
-			_ = http.ListenAndServe(port, handler)
-		}()
+		go func() { _ = http.ListenAndServe(port, _handler) }()
 
 		time.Sleep(time.Millisecond * 100)
+
 		portInt, _ := strconv.Atoi(strings.Trim(port, ":"))
-		windows.InitWebview(portInt, !isDebug)
+		windows.InitWebview(fmt.Sprintf("http://localhost:%d/#/", portInt))
 	} else {
-		fmt.Println("start rdm server in http://0.0.0.0" + port)
-		fmt.Println(http.ListenAndServe(port, handler))
+		_ = http.ListenAndServe(port, _handler)
 	}
 
 }

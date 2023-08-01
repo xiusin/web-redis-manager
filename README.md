@@ -47,7 +47,7 @@ go build -o rdm # *nix
 # 非basic auth启动
 ./rdm.exe
 
-# basic auth启动
+# basic auth启动 (用于web端授权密码登录)
 ./rdm.exe --username=admin --password=123456
 
 ```

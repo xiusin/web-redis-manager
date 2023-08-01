@@ -1,4 +1,4 @@
-package src
+package handler
 
 type ResponseData struct {
 	Status int64       `json:"status"`
@@ -36,8 +36,8 @@ type commandHelp struct {
 	Since   string `json:"since"`
 }
 
-//@see https://raw.githubusercontent.com/antirez/redis/ad78b50f62c88b6396c5ee86cda89fc2313f77af/src/help.h
-//辅助提醒命令参数
+// @see https://raw.githubusercontent.com/antirez/redis/ad78b50f62c88b6396c5ee86cda89fc2313f77af/src/help.h
+// 辅助提醒命令参数
 func FromRedisSourceCommandHelper() map[string]commandHelp {
 	var helpers = []commandHelp{
 		{"APPEND",

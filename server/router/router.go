@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/gorilla/websocket"
-	"github.com/xiusin/redis_manager/server/src"
+	"github.com/xiusin/redis_manager/server/handler"
 )
 
 var upgrader = websocket.Upgrader{
@@ -21,33 +21,32 @@ var upgrader = websocket.Upgrader{
 }
 
 func RegisterRouter(mux *http.ServeMux) {
-
-	var routes = map[string]src.HandleFunc{
-		"/redis/connection/test":        src.RedisManagerConnectionTest,
-		"/redis/connection/save":        src.RedisManagerConfigSave,
-		"/redis/connection/list":        src.RedisManagerConnectionList,
-		"/redis/connection/server":      src.RedisManagerConnectionServer,
-		"/redis/connection/removekey":   src.RedisManagerRemoveKey,
-		"/redis/connection/removerow":   src.RedisManagerRemoveRow,
-		"/redis/connection/updatekey":   src.RedisManagerUpdateKey,
-		"/redis/connection/addkey":      src.RedisManagerAddKey,
-		"/redis/connection/flushDB":     src.RedisManagerFlushDB,
-		"/redis/connection/remove":      src.RedisManagerRemoveConnection,
-		"/redis/connection/renameKey":   src.RedisManagerRenameKey,
-		"/redis/connection/command":     src.RedisManagerCommand,
-		"/redis/connection/info":        src.RedisManagerGetInfo,
-		"/redis/connection/get-command": src.RedisManagerGetCommandList,
+	var routes = map[string]handler.HandleFunc{
+		"/redis/connection/test":        handler.RedisManagerConnectionTest,
+		"/redis/connection/save":        handler.RedisManagerConfigSave,
+		"/redis/connection/list":        handler.RedisManagerConnectionList,
+		"/redis/connection/server":      handler.RedisManagerConnectionServer,
+		"/redis/connection/removekey":   handler.RedisManagerRemoveKey,
+		"/redis/connection/removerow":   handler.RedisManagerRemoveRow,
+		"/redis/connection/updatekey":   handler.RedisManagerUpdateKey,
+		"/redis/connection/addkey":      handler.RedisManagerAddKey,
+		"/redis/connection/flushDB":     handler.RedisManagerFlushDB,
+		"/redis/connection/remove":      handler.RedisManagerRemoveConnection,
+		"/redis/connection/renameKey":   handler.RedisManagerRenameKey,
+		"/redis/connection/command":     handler.RedisManagerCommand,
+		"/redis/connection/info":        handler.RedisManagerGetInfo,
+		"/redis/connection/get-command": handler.RedisManagerGetCommandList,
 	}
 
 	notReadonlyKeys := []string{"removekey", "removerow", "updatekey", "addkey", "flushDB", "renameKey", "command"}
 
 	for route, handle := range routes {
-		mux.HandleFunc(route, func(handle src.HandleFunc) func(writer http.ResponseWriter, request *http.Request) {
+		mux.HandleFunc(route, func(handle handler.HandleFunc) func(writer http.ResponseWriter, request *http.Request) {
 			return func(writer http.ResponseWriter, request *http.Request) {
 				writer.Header().Set("Content-Type", "application/json")
 				defer func() {
 					if err := recover(); err != nil {
-						writer.Write([]byte(src.JSON(src.ResponseData{Status: src.FailedCode, Msg: err.(error).Error()})))
+						_, _ = writer.Write([]byte(handler.JSON(handler.ResponseData{Status: handler.FailedCode, Msg: err.(error).Error()})))
 					}
 				}()
 
@@ -58,7 +57,7 @@ func RegisterRouter(mux *http.ServeMux) {
 				if isReadonly {
 					for _, key := range notReadonlyKeys {
 						if modifyKey == key {
-							writer.Write([]byte(src.JSON(src.ResponseData{Status: src.FailedCode, Msg: "只读模式下不可做修改或新增操作", Data: nil})))
+							_, _ = writer.Write([]byte(handler.JSON(handler.ResponseData{Status: handler.FailedCode, Msg: "只读模式下不可做修改或新增操作", Data: nil})))
 							return
 						}
 					}
@@ -80,7 +79,7 @@ func RegisterRouter(mux *http.ServeMux) {
 					}
 				}
 
-				writer.Write([]byte(handle(data)))
+				_, _ = writer.Write([]byte(handle(data)))
 			}
 		}(handle))
 	}
@@ -102,7 +101,7 @@ func RegisterRouter(mux *http.ServeMux) {
 					data[param] = nil
 				}
 			}
-			writer.Write([]byte(src.RedisPubSub(data)))
+			_, _ = writer.Write([]byte(handler.RedisPubSub(data)))
 			return
 		}
 
@@ -117,7 +116,7 @@ func RegisterRouter(mux *http.ServeMux) {
 				continue
 			}
 			data["ws"] = ws
-			src.RedisPubSub(data)
+			handler.RedisPubSub(data)
 		}
 	})
 }
