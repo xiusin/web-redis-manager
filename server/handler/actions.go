@@ -577,8 +577,7 @@ func RedisManagerConnectionServer(data RequestData) string {
 		//读取数据库列表
 		var dbs []int
 		for i := 0; i < 20; i++ {
-			_, err := client.Do("SELECT", i)
-			if err != nil {
+			if _, err := client.Do("SELECT", i); err != nil {
 				break
 			}
 			//读取数据总量

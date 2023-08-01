@@ -5,9 +5,11 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"runtime/debug"
 	"strings"
 
 	"github.com/gorilla/websocket"
+	"github.com/xiusin/logger"
 	"github.com/xiusin/redis_manager/server/handler"
 )
 
@@ -46,6 +48,7 @@ func RegisterRouter(mux *http.ServeMux) {
 				writer.Header().Set("Content-Type", "application/json")
 				defer func() {
 					if err := recover(); err != nil {
+						logger.Print(string(debug.Stack()))
 						_, _ = writer.Write([]byte(handler.JSON(handler.ResponseData{Status: handler.FailedCode, Msg: err.(error).Error()})))
 					}
 				}()

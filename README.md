@@ -1,6 +1,6 @@
-# redis_manager #
+# web-redis-manager #
 
-redis的web管理客户, 支持同时管理多个redis实例, 慢日志, 服务器信息, 配置信息, CLI模式.
+redis的web管理客户端, 支持同时管理多个redis实例, 慢日志, 服务器信息, 配置信息, CLI模式.
 
 > 演示案例: <http://rdm.xiusin.cn>
 >
@@ -10,18 +10,15 @@ redis的web管理客户, 支持同时管理多个redis实例, 慢日志, 服务�
 
 - basicauth
 - 支持redis常用数据类型管理: `list`, `string`, `hashmap`, `set`, `sorted set`, `stream`等.
-- CLI提醒模式
-- 慢日志查询打印
+- CLI
+- 慢日志
 - 服务信息
-- 客户端连接查看以及关闭
-- pubsub模式
+- 发布订阅模式
 - 图表监控
 
 ## TODO ##
 
 - 窗口模式 frameless
-- 大key定位
-- 热key定位
 - 命令行窗口每次打开时优先执行一次 `select DB` 切换当前数据库
 - 发布订阅问题处理
 - 集群模式
