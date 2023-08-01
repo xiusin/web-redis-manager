@@ -1,5 +1,3 @@
-//go:build linux
-
 package windows
 
 func InitWebview(url string) {
