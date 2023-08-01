@@ -10,7 +10,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/xiusin/logger"
-	"github.com/xiusin/redis_manager/server/handler"
+	"github.com/xiusin/rdm/server/handler"
 )
 
 var upgrader = websocket.Upgrader{

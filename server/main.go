@@ -4,7 +4,6 @@ import (
 	"embed"
 	"flag"
 	"fmt"
-	"github.com/xiusin/redis_manager/server/handler"
 	"io/fs"
 	"net/http"
 	"os"
@@ -12,11 +11,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/xiusin/redis_manager/server/windows"
+	"github.com/xiusin/rdm/server/handler"
+
+	"github.com/xiusin/rdm/server/windows"
 
 	"github.com/kataras/basicauth"
 	"github.com/rs/cors"
-	"github.com/xiusin/redis_manager/server/router"
+	"github.com/xiusin/rdm/server/router"
 )
 
 var (

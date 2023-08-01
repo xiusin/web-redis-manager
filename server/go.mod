@@ -1,4 +1,4 @@
-module github.com/xiusin/redis_manager/server
+module github.com/xiusin/rdm/server
 
 go 1.17
 
