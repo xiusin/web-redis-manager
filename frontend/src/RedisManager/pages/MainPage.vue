@@ -221,7 +221,7 @@
               </div>
             </div>
             <div class="info" v-if="currentConnectionId !== '' && infoModal"
-              :style="'position:absolute; z-index: 10;  background: #fff; width: calc(100% - 300px); height: 100%; padding:10px;' + (isQtWebView() ? 'top: 0px;' : 'top: 64px')">
+              :style="'position:absolute; z-index: 10;  background: #fff; width: calc(100% - 300px); height: calc(100% - 40px); padding:10px;' + (isQtWebView() ? 'top: 0px;' : 'top: 40px')">
               <info-tabs ref="infoTabs" :current-connection-id.sync="this.currentConnectionId"
                 :current-connection-index="this.currentDbIndex" />
             </div>
