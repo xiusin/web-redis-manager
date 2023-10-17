@@ -194,7 +194,7 @@
             </div>
 
             <div v-if="currentConnectionId !== '' && pubsubModal"
-              :style="'position:absolute; z-index: 10; background: #fff; width: calc(100% - 300px); height: 100%; padding:10px;' + (isQtWebView() ? 'top: 0px' : 'top: 64px')">
+              :style="'position:absolute; z-index: 10; background: #fff; width: calc(100% - 300px); height: calc(100% - 40px); padding:10px;' + (isQtWebView() ? 'top: 0px' : 'top: 40px')">
               <ul class="infinite-list" style="position:relative; top: 30px;">
                 <li class="infinite-list-item" :key="index" v-for="(item, index) in chanMegs[getPubSubTabKey()]">
                   {{ item }}
@@ -1899,14 +1899,14 @@ export default {
   position: absolute;
   right: 20px;
   top: 100px;
-  z-index: 9999;
+  z-index: 10;
 }
 
 .fullScreenBtn2 {
   position: absolute;
   right: 20px;
   top: 360px;
-  z-index: 9999;
+  z-index: 10;
 }
 </style>
 
