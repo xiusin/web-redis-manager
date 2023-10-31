@@ -231,7 +231,7 @@
         <span>配置Redis连接</span>
       </p>
       <div>
-        <Form :model="formItem" :label-width="80">
+        <Form :model="formItem" :label-width="80" :self-update="true">
           <FormItem label="名称:">
             <Input v-model="formItem.title" placeholder="连接名称"></Input>
           </FormItem>

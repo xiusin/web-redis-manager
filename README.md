@@ -21,7 +21,7 @@ redis的web管理客户端, 支持同时管理多个redis实例, 慢日志, 服�
 - 窗口模式 frameless
 - 命令行窗口每次打开时优先执行一次 `select DB` 切换当前数据库
 - 发布订阅问题处理
-- 大list/set/map造成页面卡顿优化
+- 大list/set/map造成页面卡顿优化 (组件最小化 https://www.jianshu.com/p/1ea5d87e06f9)
 
 ## 使用方法 ##
 
