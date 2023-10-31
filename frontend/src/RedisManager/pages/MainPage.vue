@@ -41,11 +41,6 @@
 .ivu-tabs-nav .ivu-tabs-tab-active {
   outline: none;
 }
-
-/** webview时需要取消注释 **/
-/* .ivu-modal-body {
-  padding: 0;
-} */
 </style>
 <template>
   <div class="layout">
