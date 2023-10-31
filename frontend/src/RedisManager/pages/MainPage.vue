@@ -1575,7 +1575,10 @@ export default {
           }
         }
         this.currentDbIndex = item.db
-        item.title = 'DB' + item.db + ' (' + item.count + ') 🔴'
+        if (!item.title.includes('🔥')) {
+          item.title += ' 🔥'
+        }
+        // item.title = 'DB' + item.db + ' (' + item.count + ') 🔴' // 重置key总数
       })
     },
     loadData(item, callback) {
