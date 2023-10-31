@@ -1238,32 +1238,39 @@ export default {
         let domain = process.env.NODE_ENV === 'production' ? window.location.origin : process.env.API_DOMAIN
 
         window.$websocket = new WebSocket(domain.replace('http', 'ws') + '/redis/connection/pubsub')
-        window.astilectron.post = (url, data, c) => {
-          this.$Progress.start()
-          $.post(domain + url, data, (message) => {
-            this.$Progress.finish()
+
+        window.astilectron.fetch = (fn, url, data, c) => {
+          const progress = !url.endsWith('command') && !url.endsWith('info')
+          if (progress) {
+            this.$Progress.start()
+          }
+          fn(domain + url, data, (message) => {
             this.buttonLoading = false
-            this.$Message.destroy()
+            if (process) {
+              this.$Progress.finish()
+              this.$Message.destroy()
+            }
             try {
-              c(JSON.parse(message))
+              if (typeof message === 'string') {
+                return c(JSON.parse(message))
+              } else {
+                return c(message)
+              }
             } catch (e) {
+              console.error(e)
               c(message)
             }
           })
         }
-        window.astilectron.get = (url, data, c) => {
-          this.$Progress.start()
-          $.getJSON(domain + url, data, (message) => {
-            this.$Progress.finish()
-            this.buttonLoading = false
-            this.$Message.destroy()
-            if (typeof message === 'string') {
-              return c(JSON.parse(message))
-            } else {
-              return c(message)
-            }
-          })
+
+        window.astilectron.post = (url, data, c) => {
+          window.astilectron.fetch($.post, url, data, c)
         }
+
+        window.astilectron.get = (url, data, c) => {
+          window.astilectron.fetch($.getJSON, url, data, c)
+        }
+
         Vue.prototype.$Websocket = window.astilectron
         if (callback) callback()
       } else {

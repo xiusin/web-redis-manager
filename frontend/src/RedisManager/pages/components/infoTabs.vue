@@ -1,5 +1,5 @@
 <template>
-  <Tabs v-model="tab" :animated="false" style="height: 100%; width: calc(100% - 95px)">
+  <Tabs v-model="tab" :animated="false" style="height: 100%; width: calc(100% - 200px)">
     <TabPane label="服务器信息" name="first" style="height: 100%; overflow-y: auto;">
       <div class='serverInfo'>
         <Row :gutter="3">
@@ -395,6 +395,9 @@ export default {
             let vd = {}
             value.split(' ').forEach((vv) => {
               let ss = vv.split('=')
+              if (['db', 'age', 'idle'].includes(ss[0])) {
+                ss[1] = parseInt(ss[1])
+              }
               vd[ss[0]] = ss[1]
             })
             clientData.push(vd)
