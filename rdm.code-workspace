@@ -1,8 +1,19 @@
 {
-	"folders": [
-		{
-			"path": "."
-		}
+    "folders": [
+        {
+            "path": "."
+        }
     ],
-    "settings": {}
+    "settings": {
+        "cSpell.words": [
+            "addkey",
+            "keyspace",
+            "removekey",
+            "removerow",
+            "requirepass",
+            "Strs",
+            "updatekey",
+            "upgrader"
+        ]
+    }
 }

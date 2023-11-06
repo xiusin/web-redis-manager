@@ -201,27 +201,32 @@ func RedisPubSub(data RequestData) string {
 			}
 			for {
 				message, err := client.Receive()
-				fmt.Println(string(message.([]byte)), err)
-				switch v := message.(type) {
-				case redis.Message: //单个订阅subscribe
-					retData := map[string]string{
-						"data":    string(v.Data),
-						"id":      strconv.Itoa(id),
-						"channel": v.Channel,
-						"time":    time.Now().In(loc).Format("15:04:05"),
-					}
-					if ws != nil {
-						resultValue, _ := json.Marshal(&retData)
-						if err := ws.WriteMessage(websocket.TextMessage, resultValue); err != nil {
-							logger.Warning(err)
-							return
+				if err == nil {
+					fmt.Println(string(message.([]byte)), err)
+					switch v := message.(type) {
+					case redis.Message: //单个订阅subscribe
+						retData := map[string]string{
+							"data":    string(v.Data),
+							"id":      strconv.Itoa(id),
+							"channel": v.Channel,
+							"time":    time.Now().In(loc).Format("15:04:05"),
 						}
+						if ws != nil {
+							resultValue, _ := json.Marshal(&retData)
+							if err := ws.WriteMessage(websocket.TextMessage, resultValue); err != nil {
+								logger.Warning(err)
+								return
+							}
+						}
+					case error:
+						logger.Warning(v)
+						return
+					default:
 					}
-				case error:
-					logger.Warning(v)
-					return
-				default:
+				} else {
+					fmt.Println(err)
 				}
+
 			}
 		}()
 	}

@@ -1,12 +1,9 @@
-
 import Vue from 'vue'
 
 export default {
-  // 获取应用分类列表
   connectionTest: async (data, callback) => {
     return await Vue.prototype.$Websocket.post('/redis/connection/test', data, callback)
   },
-  // 内部需要返回新增ID做到不刷新页面
   connectionSave: async (data, callback) => {
     return await Vue.prototype.$Websocket.post('/redis/connection/save', data, callback)
   },
@@ -40,7 +37,6 @@ export default {
   updateKey: async (data, callback) => {
     return await Vue.prototype.$Websocket.post('/redis/connection/updatekey', data, callback)
   },
-  // 发送redis命令
   sendCommand: (data, callback) => {
     return Vue.prototype.$Websocket.post('/redis/connection/command', data, callback)
   },

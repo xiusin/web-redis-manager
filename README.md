@@ -8,22 +8,20 @@ redis的web管理客户端, 支持同时管理多个redis实例, 慢日志, 服�
 
 ## 特性 ##
 
-- basicauth
+- basic auth
 - 支持redis常用数据类型管理: `list`, `string`, `hashmap`, `set`, `sorted set`, `stream`等.
-- CLI
+- CLI命令行模式
 - 慢日志
 - 服务信息
 - 发布订阅模式
 - 图表监控
-- list / set / stream等数据分页优化
+- list / set / stream等数据分页优化(优先前端列表分页)
 
 ## TODO ##
-
-- 窗口模式 frameless
-- 命令行窗口每次打开时优先执行一次 `select DB` 切换当前数据库
-- 发布订阅问题处理
-- 大list/set/map造成页面卡顿优化 (组件最小化 https://www.jianshu.com/p/1ea5d87e06f9)
-- 修复CPU占用率
+- [ ] 命令行窗口每次打开时优先执行一次 `select DB` 切换当前数据库
+- [ ] 发布订阅问题处理 (Websocket异常关闭)
+- [ ] 大list/set/map造成页面卡顿优化 (组件最小化 https://www.jianshu.com/p/1ea5d87e06f9)
+- [ ] 连接失败时自动关闭(清理节点loading状态)
 
 ## 使用方法 ##
 
