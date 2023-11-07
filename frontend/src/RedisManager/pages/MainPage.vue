@@ -72,23 +72,16 @@
                     <Input placeholder="过滤规则: *" v-model="keyFilter" style="width: 100%;">
                     <Icon @click="clickEvent(currentDbNode)" type="ios-search" slot="suffix" style="cursor: pointer" />
                     </Input>
-                    <div style='height: calc(100% - 100px); overflow-y: auto; overflow-x: hidden;'>
+                    <div style='height: calc(100% - 72px); overflow-y: auto; overflow-x: hidden;'>
                         <List size="small">
                             <ListItem :ref="keyItem.title" v-for="keyItem in keysList" :key="keyItem.title"
-                                style="width: 100%; height: 30px; line-height: 30px;">
+                                style="width: 100%; height: 30px; line-height: 30px; padding: 0 5px">
                                 <ListItemMeta @click.native="selectChange([keyItem])">
                                     <template slot="title">
                                         {{ keyItem.title }}
                                     </template>
                                 </ListItemMeta>
                                 <template slot="action">
-                                    <li>
-                                        <Tooltip :content="keyItem.title" placement="left">
-                                            <Button>
-                                                <Icon type="ios-eye-outline" slot="suffix" />
-                                            </Button>
-                                        </Tooltip>
-                                    </li>
                                     <li @click="removeKey(keyItem.title)">
                                         <Icon type="ios-trash-outline" slot="suffix" />
                                     </li>
@@ -128,14 +121,6 @@
                                     </Row>
                                     <div v-if="data.type === 'string'"
                                         style="margin-top: 3px; height: 800px; overflow: auto">
-                                        <Button class="fullScreenBtn" size="small" @click="setFullScreen(1)">
-                                            <template v-if="isFullScreen(1)">
-                                                <Icon type="ios-expand" />
-                                            </template>
-                                            <template v-else>
-                                                <Icon type="ios-contract" />
-                                            </template>
-                                        </Button>
                                         <codemirror v-model="data.data" ref="stringCodeMirror" :options="editorOpt" />
                                         <Row type="flex">
                                             <Col span="24" style="text-align: right">
@@ -150,11 +135,11 @@
                                         <Row type="flex">
                                             <Col span="16">
                                             <Table :highlightRow="true" @on-row-click="getRowData" ref="currentRowTable"
-                                                border height="250" :columns="getColumns(data.type)"
+                                                border height="370" :columns="getColumns(data.type)"
                                                 :data="formatItem(data.type, data.data)" />
                                             </Col>
                                             <Col span="8">
-                                            <Card style="height:250px;border-left: none;" dis-hover>
+                                            <Card style="height:370px;border-left: none;" dis-hover>
                                                 <p slot="title">
                                                     操作
                                                 </p>
@@ -168,14 +153,6 @@
                                             </Col>
                                         </Row>
                                         <div style="overflow:hidden;" class="moreKeyBox">
-                                            <Button class="fullScreenBtn2" size="small" @click="setFullScreen(2)">
-                                                <template v-if="isFullScreen(2)">
-                                                    <Icon type="ios-expand" />
-                                                </template>
-                                                <template v-else>
-                                                    <Icon type="ios-contract" />
-                                                </template>
-                                            </Button>
                                             <codemirror ref="otherCodeMirror" v-model="currentSelectRowData.value"
                                                 :options="editorOpt" />
                                             <Button style="float: right" size="small"
@@ -407,10 +384,11 @@
             </div>
         </Modal>
 
-        <Modal class="showJsonModal" v-model="showJsonModal" fullscreen footer-hide
+        <Modal v-if="showJsonModal" class="showJsonModal" v-model="showJsonModal" fullscreen footer-hide
             :on-visible-change="showJsonModalOkClick">
-            <VueTerminal ref="child" v-bind:id="currentConnectionId" @command="onCliCommand" console-sign="redis-cli $"
-                style="height: 100%; font-size:14px; font-weight: bold"></VueTerminal>
+            <VueTerminal ref="child" v-bind:id="currentConnectionId" v-bind:index="currentDbIndex" @command="onCliCommand"
+                console-sign="redis-cli $" style="height: 100%; font-size:14px; font-weight: bold">
+            </VueTerminal>
         </Modal>
 
     </div>
@@ -607,11 +585,7 @@ export default {
         },
         getSiderStyle() {
             const style = { background: '#fff', width: '210px', maxWidth: '210px', minWidth: '210px', 'overflow-y': 'auto', 'overflow-x': 'hidden' }
-            // if (this.connectionTreeList.length === 0) {
             style.borderRight = '1px solid #c5c5c5'
-            // } else {
-            //     style.borderRight = 'none'
-            // }
             return style
         },
         renameKey(key) {
@@ -1102,13 +1076,14 @@ export default {
         },
         formatItem(type, data) {
             let res = []
+            const strlen = 80
             switch (type) {
                 case 'hash':
                     for (let i in data) {
                         if ((this.searchKey && (i.indexOf(this.searchKey) > -1 || data[i].indexOf(this.searchKey) > -1)) || !this.searchKey) {
                             res.push({
                                 key: i,
-                                value: data[i].substr(0, 50),
+                                value: data[i].length > strlen ? data[i].substr(0, strlen) + '...' : data[i],
                                 fullValue: data[i]
                             })
                         }
@@ -1132,7 +1107,7 @@ export default {
                         if ((this.searchKey && (data[i]['score'].indexOf(this.searchKey) > -1 || data[i]['value'].indexOf(this.searchKey) > -1)) || !this.searchKey) {
                             res.push({
                                 key: data[i]['score'],
-                                value: data[i]['value'].substr(0, 50),
+                                value: data[i]['value'].length > strlen ? data[i]['value'].substr(0, strlen) : data[i]['value'],
                                 fullValue: data[i]
                             })
                         }
@@ -1142,13 +1117,13 @@ export default {
                     for (let i = 0; i < data.length; i++) {
                         if (!this.searchKey || (this.searchKey && data[i].indexOf(this.searchKey) > -1)) {
                             res.push({
-                                value: data[i].substr(0, 50),
+                                value: data[i].length > strlen ? data[i].substr(0, strlen) + '...' : data[i],
                                 fullValue: data[i]
                             })
                         }
                     }
             }
-            return res
+            return res.slice(0, 200)
         },
         getColumns(type) {
             let cols = []
@@ -1166,7 +1141,7 @@ export default {
                             key: 'key'
                         },
                         {
-                            title: '值',
+                            title: '值 (性能考虑,默认显示200条,请使用查询)',
                             key: 'value'
                         }
                     ]
@@ -1197,7 +1172,7 @@ export default {
                             align: 'center'
                         },
                         {
-                            title: '值',
+                            title: '值 (性能考虑,默认显示200条,请使用查询)',
                             width: 400,
                             key: 'value'
                         },
@@ -1217,7 +1192,7 @@ export default {
                             align: 'center'
                         },
                         {
-                            title: '值',
+                            title: '值 (性能考虑,默认显示200条,请使用查询)',
                             key: 'value'
                         }
                     ]

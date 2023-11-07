@@ -30,6 +30,9 @@ export default {
         id: {
             default: 0
         },
+        index: {
+            default: 0
+        },
         height: {
             type: String,
             default: '100%'
@@ -90,15 +93,19 @@ export default {
                             Api.sendCommand({
                                 command: cmd.str,
                                 id: that.id,
-                                index: 0
+                                index: that.index
                             }, (data) => {
-                                cmd.out = data.data.replace(/\n/g, '<br/>')
-                                call(cmd)
+                                if (data.data) {
+                                    cmd.out = data.data.replace(/\n/g, '<br/>')
+                                    call(cmd)
+                                }
                             })
                         },
                         help: data.data['helpers'][i].summary
                     })
                 }
+
+                this.$ptty.run_command('SELECT 1');
             })
         }, 500)
     }
@@ -352,4 +359,5 @@ export default {
     height: 36px !important;
     -webkit-transform: translate(-18px, -18px) scale(0.18) translate(18px, 18px);
     transform: translate(-18px, -18px) scale(0.18) translate(18px, 18px);
-}</style>
+}
+</style>

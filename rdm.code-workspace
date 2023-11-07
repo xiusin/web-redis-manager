@@ -13,7 +13,8 @@
             "requirepass",
             "Strs",
             "updatekey",
-            "upgrader"
+            "upgrader",
+            "slowlog"
         ]
     }
 }
