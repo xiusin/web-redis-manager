@@ -24,4 +24,7 @@ vls.log
 build/bin
 node_modules
 frontend/dist
+vbuild
+rdm
+rdm.exe
 
