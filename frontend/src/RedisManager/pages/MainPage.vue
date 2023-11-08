@@ -53,7 +53,7 @@
                     发布订阅
                 </Button>
                 <Button size="small" v-if="currentConnectionId !== ''" icon="md-laptop" type="warning"
-                    @click="showJsonModal = true">CLI
+                    @click="showCliModal">CLI
                 </Button>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <Button size="small" v-if="currentConnectionId !== ''" icon="md-alert" type="info"
@@ -384,10 +384,9 @@
             </div>
         </Modal>
 
-        <Modal v-if="showJsonModal" class="showJsonModal" v-model="showJsonModal" fullscreen footer-hide
-            :on-visible-change="showJsonModalOkClick">
-            <VueTerminal ref="child" v-bind:id="currentConnectionId" v-bind:index="currentDbIndex" @command="onCliCommand"
-                console-sign="redis-cli $" style="height: 100%; font-size:14px; font-weight: bold">
+        <Modal class="showJsonModal" v-model="showJsonModal" fullscreen footer-hide>
+            <VueTerminal v-if="showJsonModal" ref="child" v-bind:id="currentConnectionId" v-bind:index="currentDbIndex"
+                @command="onCliCommand" console-sign="redis-cli $" style="height: 100%; font-size:14px; font-weight: bold">
             </VueTerminal>
         </Modal>
 
@@ -588,6 +587,9 @@ export default {
             style.borderRight = '1px solid #c5c5c5'
             return style
         },
+        showCliModal() {
+            this.showJsonModal = true
+        },
         renameKey(key) {
             if (typeof key === 'object') {
                 Api.renameKey({
@@ -731,6 +733,8 @@ export default {
             })
         },
         showJsonModalOkClick() {
+            console.log('close close')
+            // $destroy()
             this.showJsonModal = false
         },
         isEmptyObj(obj) {
@@ -1778,10 +1782,21 @@ export default {
                     this.$refs.infoTabs.$forceUpdate()
                 })
             }
-            window.document.querySelector('#terminal .content').innerHTML = ''
+            try {
+                window.document.querySelector('#terminal .content').innerHTML = ''
+            } catch (e) {
+                console.log(e)
+            }
         },
         currentDbIndex: (newVal) => {
-            window.document.querySelector('#terminal .content').innerHTML = ''
+            try {
+                window.document.querySelector('#terminal .content').innerHTML = ''
+            } catch (e) {
+                console.log(e)
+            }
+        },
+        showJsonModal: (newVal) => {
+            console.log('showJsonModal', newVal)
         }
     }
 }

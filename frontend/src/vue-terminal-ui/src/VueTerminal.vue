@@ -59,9 +59,7 @@ export default {
         }
     },
     mounted() {
-        // TODO 连接选择当前选中DB
-
-        this.intro = '请在连接处选择要操作的DB, 默认为DB(0), 此功能为模拟cli实现, 部分命令的返回值无法还原. 使用`help`命令查看支持的redis命令'
+        this.intro = '此功能为模拟cli实现, 部分命令的返回值无法还原. 使用`help`命令查看支持的redis命令'
         const commandEmitter = (commandText) => {
             let prms = new Promise((resolve, reject) => {
                 var data = {
@@ -105,7 +103,7 @@ export default {
                     })
                 }
 
-                this.$ptty.run_command('SELECT 1');
+                this.$ptty.run_command('SELECT ' + (that.index >= 0 ? that.index : 0));
             })
         }, 500)
     }
