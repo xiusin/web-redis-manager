@@ -301,7 +301,7 @@
             </div>
         </Modal>
 
-        <Modal v-model="addKeyModal" width="500">
+        <Modal v-model="addKeyModal" width="580">
             <p slot="header" style="color:#f60;">
                 <Icon type="ios-information-circle"></Icon>
                 <span>添加新键</span>
@@ -319,8 +319,8 @@
                             <Radio label="zset"></Radio>
                             <Radio label="hash"></Radio>
                             <Radio label="stream"></Radio>
-                            <Radio label="JSON"></Radio>
-                            <Radio label="RediSearch"></Radio>
+                            <Radio label="JSON" disabled></Radio>
+                            <Radio label="RediSearch" disabled></Radio>
                         </RadioGroup>
                     </FormItem>
                     <FormItem label="分值:" v-if="newKeyType === 'zset'">
