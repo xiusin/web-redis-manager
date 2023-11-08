@@ -659,7 +659,6 @@ export default {
                 }
             } else {
                 window.astilectron.onMessage((message) => {
-                    // console.log(message)
                     if (!that.chanMegs.hasOwnProperty(message.id + '')) {
                         that.chanMegs[message.id + ''] = []
                     }
@@ -719,7 +718,6 @@ export default {
             }
             this.infoModal = true
             this.pubsubModal = false
-            // this.loadInfo() TODO 如何初始化组件时请求组件接口
         },
         loadPubSubChannels() {
             Api.pubSub({
@@ -731,11 +729,6 @@ export default {
                     this.$Message.error(data.msg)
                 }
             })
-        },
-        showJsonModalOkClick() {
-            console.log('close close')
-            // $destroy()
-            this.showJsonModal = false
         },
         isEmptyObj(obj) {
             return JSON.stringify(obj) === '{}'
