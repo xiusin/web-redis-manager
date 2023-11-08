@@ -301,7 +301,7 @@
             </div>
         </Modal>
 
-        <Modal v-model="addKeyModal" width="580">
+        <Modal v-model="addKeyModal" width="650">
             <p slot="header" style="color:#f60;">
                 <Icon type="ios-information-circle"></Icon>
                 <span>添加新键</span>
