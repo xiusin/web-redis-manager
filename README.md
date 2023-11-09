@@ -6,15 +6,15 @@ redis的web管理客户端, 支持同时管理多个redis实例, 慢日志, 服�
 >
 > 账号: admin 密码:123456
 
-## 特性 ##
+## FEATURE ##
 
-- basic auth
-- 支持redis常用数据类型管理: `list`, `string`, `hashmap`, `set`, `sorted set`, `stream`等.
-- CLI命令行模式
-- 慢日志
-- 服务信息
-- 发布订阅模式
-- 图表监控
+- Basic auth
+- Support for Redis common data type: `list`, `string`, `hashmap`, `set`, `sorted set`, `stream`等.
+- Cli mode
+- Slow log
+- Server info
+- pubsub mode
+- charts
 
 
 ## TODO ##
@@ -32,14 +32,14 @@ git clone --depth=1 https://github.com/xiusin/web-redis-manager.git
 cd web-redis-manager
 git checkout develop
 
-yarn # 安装前端依赖
-yarn build # 打包前端代码
+yarn # install
+yarn build # build
 
 cd server
 
-go mod tidy # 下载go依赖包
+go mod tidy # sync deps
 
-go build -o rdm.exe # 编译 windows
+go build -o rdm.exe # compile windows
 go build -o rdm # *nix
 
 # 非basic auth启动
