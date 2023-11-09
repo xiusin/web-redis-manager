@@ -49,7 +49,9 @@ func main() {
 	mux.Handle("/", http.FileServer(http.FS(appAssets)))
 
 	_handler := cors.Default().Handler(mux)
+	var hasAuth bool
 	if len(basicAuthName) > 0 && len(basicAuthPass) > 0 {
+		hasAuth = true
 		_handler = basicauth.Default(map[string]string{basicAuthName: basicAuthPass})(_handler)
 	}
 
@@ -61,6 +63,12 @@ func main() {
 		portInt, _ := strconv.Atoi(strings.Trim(port, ":"))
 		windows.InitWebview(fmt.Sprintf("http://localhost:%d/#/", portInt))
 	} else {
+		fmt.Printf("> service listening on: \033[32mhttp://0.0.0.0:%s/ \033[0m\n", strings.Trim(port, ":"))
+		fmt.Println("> \033[43;35missue: https://github.com/xiusin/web-redis-manager/issues\033[0m")
+		if hasAuth {
+			fmt.Println(`> 账号: ` + basicAuthName + ` 密码: ` + basicAuthPass)
+		}
+
 		_ = http.ListenAndServe(port, _handler)
 	}
 

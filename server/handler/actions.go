@@ -93,6 +93,11 @@ func RedisManagerConnectionTest(data RequestData) string {
 		if err != nil {
 			return JSON(ResponseData{FailedCode, "auth: " + err.Error(), err.Error()})
 		}
+	} else {
+		_, err := client.Do("PING")
+		if err != nil {
+			return JSON(ResponseData{FailedCode, "ping: " + err.Error(), err.Error()})
+		}
 	}
 	return JSON(ResponseData{SuccessCode, "连接成功", nil})
 }
