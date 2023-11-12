@@ -1,30 +1,51 @@
-# web-redis-manager #
+# Web Redis Manager
+A modern Redis management tool that works on the web or desktop.
+Web Redis Manager is a comprehensive web-based management client for Redis databases. It provides robust features and tools to simplify the process of managing and maintaining your Redis instances.
 
-redis的web管理客户端, 支持同时管理多个redis实例, 慢日志, 服务器信息, 配置信息, CLI模式.
+<p align="center">
+  <img src="./frontend/static/redis.svg" />
+</p>
 
-> 演示案例: <http://rdm.xiusin.cn>
->
-> 账号: admin 密码:123456
+####  Manage Multiple Redis Instances
 
-## FEATURE ##
+With Web Redis Manager, you can manage multiple Redis instances simultaneously. This makes it easy to monitor, maintain, and manage all your Redis instances from one central location.
 
-- Basic auth
-- Support for Redis common data type: `list`, `string`, `hashmap`, `set`, `sorted set`, `stream`等.
-- Cli mode
-- Slow log
-- Server info
-- pubsub mode
-- charts
+#### Slow Log Monitoring
+Our tool provides slow log monitoring to help you identify and address performance issues. By monitoring your slow logs, you can identify queries that are taking a long time to execute and take steps to optimize them.
 
+#### Server Information
+Web Redis Manager provides detailed server information at your fingertips. You can easily view and analyze key server metrics to ensure your Redis instances are running optimally.
 
-## TODO ##
-- [ ] 只读模式,屏蔽隐藏修改操作
-- [ ] 发布订阅问题处理 (Websocket异常关闭)
-- [ ] 大list/set/map造成页面卡顿优化 (组件最小化 https://www.jianshu.com/p/1ea5d87e06f9)
-- [ ] 连接失败时自动关闭(清理节点loading状态)
-- [ ] list / hash / zset编辑
+#### Configuration Management
+Our tool makes it easy to view and modify your Redis configuration settings. Whether you need to adjust memory usage, set replication settings, or tweak other configuration options, you can do it all from our user-friendly interface.
 
-## 使用方法 ##
+#### CLI Mode
+For power users who prefer working from the command line, we offer a CLI mode. This gives you the flexibility to manage your Redis instances in a way that suits your workflow.
+
+### Publish/Subscribe Mode
+
+Web Redis Manager supports the publish/subscribe messaging paradigm, allowing for real-time message communication between publishers and subscribers.
+
+### Performance Chart Monitoring
+
+Our tool offers performance chart monitoring, providing you with visual insights into your Redis instances' performance. This feature makes it easier to track and optimize the performance of your Redis databases.
+
+### Modern Design and Interface
+
+Our clean, user-friendly interface makes it easy to manage your Redis databases. You'll have all the tools you need at your fingertips.
+
+### Web and Desktop Availability
+
+Whether you prefer working in a web interface or a standalone desktop application, we've got you covered. Our tool works seamlessly on both platforms.
+
+### Comprehensive Redis Management Capabilities
+
+- **Data Visualization**: Easily view and navigate your data in a visual format.
+- **Data Editing**: Modify your data directly within the tool.
+- **Performance Monitoring**: Keep track of your Redis database's performance to identify and address issues promptly.
+- **Security Features**: We offer features like secure password protection to help keep your data safe.
+
+## Installation
 
 ```shell
 git clone --depth=1 https://github.com/xiusin/web-redis-manager.git
@@ -41,44 +62,43 @@ go mod tidy # sync deps
 go build -o rdm.exe # compile windows
 go build -o rdm # *nix
 
-# 非basic auth启动
+# setup
 ./rdm.exe
 
-# basic auth启动 (用于web端授权密码登录)
+# basic auth setup (For password authorization login on the web)
 ./rdm.exe --username=admin --password=123456
-
 ```
 
-## 示意图 ##
+## Screenshots ##
 
-### 入口页面 ###
+### setup ###
 
 ![./images/1-min.png](./images/1-min.png)
 
-### 连接实例 ###
+### connection ###
 
 ![./images/2-min.png](./images/2-min.png)
 
-### 管理键 ###
+### key list ###
 
 ![./images/3-min.png](./images/3-min.png)
 
-### 操作值 ###
+### value ###
 
 ![./images/4-min.png](./images/4-min.png)
 
-### 配置信息 ###
+### configure ###
 
 ![./images/5-min.png](./images/5-min.png)
 
-### 服务器信息 ###
+### server info ###
 
 ![./images/6-min.png](./images/6-min.png)
 
-### 慢日志 ###
+### slow log ###
 
 ![./images/7-min.png](./images/7-min.png)
 
-### CLI管理 ###
+### cli mode ###
 
 ![./images/8-min.png](./images/8-min.png)
