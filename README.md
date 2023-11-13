@@ -62,7 +62,7 @@ go mod tidy # sync deps
 go build -o rdm.exe # compile windows
 go build -o rdm # *nix
 
-# setup
+# setup with gui
 ./rdm.exe
 
 # basic auth setup (For password authorization login on the web)
