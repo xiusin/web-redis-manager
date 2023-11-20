@@ -1792,9 +1792,6 @@ export default {
             if (qs) {
                 window.document.querySelector('#terminal .content').innerHTML = ''
             }
-        },
-        showJsonModal: (newVal) => {
-            console.log('showJsonModal', newVal)
         }
     }
 }
