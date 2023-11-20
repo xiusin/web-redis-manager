@@ -1775,20 +1775,22 @@ export default {
         currentConnectionId(newVal) {
             if (typeof this.$refs['infoTabs'] !== 'undefined') {
                 this.$nextTick(() => {
-                    this.$refs.infoTabs.$forceUpdate()
+                    if (this.$refs.infoTabs) {
+                        this.$refs.infoTabs.$forceUpdate()
+                    }
                 })
             }
-            try {
+
+            const qs = window.document.querySelector('#terminal .content');
+            if (qs) {
                 window.document.querySelector('#terminal .content').innerHTML = ''
-            } catch (e) {
-                console.log(e)
             }
+
         },
         currentDbIndex: (newVal) => {
-            try {
+            const qs = window.document.querySelector('#terminal .content');
+            if (qs) {
                 window.document.querySelector('#terminal .content').innerHTML = ''
-            } catch (e) {
-                console.log(e)
             }
         },
         showJsonModal: (newVal) => {
