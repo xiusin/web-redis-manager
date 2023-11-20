@@ -1785,7 +1785,6 @@ export default {
             if (qs) {
                 window.document.querySelector('#terminal .content').innerHTML = ''
             }
-
         },
         currentDbIndex: (newVal) => {
             const qs = window.document.querySelector('#terminal .content');

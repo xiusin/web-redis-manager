@@ -40,19 +40,14 @@ func RedisManagerGetInfo(data RequestData) string {
 	client, _ := getRedisClient(data, false, false)
 	defer client.Close()
 	d, err := redis.String(client.Do("INFO"))
-	if err != nil {
-		return JSON(ResponseData{FailedCode, "读取服务器信息失败:" + err.Error(), nil})
-	}
+	ThrowIf(err)
 
 	c, err := redis.Strings(client.Do("CONFIG", "GET", "*"))
-	if err != nil {
-		return JSON(ResponseData{FailedCode, "读取配置文件失败:" + err.Error(), nil})
-	}
+	ThrowIf(err)
 
 	logs, err := redis.Values(client.Do("SLOWLOG", "GET", 50))
-	if err != nil {
-		return JSON(ResponseData{FailedCode, "读取慢日志失败:" + err.Error(), nil})
-	}
+	ThrowIf(err)
+
 	structLogs := []slowLog{}
 	for _, log := range logs {
 		var sl slowLog
@@ -408,8 +403,8 @@ func RedisManagerRemoveConnection(data RequestData) string {
 
 var redisPools = map[int64]*redis.Pool{}
 
-func GetServerCfg(data RequestData) (*connection, error) {
-	var config = &connection{}
+func GetServerCfg(data RequestData) (connection, error) {
+	var config = connection{}
 	if len(connectionList) == 0 {
 		_ = readConfigJSON()
 	}
@@ -417,7 +412,7 @@ func GetServerCfg(data RequestData) (*connection, error) {
 	config.ID = int64(id)
 	for _, v := range connectionList {
 		if v.ID == config.ID {
-			config = &v
+			config = v
 			break
 		}
 	}
@@ -435,9 +430,7 @@ func getRedisClient(data RequestData, getSelectedIndexClient bool, getKey bool) 
 		pool = &redis.Pool{
 			Dial: func() (conn redis.Conn, err error) {
 				conn, err = redis.Dial("tcp", config.Ip+":"+config.Port)
-				if err != nil {
-					panic(err)
-				}
+				ThrowIf(err)
 				if config.Auth != "" {
 					if _, err := conn.Do("AUTH", config.Auth); err != nil {
 						conn.Close()
