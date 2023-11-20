@@ -1,5 +1,10 @@
 package handler
 
+import (
+	"errors"
+	"reflect"
+)
+
 type ResponseData struct {
 	Status int64       `json:"status"`
 	Msg    string      `json:"msg"`
@@ -7,11 +12,12 @@ type ResponseData struct {
 }
 
 type connection struct {
-	ID    int64  `json:"id"`
-	Title string `json:"title"`
-	Ip    string `json:"ip"`
-	Port  string `json:"port"`
-	Auth  string `json:"auth"`
+	ID       int64  `json:"id"`
+	Title    string `json:"title"`
+	Ip       string `json:"ip"`
+	Port     string `json:"port"`
+	Auth     string `json:"auth"`
+	Readonly bool   `json:"readonly,omitempty"`
 }
 
 type RequestData map[string]interface{}
@@ -34,6 +40,35 @@ type commandHelp struct {
 	Summary string `json:"summary"`
 	Group   int    `json:"group"`
 	Since   string `json:"since"`
+}
+
+func CheckReadonly(readonly bool, modifyKey string) {
+	if readonly {
+		for _, key := range []string{"removekey", "removerow", "updatekey", "addkey", "flushDB", "renameKey", "command"} {
+			ThrowIf(modifyKey == key, "Cannot make modifications or add operations in read-only mode")
+		}
+	}
+}
+
+func ThrowIf(cond interface{}, msg ...string) {
+	if cond == nil {
+		return
+	}
+	switch val := cond.(type) {
+	case bool:
+		if val {
+			if len(msg) == 0 {
+				msg = append(msg, "unknown error")
+			}
+			panic(errors.New(msg[0]))
+		}
+	case error:
+		if cond != nil {
+			panic(cond)
+		}
+	default:
+		panic(errors.New("ThrowIf only support types: error,bool: " + reflect.TypeOf(cond).String()))
+	}
 }
 
 // @see https://raw.githubusercontent.com/antirez/redis/ad78b50f62c88b6396c5ee86cda89fc2313f77af/src/help.h

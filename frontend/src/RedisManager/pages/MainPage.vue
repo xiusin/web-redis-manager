@@ -236,6 +236,9 @@
                         <Input v-model="formItem.auth" placeholder="授权密码(可选)"></Input>
                     </FormItem>
 
+                    <FormItem label="只读:">
+                        <Checkbox v-model="formItem.readonly">Readonly</Checkbox>
+                    </FormItem>
                 </Form>
             </div>
             <div slot="footer">
@@ -472,7 +475,7 @@ export default {
             currentDbIndex: -1,
             currentSelectRowData: {}, // 用于行列选择
             currentHandleNodeData: {}, // 用于基于当前操作数据的节点
-            formItem: { title: '', ip: '127.0.0.1', port: '6379', auth: '' },
+            formItem: { title: '', ip: '127.0.0.1', port: '6379', auth: '', readonly: false },
             ttlModal: false,
             ttlValue: { 'data': {}, 'key': '' },
             rowValue: { 'data': {}, 'key': '', 'score': 100, 'newRowKey': '', 'newRowValue': '' },

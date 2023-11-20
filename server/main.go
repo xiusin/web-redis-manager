@@ -11,13 +11,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/xiusin/rdm/server/handler"
-
-	"github.com/xiusin/rdm/server/windows"
-
 	"github.com/kataras/basicauth"
 	"github.com/rs/cors"
+	"github.com/xiusin/rdm/server/handler"
 	"github.com/xiusin/rdm/server/router"
+	"github.com/xiusin/rdm/server/windows"
 )
 
 var (
@@ -49,17 +47,14 @@ func main() {
 	mux.Handle("/", http.FileServer(http.FS(appAssets)))
 
 	_handler := cors.Default().Handler(mux)
-	var hasAuth bool
-	if len(basicAuthName) > 0 && len(basicAuthPass) > 0 {
-		hasAuth = true
+	var hasAuth = len(basicAuthName) > 0 && len(basicAuthPass) > 0
+	if hasAuth {
 		_handler = basicauth.Default(map[string]string{basicAuthName: basicAuthPass})(_handler)
 	}
 
 	if !isDebug {
 		go func() { _ = http.ListenAndServe(port, _handler) }()
-
 		time.Sleep(time.Millisecond * 100)
-
 		portInt, _ := strconv.Atoi(strings.Trim(port, ":"))
 		windows.InitWebview(fmt.Sprintf("http://localhost:%d/#/", portInt))
 	} else {
@@ -68,7 +63,6 @@ func main() {
 		if hasAuth {
 			fmt.Println(`> 账号: ` + basicAuthName + ` 密码: ` + basicAuthPass)
 		}
-
 		_ = http.ListenAndServe(port, _handler)
 	}
 

@@ -2,10 +2,8 @@ package router
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
-	"runtime/debug"
 	"strings"
 
 	"github.com/gorilla/websocket"
@@ -40,31 +38,15 @@ func RegisterRouter(mux *http.ServeMux) {
 		"/redis/connection/get-command": handler.RedisManagerGetCommandList,
 	}
 
-	notReadonlyKeys := []string{"removekey", "removerow", "updatekey", "addkey", "flushDB", "renameKey", "command"}
-
 	for route, handle := range routes {
 		mux.HandleFunc(route, func(handle handler.HandleFunc) func(writer http.ResponseWriter, request *http.Request) {
 			return func(writer http.ResponseWriter, request *http.Request) {
 				writer.Header().Set("Content-Type", "application/json")
 				defer func() {
 					if err := recover(); err != nil {
-						logger.Print(string(debug.Stack()))
 						_, _ = writer.Write([]byte(handler.JSON(handler.ResponseData{Status: handler.FailedCode, Msg: err.(error).Error()})))
 					}
 				}()
-
-				// 检查是否为只读模式
-				modifyKey := strings.Replace(request.URL.Path, "/redis/connection/", "", 1)
-				isReadonly := false
-
-				if isReadonly {
-					for _, key := range notReadonlyKeys {
-						if modifyKey == key {
-							_, _ = writer.Write([]byte(handler.JSON(handler.ResponseData{Status: handler.FailedCode, Msg: "只读模式下不可做修改或新增操作", Data: nil})))
-							return
-						}
-					}
-				}
 
 				var params url.Values
 				data := make(map[string]interface{})
@@ -81,7 +63,11 @@ func RegisterRouter(mux *http.ServeMux) {
 						data[param] = nil
 					}
 				}
-
+				if data["id"] != nil {
+					cfg, err := handler.GetServerCfg(data)
+					handler.ThrowIf(err)
+					handler.CheckReadonly(cfg.Readonly, strings.Replace(request.URL.Path, "/redis/connection/", "", 1))
+				}
 				_, _ = writer.Write([]byte(handle(data)))
 			}
 		}(handle))
@@ -90,7 +76,7 @@ func RegisterRouter(mux *http.ServeMux) {
 	mux.HandleFunc("/redis/connection/pubsub", func(writer http.ResponseWriter, request *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
-				fmt.Println("recover", err)
+				logger.Error(err)
 			}
 		}()
 		if request.Method == http.MethodPost {
@@ -112,7 +98,7 @@ func RegisterRouter(mux *http.ServeMux) {
 		for {
 			_, msg, err := ws.ReadMessage()
 			if err != nil {
-				continue
+				break
 			}
 			data := make(map[string]interface{})
 			if err := json.Unmarshal(msg, &data); err != nil {

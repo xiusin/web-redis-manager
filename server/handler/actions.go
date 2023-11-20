@@ -3,7 +3,6 @@ package handler
 import (
 	"encoding/gob"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"math"
 	"math/rand"
@@ -108,13 +107,16 @@ func RedisManagerConfigSave(data RequestData) string {
 	config.Title = data["title"].(string)
 	config.Port = data["port"].(string)
 	config.Auth = data["auth"].(string)
+	config.Readonly, _ = strconv.ParseBool(data["readonly"].(string))
 	totalConnection = totalConnection + 1
 	config.ID = int64(totalConnection)
+
+	ThrowIf(config.Title == "", "名称不能为空")
 
 	// 判断存在
 	for _, conn := range connectionList {
 		if conn.Ip == config.Ip && conn.Port == config.Port {
-			return JSON(ResponseData{FailedCode, "已经存在相同的连接, 名称为: " + config.Title, nil})
+			return JSON(ResponseData{FailedCode, "已经存在相同的连接, 名称为: " + conn.Title, nil})
 		}
 	}
 	connectionList = append(connectionList, config)
@@ -145,14 +147,14 @@ func RedisManagerConnectionList(_ RequestData) string {
 }
 
 func getFromInterfaceOrFloat64ToInt(id interface{}) int {
-	switch id.(type) {
+	switch id := id.(type) {
 	case float64:
-		return int(id.(float64))
+		return int(id)
 	case string:
-		idInfo, _ := strconv.Atoi(id.(string))
+		idInfo, _ := strconv.Atoi(id)
 		return idInfo
 	default:
-		panic("参数类型非法" + fmt.Sprintf("%+v", id))
+		panic(fmt.Errorf("invalid type: %T", id))
 	}
 }
 
@@ -164,18 +166,17 @@ func RedisManagerRenameKey(data RequestData) string {
 	if len(newKey) == 0 {
 		return JSON(ResponseData{FailedCode, "新key不能为空", nil})
 	}
-	resp, err := client.Do("EXISTS", newKey)
+	resp, _ := client.Do("EXISTS", newKey)
 	if resp.(int64) != 0 {
 		return JSON(ResponseData{FailedCode, "新key已存在", resp})
 	}
-	if _, err = client.Do("RENAME", key, newKey); err != nil {
-		return JSON(ResponseData{FailedCode, err.Error(), nil})
-	}
+	_, err := client.Do("RENAME", key, newKey)
+	ThrowIf(err)
 	return JSON(ResponseData{SuccessCode, "重命名成功", nil})
 }
 
 func RedisPubSub(data RequestData) string {
-	wsIntf, _ := data["ws"]
+	wsIntf := data["ws"]
 	channelPrefix := "channel-"
 	var ws *websocket.Conn
 	if wsIntf != nil {
@@ -190,7 +191,7 @@ func RedisPubSub(data RequestData) string {
 	if err != nil {
 		return JSON(ResponseData{FailedCode, "获取订阅列表失败", err.Error()})
 	}
-	ok, _ := pubSubs[fmt.Sprintf("%s%d", channelPrefix, id)]
+	ok := pubSubs[fmt.Sprintf("%s%d", channelPrefix, id)]
 
 	// 检查订阅所有通道
 	if (ws != nil) && !ok {
@@ -305,8 +306,7 @@ func RedisManagerCommand(data RequestData) string {
 	if val == nil {
 		return JSON(ResponseData{SuccessCode, SuccessMsg, `(nil)`})
 	}
-	//fmt.Println(commands[0], flags, "===>", reflect.TypeOf(val), val)
-	switch val.(type) {
+	switch val := val.(type) {
 	case []byte, string:
 		res, _ := redis.String(val, nil)
 		return JSON(ResponseData{SuccessCode, SuccessMsg, res})
@@ -317,7 +317,7 @@ func RedisManagerCommand(data RequestData) string {
 
 	case []interface{}:
 		var ret = ""
-		parseInterfaces(val.([]interface{}), &ret)
+		parseInterfaces(val, &ret)
 		return JSON(ResponseData{SuccessCode, SuccessMsg, ret})
 	default:
 		return JSON(ResponseData{SuccessCode, SuccessMsg, val})
@@ -370,9 +370,9 @@ func deepLoopInterfaces(val []interface{}, strs *[]string, level int, prefix str
 			item += prefix
 		}
 		item += strings.Repeat("　", level)
-		switch v.(type) {
+		switch v := v.(type) {
 		case []byte:
-			*strs = append(*strs, fmt.Sprintf("%s%d)　%s", item, k+1, string(v.([]byte))))
+			*strs = append(*strs, fmt.Sprintf("%s%d)　%s", item, k+1, string(v)))
 		case string:
 			*strs = append(*strs, fmt.Sprintf("%s%d)　%s", item, k+1, v))
 		case int, int8, int32, int64:
@@ -380,7 +380,7 @@ func deepLoopInterfaces(val []interface{}, strs *[]string, level int, prefix str
 		case []interface{}:
 			exp, _ := regexp.Compile("　+")
 			item = exp.ReplaceAllString(item, "　")
-			deepLoopInterfaces(v.([]interface{}), strs, level+1, fmt.Sprintf("%s%d)　", item, k+1))
+			deepLoopInterfaces(v, strs, level+1, fmt.Sprintf("%s%d)　", item, k+1))
 		default:
 			*strs = append(*strs, fmt.Sprintf("%s,%+v", reflect.TypeOf(v), v))
 		}
@@ -408,24 +408,28 @@ func RedisManagerRemoveConnection(data RequestData) string {
 
 var redisPools = map[int64]*redis.Pool{}
 
-func getRedisClient(data RequestData, getSelectedIndexClient bool, getKey bool) (redis.Conn, string) {
-	var config connection
+func GetServerCfg(data RequestData) (*connection, error) {
+	var config = &connection{}
 	if len(connectionList) == 0 {
 		_ = readConfigJSON()
 	}
 	id := getFromInterfaceOrFloat64ToInt(data["id"])
 	config.ID = int64(id)
-	var pool *redis.Pool
-	var ok bool
 	for _, v := range connectionList {
 		if v.ID == config.ID {
-			config = v
+			config = &v
 			break
 		}
 	}
-	if config.Title == "" {
-		panic(errors.New("no connection"))
-	}
+	ThrowIf(config.Title == "", "no connection")
+	return config, nil
+}
+
+func getRedisClient(data RequestData, getSelectedIndexClient bool, getKey bool) (redis.Conn, string) {
+	var pool *redis.Pool
+	var ok bool
+	config, err := GetServerCfg(data)
+	ThrowIf(err)
 
 	if pool, ok = redisPools[config.ID]; !ok {
 		pool = &redis.Pool{
@@ -462,9 +466,7 @@ func getRedisClient(data RequestData, getSelectedIndexClient bool, getKey bool) 
 	var key string
 	if getKey {
 		key = data["key"].(string)
-		if key == "" {
-			panic(errors.New("please select the key to operate"))
-		}
+		ThrowIf(key == "", "please select the key to operate")
 	} else {
 		key = ""
 	}
@@ -628,9 +630,7 @@ func RedisManagerRemoveKey(data RequestData) string {
 	client, key := getRedisClient(data, true, true)
 	defer client.Close()
 	_, err := client.Do("UNLINK", key) // UNLINK (异步) 替代 DEL (同步)
-	if err != nil {
-		return JSON(ResponseData{FailedCode, err.Error(), nil})
-	}
+	ThrowIf(err)
 	return JSON(ResponseData{SuccessCode, "删除成功", nil})
 }
 
@@ -638,10 +638,8 @@ func RedisManagerFlushDB(data RequestData) string {
 	client, _ := getRedisClient(data, true, false)
 	defer client.Close()
 	_, err := client.Do("FLUSHDB")
-	if err != nil {
-		return JSON(ResponseData{FailedCode, err.Error(), nil})
-	}
-	return JSON(ResponseData{SuccessCode, "清空数据库成功", nil})
+	ThrowIf(err)
+	return JSON(ResponseData{SuccessCode, "Successfully cleared the database", nil})
 }
 
 func RedisManagerRemoveRow(data RequestData) string {
@@ -649,9 +647,7 @@ func RedisManagerRemoveRow(data RequestData) string {
 	defer client.Close()
 	var err error
 	valType := data["type"].(string)
-	if valType == "" {
-		return JSON(ResponseData{FailedCode, "无法解析数据类型", nil})
-	}
+	ThrowIf(valType == "", "Unable to parse data type")
 	switch valType {
 	case "list":
 		_, err = client.Do("LREM", key, 1, data["data"])
@@ -664,10 +660,8 @@ func RedisManagerRemoveRow(data RequestData) string {
 	case "stream":
 		_, err = client.Do("XDEL", key, data["data"])
 	}
-	if err != nil {
-		return JSON(ResponseData{FailedCode, err.Error(), nil})
-	}
-	return JSON(ResponseData{SuccessCode, "删除成功", nil})
+	ThrowIf(err)
+	return JSON(ResponseData{SuccessCode, "Successfully deleted", nil})
 }
 
 func RedisManagerUpdateKey(data RequestData) string {
@@ -680,14 +674,10 @@ func RedisManagerUpdateKey(data RequestData) string {
 	case "ttl": //更新ttl时间
 		ttl := getFromInterfaceOrFloat64ToInt(data["ttl"])
 		_, err = client.Do("EXPIRE", key, ttl)
-		if err != nil {
-			return JSON(ResponseData{FailedCode, "操作失败", nil})
-		}
+		ThrowIf(err)
 	case "value": //更新value
 		valType := data["type"].(string)
-		if valType == "" {
-			return JSON(ResponseData{FailedCode, "无法解析数据类型", nil})
-		}
+		ThrowIf(valType == "", "Unable to parse data type")
 		switch valType {
 		case "list":
 			_, err = client.Do("LPUSH", key, data["data"])
@@ -699,25 +689,19 @@ func RedisManagerUpdateKey(data RequestData) string {
 			_, err = client.Do("SET", key, data["data"])
 		case "hash":
 			rowkey := data["rowkey"].(string)
-			if rowkey == "" {
-				return JSON(ResponseData{FailedCode, "参数错误", nil})
-			}
+			ThrowIf(rowkey == "", "parameter error")
 			_, err = client.Do("HSET", key, rowkey, data["data"])
 		}
 	case "addrow": // 添加新的列
 		valType := data["type"].(string)
-		if valType == "" {
-			return JSON(ResponseData{FailedCode, "无法解析数据类型", nil})
-		}
+		ThrowIf(valType == "", "Unable to parse data type")
 		switch valType {
 		case "list":
 			_, err = client.Do("RPUSH", key, data["data"])
 		case "set":
 			var ok int
 			ok, err = redis.Int(client.Do("SADD", key, data["data"]))
-			if ok == 0 {
-				return JSON(ResponseData{FailedCode, "添加失败, 数据已经存在", nil})
-			}
+			ThrowIf(ok == 0, "Adding failed, data already exists")
 		case "stream":
 			newId := data["score"].(string)
 			if len(newId) == 0 {
@@ -745,9 +729,7 @@ func RedisManagerUpdateKey(data RequestData) string {
 		}
 	case "updateRowValue":
 		valType := data["type"].(string)
-		if len(valType) == 0 {
-			return JSON(ResponseData{FailedCode, "无法解析数据类型", nil})
-		}
+		ThrowIf(valType == "", "Unable to parse data type")
 		switch strings.ToLower(valType) {
 		case "list":
 			_, ok := data["rowkey"]
@@ -761,13 +743,13 @@ func RedisManagerUpdateKey(data RequestData) string {
 			if !ok {
 				return JSON(ResponseData{FailedCode, "请选择要编辑的数据", nil})
 			}
-			_, err = client.Do("SREM", key, rowkey)
+			_, _ = client.Do("SREM", key, rowkey)
+
 			_, err = client.Do("SADD", key, data["data"])
 		case "zset":
 			rowkey := data["rowkey"].(string)
 			score := getFromInterfaceOrFloat64ToInt(data["score"])
-			// 先删除后添加
-			_, err = client.Do("ZREM", key, rowkey)
+			_, _ = client.Do("ZREM", key, rowkey)
 			_, err = client.Do("ZADD", key, score, data["data"])
 		case "stream":
 			return JSON(ResponseData{FailedCode, "不支持修改Steam内容", nil})
@@ -776,12 +758,10 @@ func RedisManagerUpdateKey(data RequestData) string {
 			_, err = client.Do("HSET", key, hashKey, data["data"])
 		}
 	default:
-		return JSON(ResponseData{FailedCode, "无法解析动作", nil})
+		return JSON(ResponseData{FailedCode, "Unable to parse action", nil})
 	}
-	if err != nil {
-		return JSON(ResponseData{FailedCode, err.Error(), nil})
-	}
-	return JSON(ResponseData{SuccessCode, "操作成功", extraData})
+	ThrowIf(err)
+	return JSON(ResponseData{SuccessCode, "Operation successful", extraData})
 }
 
 func RedisManagerAddKey(data RequestData) string {
@@ -789,9 +769,7 @@ func RedisManagerAddKey(data RequestData) string {
 	var err error
 	defer client.Close()
 	valType := data["type"].(string)
-	if valType == "" {
-		return JSON(ResponseData{FailedCode, "无法解析数据类型", nil})
-	}
+	ThrowIf(valType == "", "Unable to parse data type")
 	switch valType {
 	case "list":
 		_, err = client.Do("LPUSH", key, data["data"].(string))
@@ -823,9 +801,7 @@ func RedisManagerAddKey(data RequestData) string {
 		}
 		_, err = client.Do("HSET", key, rowkey, data["data"].(string))
 	}
-	if err != nil {
-		return JSON(ResponseData{FailedCode, err.Error(), nil})
-	}
+	ThrowIf(err)
 	return JSON(ResponseData{SuccessCode, "操作成功", nil})
 }
 
@@ -854,7 +830,6 @@ func readConfigJSON() error {
 
 func RedisManagerGetCommandList(_ RequestData) string {
 	return JSON(ResponseData{SuccessCode, "成功", map[string]interface{}{
-		//"commands": GetCommands(),
 		"helpers": FromRedisSourceCommandHelper(),
 	}})
 }

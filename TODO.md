@@ -1,0 +1,6 @@
+- [×] 只读模式,屏蔽隐藏修改操作
+- [ ] 发布订阅问题处理 (Websocket异常关闭)
+- [ ] 大list/set/map造成页面卡顿优化 (组件最小化 https://www.jianshu.com/p/1ea5d87e06f9)
+- [ ] 连接失败时自动关闭(清理节点loading状态)
+- [ ] list / set / stream等数据优化
+- [ ] list / hash / zset编辑
