@@ -1,5 +1,5 @@
 <template>
-    <Tabs v-model="tab" :animated="false" style="height: 100%; width: calc(100% - 200px)">
+    <Tabs v-model="tab" :animated="false" style="height: 100%; width: calc(100% - 205px)">
         <TabPane label="服务器信息" name="first" style="height: 100%; overflow-y: auto;">
             <div class='serverInfo'>
                 <Row :gutter="3">
