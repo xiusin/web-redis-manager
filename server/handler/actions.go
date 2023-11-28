@@ -29,6 +29,11 @@ type slowLog struct {
 	Time     string `json:"time"`
 }
 
+type ConnectionListItem struct {
+	ID    int64  `json:"id"`
+	Title string `json:"title"`
+}
+
 type cliConns struct {
 	sync.Mutex
 	conns map[string]redis.Conn
@@ -63,11 +68,7 @@ func RedisManagerGetInfo(data RequestData) string {
 		structLogs = append(structLogs, sl)
 	}
 
-	return JSON(ResponseData{SuccessCode, "保存成功", RequestData{
-		"data":     d,
-		"config":   c,
-		"slowLogs": structLogs,
-	}})
+	return JSON(ResponseData{SuccessCode, "保存成功", RequestData{"data": d, "config": c, "slowLogs": structLogs}})
 }
 
 func RedisManagerConnectionTest(data RequestData) string {
@@ -78,20 +79,14 @@ func RedisManagerConnectionTest(data RequestData) string {
 	config.Auth = data["auth"].(string)
 
 	client, err := redis.Dial("tcp", fmt.Sprintf("%s:%s", config.Ip, config.Port))
-	if err != nil {
-		return JSON(ResponseData{FailedCode, "Connect to redis error" + err.Error(), err.Error()})
-	}
+	ThrowIf(err)
 	defer client.Close()
 	if config.Auth != "" {
 		_, err := client.Do("AUTH", config.Auth)
-		if err != nil {
-			return JSON(ResponseData{FailedCode, "auth: " + err.Error(), err.Error()})
-		}
+		ThrowIf(err)
 	} else {
 		_, err := client.Do("PING")
-		if err != nil {
-			return JSON(ResponseData{FailedCode, "ping: " + err.Error(), err.Error()})
-		}
+		ThrowIf(err)
 	}
 	return JSON(ResponseData{SuccessCode, "连接成功", nil})
 }
@@ -105,39 +100,24 @@ func RedisManagerConfigSave(data RequestData) string {
 	config.Readonly, _ = strconv.ParseBool(data["readonly"].(string))
 	totalConnection = totalConnection + 1
 	config.ID = int64(totalConnection)
-
 	ThrowIf(config.Title == "", "名称不能为空")
 
-	// 判断存在
 	for _, conn := range connectionList {
 		if conn.Ip == config.Ip && conn.Port == config.Port {
 			return JSON(ResponseData{FailedCode, "已经存在相同的连接, 名称为: " + conn.Title, nil})
 		}
 	}
 	connectionList = append(connectionList, config)
-	err := writeConfigJSON()
-	if err != nil {
-		return JSON(ResponseData{FailedCode, "保存失败:" + err.Error(), nil})
-	}
+	ThrowIf(writeConfigJSON())
 	return JSON(ResponseData{SuccessCode, "保存成功", config})
 }
 
 func RedisManagerConnectionList(_ RequestData) string {
-	err := readConfigJSON()
-	if err != nil {
-		return JSON(ResponseData{FailedCode, "获取列表失败:" + err.Error(), nil})
-	}
-	var conns = []struct {
-		ID    int64  `json:"id"`
-		Title string `json:"title"`
-	}{}
+	ThrowIf(readConfigJSON())
+	var conns = []ConnectionListItem{}
 	for _, conn := range connectionList {
-		conns = append(conns, struct {
-			ID    int64  `json:"id"`
-			Title string `json:"title"`
-		}{ID: conn.ID, Title: conn.Title})
+		conns = append(conns, ConnectionListItem{ID: conn.ID, Title: conn.Title})
 	}
-
 	return JSON(ResponseData{SuccessCode, "获取列表成功", conns})
 }
 
@@ -158,13 +138,11 @@ func RedisManagerRenameKey(data RequestData) string {
 	defer client.Close()
 
 	newKey := data["newKey"].(string)
-	if len(newKey) == 0 {
-		return JSON(ResponseData{FailedCode, "新key不能为空", nil})
-	}
+	ThrowIf(len(newKey) == 0, "new key is empty")
+
 	resp, _ := client.Do("EXISTS", newKey)
-	if resp.(int64) != 0 {
-		return JSON(ResponseData{FailedCode, "新key已存在", resp})
-	}
+	ThrowIf(resp.(int64) != 0, "new key already exists")
+
 	_, err := client.Do("RENAME", key, newKey)
 	ThrowIf(err)
 	return JSON(ResponseData{SuccessCode, "重命名成功", nil})
@@ -183,9 +161,7 @@ func RedisPubSub(data RequestData) string {
 	client, _ := getRedisClient(data, false, false)
 	id := getFromInterfaceOrFloat64ToInt(data["id"])
 	channels, err := redis.Strings(client.Do("PUBSUB", "channels"))
-	if err != nil {
-		return JSON(ResponseData{FailedCode, "获取订阅列表失败", err.Error()})
-	}
+	ThrowIf(err)
 	ok := pubSubs[fmt.Sprintf("%s%d", channelPrefix, id)]
 
 	// 检查订阅所有通道
@@ -235,11 +211,8 @@ func RedisPubSub(data RequestData) string {
 	// 获取所有通道列表, 如果通道还没订阅那么就开启订阅协程
 	if channel, ok := data["channel"]; ok {
 		msg := data["msg"]
-		if msg == "" || channel == "" {
-			return JSON(ResponseData{FailedCode, "发布内容失败", nil})
-		}
-		// 先查看是否有消费者订阅频道
-		var flag bool
+		ThrowIf(msg == "" || channel == "", "发布内容失败")
+		var flag bool // 先查看是否有消费者订阅频道
 		for _, ch := range channels {
 			if ch == channel {
 				flag = true
@@ -260,11 +233,8 @@ func RedisPubSub(data RequestData) string {
 			}()
 		}
 		_, err := client.Do("PUBLISH", channel, msg)
-		if err != nil {
-			return JSON(ResponseData{FailedCode, "发布内容失败", err.Error()})
-		} else {
-			return JSON(ResponseData{SuccessCode, "发布内容成功", nil})
-		}
+		ThrowIf(err)
+		return JSON(ResponseData{SuccessCode, "发布内容成功", nil})
 	}
 
 	return JSON(ResponseData{SuccessCode, SuccessMsg, channels})
@@ -280,20 +250,19 @@ func RedisManagerCommand(data RequestData) string {
 		cliClients.conns[id] = conn
 	}
 	command, ok := data["command"]
-	if !ok {
-		return JSON(ResponseData{FailedCode, FailedMsg, "command empty!"})
-	}
+	ThrowIf(!ok, "command empty!")
+
 	var commands []interface{}
-	if err := json.Unmarshal([]byte(command.(string)), &commands); err != nil {
-		return JSON(ResponseData{FailedCode, FailedMsg, "command failed!"})
-	}
+
+	err := json.Unmarshal([]byte(command.(string)), &commands)
+	ThrowIf(err)
+
 	var flags []interface{}
 	for _, v := range commands[1:] {
 		rightfulParam := strings.Replace(v.(string), "\"", "\\\"", -1)
 		rightfulParam = strings.Replace(rightfulParam, "'", "\\'", -1)
 		flags = append(flags, rightfulParam)
 	}
-	//fmt.Println(flags...)
 	val, err := conn.Do(commands[0].(string), flags...)
 	if err != nil {
 		return JSON(ResponseData{SuccessCode, SuccessMsg, fmt.Sprintf("(error) %s", err)})
@@ -394,10 +363,7 @@ func RedisManagerRemoveConnection(data RequestData) string {
 		}
 	}
 	connectionList = configs
-	err := writeConfigJSON()
-	if err != nil {
-		return JSON(ResponseData{FailedCode, "删除失败:" + err.Error(), nil})
-	}
+	ThrowIf(writeConfigJSON())
 	return JSON(ResponseData{SuccessCode, SuccessMsg, nil})
 }
 
@@ -474,14 +440,10 @@ func RedisManagerConnectionServer(data RequestData) string {
 	switch action {
 	case "get_value":
 		index := getFromInterfaceOrFloat64ToInt(data["index"])
-		_, err = client.Do("SELECT", index) //选择数据库
-		if err != nil {
-			return JSON(ResponseData{FailedCode, FailedMsg, nil})
-		}
+		_, err = client.Do("SELECT", index)
+		ThrowIf(err)
 		key := data["key"].(string)
-		if key == "" {
-			return JSON(ResponseData{FailedCode, FailedMsg, nil})
-		}
+		ThrowIf(key == "", FailedMsg)
 		typeStr, _ := redis.String(client.Do("TYPE", key))
 		if typeStr == "none" {
 			return JSON(ResponseData{5001, FailedMsg, nil})
@@ -493,99 +455,54 @@ func RedisManagerConnectionServer(data RequestData) string {
 			llen, _ := redis.Int64(client.Do("LLEN", key))
 			val, err := redis.Strings(client.Do("LRANGE", key, 0, size))
 			totalPage := int64(math.Ceil(float64(llen) / float64(size)))
-			if err != nil {
-				return JSON(ResponseData{FailedCode, "读取数据错误", err.Error()})
-			} else {
-				return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{
-					"type":      typeStr,
-					"data":      val,
-					"ttl":       ttl,
-					"totalPage": totalPage,
-					"size":      size,
-				}})
-			}
+			ThrowIf(err)
+			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": val, "ttl": ttl, "totalPage": totalPage, "size": size}})
 		case "set":
 			val, err := redis.Strings(client.Do("SMEMBERS", key))
-			if err != nil {
-				return JSON(ResponseData{FailedCode, "读取数据错误", err.Error()})
-			} else {
-				return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{
-					"type": typeStr,
-					"data": val,
-					"ttl":  ttl,
-				}})
-			}
+			ThrowIf(err)
+			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": val, "ttl": ttl}})
 		case "stream":
 			val, err := client.Do("XRANGE", key, "-", "+", "COUNT", 200)
-			if err != nil {
-				return JSON(ResponseData{FailedCode, "读取数据错误", err.Error()})
-			} else {
-				vds := val.([]interface{})
-				var retData []map[string][]string
-				for _, v := range vds {
-					item := map[string][]string{}
-					v := v.([]interface{})
-					xid := string(v[0].([]byte))
-					item[xid] = []string{}
-					fv := v[1].([]interface{})
-					for _, v := range fv {
-						item[xid] = append(item[xid], string(v.([]byte)))
-					}
-					retData = append(retData, item)
+			ThrowIf(err)
+			vds := val.([]interface{})
+			var retData []map[string][]string
+			for _, v := range vds {
+				item := map[string][]string{}
+				v := v.([]interface{})
+				xid := string(v[0].([]byte))
+				item[xid] = []string{}
+				fv := v[1].([]interface{})
+				for _, v := range fv {
+					item[xid] = append(item[xid], string(v.([]byte)))
 				}
-
-				return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{
-					"type": typeStr,
-					"data": retData,
-					"ttl":  ttl,
-				}})
+				retData = append(retData, item)
 			}
+
+			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": retData, "ttl": ttl}})
 		case "zset":
 			val, err := redis.StringMap(client.Do("ZRANGEBYSCORE", key, "-inf", "+inf", "WITHSCORES"))
-			if err != nil {
-				return JSON(ResponseData{FailedCode, "读取数据错误", err.Error()})
-			} else {
-				var retData []map[string]string
-				for k, v := range val {
-					retData = append(retData, map[string]string{"value": k, "score": v})
-				}
-				return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{
-					"type": typeStr,
-					"data": retData,
-					"ttl":  ttl,
-				}})
+			ThrowIf(err)
+
+			var retData []map[string]string
+			for k, v := range val {
+				retData = append(retData, map[string]string{"value": k, "score": v})
 			}
+			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": retData, "ttl": ttl}})
 		case "string":
 			val, err := redis.String(client.Do("GET", key))
-			if err != nil {
-				return JSON(ResponseData{FailedCode, "读取数据错误", err.Error()})
-			} else {
-				return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{
-					"type": typeStr,
-					"data": val,
-					"ttl":  ttl,
-				}})
-			}
+			ThrowIf(err)
+			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": val, "ttl": ttl}})
 		case "hash":
 			val, err := redis.StringMap(client.Do("HGETALL", key))
-			if err != nil {
-				return JSON(ResponseData{FailedCode, "读取数据错误", err.Error()})
-			} else {
-				return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{
-					"type": typeStr,
-					"data": val,
-					"ttl":  ttl,
-				}})
-			}
+			ThrowIf(err)
+			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": val, "ttl": ttl}})
 		}
 	case "dblist":
-		//读取数据库列表
 		var dbs []int
 		for i := 0; i < 20; i++ {
 			if _, err := client.Do("SELECT", i); err != nil {
 				break
 			}
-			//读取数据总量
 			total, _ := redis.Int(client.Do("DBSIZE"))
 			dbs = append(dbs, total)
 		}
@@ -666,7 +583,11 @@ func RedisManagerUpdateKey(data RequestData) string {
 	switch action {
 	case "ttl": //更新ttl时间
 		ttl := getFromInterfaceOrFloat64ToInt(data["ttl"])
-		_, err = client.Do("EXPIRE", key, ttl)
+		if ttl < -1 {
+			_, err = client.Do("PERSIST", key)
+		} else {
+			_, err = client.Do("EXPIRE", key, ttl)
+		}
 		ThrowIf(err)
 	case "value": //更新value
 		valType := data["type"].(string)
@@ -789,9 +710,7 @@ func RedisManagerAddKey(data RequestData) string {
 		_, err = redis.String(client.Do("XADD", params...))
 	case "hash":
 		rowkey := data["rowKey"].(string)
-		if rowkey == "" {
-			return JSON(ResponseData{FailedCode, "参数错误", nil})
-		}
+		ThrowIf(rowkey == "", "参数错误")
 		_, err = client.Do("HSET", key, rowkey, data["data"].(string))
 	}
 	ThrowIf(err)

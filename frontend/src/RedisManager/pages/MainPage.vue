@@ -116,6 +116,8 @@
                                             <Button :loading="buttonLoading" @click="flushKey(key)">刷新</Button>
                                             <Button :loading="buttonLoading" @click="renameKey(key)">重命名</Button>
                                             <Button :loading="buttonLoading" @click="setTTL(key, data)">重置TTL</Button>
+                                            <Button :loading="buttonLoading" @click="moveKey(key)">移动到</Button>
+                                            <Button :loading="buttonLoading" @click="dumpKey(key)">DUMP KEY</Button>
                                         </ButtonGroup>
                                         </Col>
                                     </Row>
@@ -143,6 +145,18 @@
                                                 <p slot="title">
                                                     操作
                                                 </p>
+                                                <ButtonGroup style="width: 100%;">
+                                                    <Button style="width: 33%">
+                                                        <Icon type="chevron-left"></Icon>
+                                                        上一页
+                                                    </Button>
+                                                    <Button style="float:right;width: 33%">
+                                                        下一页
+                                                        <Icon type="chevron-right"></Icon>
+                                                    </Button>
+                                                </ButtonGroup>
+                                                <br />
+                                                <br />
                                                 <Button long @click="addRow(key, data)">插入行</Button>
                                                 <br />
                                                 <br />
@@ -168,7 +182,7 @@
                             <img draggable="false" src="static/redis.svg" style="width: 20%; margin-top: 100px;" />
 
                             <p style="font-size: 16px; font-weight: bold;  margin-top:100px;color: #000;">
-                                RedisDesktop - Redis客户端管理工具
+                                RedisDesktop - 现代化RedisGUI软件
                             </p>
                         </div>
 
@@ -262,8 +276,8 @@
             </p>
             <div>
                 <Form :label-width="80">
-                    <FormItem label="名称:">
-                        <Input v-model="ttlValue.data.ttl" placeholder="设置TTL时间"></Input>
+                    <FormItem label="TTL:">
+                        <Input v-model="ttlValue.data.ttl" placeholder="设置TTL时间, -1为永久有效"></Input>
                     </FormItem>
                 </Form>
             </div>
@@ -393,6 +407,21 @@
             </VueTerminal>
         </Modal>
 
+
+        <Modal v-model="moveKeyModal">
+            <div style="padding: 30px">
+                <Form :model="formItem" :label-width="50">
+                    <FormItem label="DB：">
+                        <Select v-model="formItem.select">
+                            <Option value="beijing">New York</Option>
+                            <Option value="shanghai">London</Option>
+                            <Option value="shenzhen">Sydney</Option>
+                        </Select>
+                    </FormItem>
+                </Form>
+            </div>
+        </Modal>
+
     </div>
 </template>
 <script>
@@ -475,7 +504,7 @@ export default {
             currentDbIndex: -1,
             currentSelectRowData: {}, // 用于行列选择
             currentHandleNodeData: {}, // 用于基于当前操作数据的节点
-            formItem: { title: '', ip: '127.0.0.1', port: '6379', auth: '', readonly: false },
+            formItem: { title: '新服务器', ip: '127.0.0.1', port: '6379', auth: '', readonly: false },
             ttlModal: false,
             ttlValue: { 'data': {}, 'key': '' },
             rowValue: { 'data': {}, 'key': '', 'score': 100, 'newRowKey': '', 'newRowValue': '' },
@@ -502,7 +531,9 @@ export default {
             currentTotalKeyNum: 0, // 当前DB的key总数, 结合filter
             currentDbNode: null, // 当前打开的DB节点
             screenWidth: 0,
-            screenHeight: 0
+            screenHeight: 0,
+            moveKeyToDB: -1,
+            moveKeyModal: false
         }
     },
     mounted() {
@@ -559,6 +590,9 @@ export default {
         }
     },
     methods: {
+        moveKey(key) {
+            this.moveKeyModal = true
+        },
         setFullScreen(type) {
             switch (type) {
                 case 1:
@@ -592,6 +626,10 @@ export default {
         },
         showCliModal() {
             this.showJsonModal = true
+        },
+        async dumpKey(key) {
+            const data = await Api.dumpKey({ id: this.currentConnectionId, index: this.currentDbIndex, key: key });
+            console.log(data)
         },
         renameKey(key) {
             if (typeof key === 'object') {
