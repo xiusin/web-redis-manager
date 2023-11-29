@@ -116,8 +116,7 @@
                                             <Button :loading="buttonLoading" @click="flushKey(key)">刷新</Button>
                                             <Button :loading="buttonLoading" @click="renameKey(key)">重命名</Button>
                                             <Button :loading="buttonLoading" @click="setTTL(key, data)">重置TTL</Button>
-                                            <Button :loading="buttonLoading" @click="moveKey(key)">移动到</Button>
-                                            <Button :loading="buttonLoading" @click="dumpKey(key)">DUMP KEY</Button>
+                                            <Button :loading="buttonLoading" @click="showMoveKeyModal(key)">移动到</Button>
                                         </ButtonGroup>
                                         </Col>
                                     </Row>
@@ -408,14 +407,15 @@
         </Modal>
 
 
-        <Modal v-model="moveKeyModal">
+        <Modal v-model="moveKey.modal" @on-ok="moveKeyOk">
             <div style="padding: 30px">
-                <Form :model="formItem" :label-width="50">
+                <Form :label-width="50">
                     <FormItem label="DB：">
-                        <Select v-model="formItem.select">
-                            <Option value="beijing">New York</Option>
-                            <Option value="shanghai">London</Option>
-                            <Option value="shenzhen">Sydney</Option>
+                        <Select v-model="moveKey.db">
+                            <Option v-for="index in connectionDbNums[currentConnectionId]" :key="index - 1"
+                                :value="index - 1" :disabled="index - 1 == currentDbIndex">
+                                DB({{ index - 1 }})
+                            </Option>
                         </Select>
                     </FormItem>
                 </Form>
@@ -484,6 +484,7 @@ export default {
                 gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter']
             },
             keysList: [], // DB的key列表
+            connectionDbNums: {},
             customChannel: '',
             chanMegs: {}, // 消息内容
             channelMsg: '',
@@ -532,8 +533,7 @@ export default {
             currentDbNode: null, // 当前打开的DB节点
             screenWidth: 0,
             screenHeight: 0,
-            moveKeyToDB: -1,
-            moveKeyModal: false
+            moveKey: { db: -1, modal: false, key: '' }
         }
     },
     mounted() {
@@ -590,8 +590,23 @@ export default {
         }
     },
     methods: {
-        moveKey(key) {
-            this.moveKeyModal = true
+        showMoveKeyModal(key) {
+            this.moveKey.modal = true
+            this.moveKey.key = key
+        },
+        moveKeyOk() {
+            Api.moveKey({ id: this.currentConnectionId, index: this.currentDbIndex, key: this.moveKey.key, todb: this.moveKey.db }, (data) => {
+                if (data.status !== 200) {
+                    this.$Message.error(data.msg)
+                    return
+                }
+                this.moveKey.modal = false
+                this.moveKey.db = -1
+                this.moveKey.key = ''
+
+                // TODO 从列表内删除此KEY
+                this.$Message.success(data.msg)
+            });
         },
         setFullScreen(type) {
             switch (type) {
@@ -1034,7 +1049,7 @@ export default {
                     return
                 }
                 this.tabs[this.getTabsKey()].keys[key] = res.data
-                this.tabs = Object.assign({}, this.tabs) // 绑定为动态变量,否则页面不会动态渲染
+                this.tabs = Object.assign({}, this.tabs)
                 this.currentKey = key
             })
         },
@@ -1617,6 +1632,8 @@ export default {
                             this.currentConnection = item.data.title
                             let data = []
                             if (res.data) {
+                                this.connectionDbNums[item.data.id] = res.data.length
+
                                 for (let i = 0; i < res.data.length; i++) {
                                     data.push({
                                         title: 'DB' + i + ' (' + res.data[i] + ')',

@@ -33,6 +33,7 @@ func RegisterRouter(mux *http.ServeMux) {
 		"/redis/connection/flushDB":     handler.RedisManagerFlushDB,
 		"/redis/connection/remove":      handler.RedisManagerRemoveConnection,
 		"/redis/connection/renameKey":   handler.RedisManagerRenameKey,
+		"/redis/connection/moveKey":     handler.RedisManagerMoveKey,
 		"/redis/connection/command":     handler.RedisManagerCommand,
 		"/redis/connection/info":        handler.RedisManagerGetInfo,
 		"/redis/connection/get-command": handler.RedisManagerGetCommandList,

@@ -14,7 +14,8 @@
             "Strs",
             "updatekey",
             "upgrader",
-            "slowlog"
+            "slowlog",
+            "keyorscore"
         ]
     }
 }

@@ -148,6 +148,16 @@ func RedisManagerRenameKey(data RequestData) string {
 	return JSON(ResponseData{SuccessCode, "重命名成功", nil})
 }
 
+func RedisManagerMoveKey(data RequestData) string {
+	client, key := getRedisClient(data, true, true)
+	defer client.Close()
+
+	_, err := client.Do("MOVE", key, data["todb"].(string))
+	ThrowIf(err)
+
+	return JSON(ResponseData{SuccessCode, "移动成功", nil})
+}
+
 func RedisPubSub(data RequestData) string {
 	wsIntf := data["ws"]
 	channelPrefix := "channel-"

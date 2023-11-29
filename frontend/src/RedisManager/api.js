@@ -31,7 +31,9 @@ export default {
     renameKey: async (data, callback) => {
         return await Vue.prototype.$Websocket.post('/redis/connection/renameKey', data, callback)
     },
-
+    moveKey: async (data, callback) => {
+        return await Vue.prototype.$Websocket.post('/redis/connection/moveKey', data, callback)
+    },
     dumpKey: async (data, callback) => {
         return await Vue.prototype.$Websocket.post('/redis/connection/dumpKey', data, callback)
     },
