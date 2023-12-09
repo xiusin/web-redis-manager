@@ -1,5 +1,17 @@
 {
     "cSpell.words": [
-        "slowlog"
+        "addrow",
+        "childs",
+        "dblist",
+        "HGETALL",
+        "llen",
+        "removekey",
+        "rowkey",
+        "SCARD",
+        "slowlog",
+        "WITHSCORES",
+        "ZCARD",
+        "ZRANGEBYSCORE",
+        "zset"
     ]
 }

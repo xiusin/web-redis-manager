@@ -5,3 +5,4 @@
 - [ ] 连接服务器时需要校验是否需要auth信息
 - [ ] list / set / stream等数据优化
 - [ ] list / hash / zset编辑
+- [ ] list / set / stream查询请求后端

@@ -4,7 +4,6 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"fmt"
-	"math"
 	"math/rand"
 	"os"
 	"reflect"
@@ -459,20 +458,23 @@ func RedisManagerConnectionServer(data RequestData) string {
 			return JSON(ResponseData{5001, FailedMsg, nil})
 		}
 		ttl, _ := redis.Int64(client.Do("TTL", key))
-		size := 500
+		size := 1000
 		switch typeStr {
 		case "list": // 读取总长度
 			llen, _ := redis.Int64(client.Do("LLEN", key))
 			val, err := redis.Strings(client.Do("LRANGE", key, 0, size))
-			totalPage := int64(math.Ceil(float64(llen) / float64(size)))
 			ThrowIf(err)
-			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": val, "ttl": ttl, "totalPage": totalPage, "size": size}})
+			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": val, "ttl": ttl, "count": llen, "size": 50, "current": 1}})
 		case "set":
-			val, err := redis.Strings(client.Do("SMEMBERS", key))
+			llen, _ := redis.Int64(client.Do("SCARD", key))
+			repl, err := client.Do("SSCAN", key, 0, "COUNT", size)
 			ThrowIf(err)
-			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": val, "ttl": ttl}})
+			keys, err := redis.Strings(repl.([]interface{})[1], nil)
+			ThrowIf(err)
+			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": keys, "ttl": ttl, "count": llen, "size": 50, "current": 1}})
 		case "stream":
-			val, err := client.Do("XRANGE", key, "-", "+", "COUNT", 200)
+			llen, _ := redis.Int64(client.Do("XLEN", key))
+			val, err := client.Do("XRANGE", key, "-", "+", "COUNT", size)
 			ThrowIf(err)
 			vds := val.([]interface{})
 			var retData []map[string][]string
@@ -487,25 +489,32 @@ func RedisManagerConnectionServer(data RequestData) string {
 				}
 				retData = append(retData, item)
 			}
-
-			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": retData, "ttl": ttl}})
+			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": retData, "ttl": ttl, "count": llen, "size": 50, "current": 1}})
 		case "zset":
-			val, err := redis.StringMap(client.Do("ZRANGEBYSCORE", key, "-inf", "+inf", "WITHSCORES"))
+			llen, _ := redis.Int64(client.Do("ZCARD", key))
+			repl, err := client.Do("ZSCAN", key, 0, "COUNT", size)
+			ThrowIf(err)
+			values, err := redis.Strings(repl.([]interface{})[1], nil)
 			ThrowIf(err)
 
 			var retData []map[string]string
-			for k, v := range val {
-				retData = append(retData, map[string]string{"value": k, "score": v})
+			for i, v := range values {
+				if i%2 == 1 {
+					retData = append(retData, map[string]string{"value": values[i-1], "score": v})
+				}
 			}
-			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": retData, "ttl": ttl}})
+			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": retData, "ttl": ttl, "count": llen, "size": 50, "current": 1}})
 		case "string":
 			val, err := redis.String(client.Do("GET", key))
 			ThrowIf(err)
 			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": val, "ttl": ttl}})
 		case "hash":
-			val, err := redis.StringMap(client.Do("HGETALL", key))
+			llen, _ := redis.Int64(client.Do("HLEN", key))
+			repl, err := client.Do("HSCAN", key, 0, "COUNT", size)
 			ThrowIf(err)
-			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": val, "ttl": ttl}})
+			keys, err := redis.StringMap(repl.([]interface{})[1], nil)
+			ThrowIf(err)
+			return JSON(ResponseData{SuccessCode, "读取所有key成功", RequestData{"type": typeStr, "data": keys, "ttl": ttl, "count": llen, "size": 50, "current": 1}})
 		}
 	case "dblist":
 		var dbs []int

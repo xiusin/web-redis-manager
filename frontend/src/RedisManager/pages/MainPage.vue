@@ -92,7 +92,7 @@
                 </Content>
                 <Layout>
                     <Content
-                        :style="!isQtWebView() ? { height: '100%', background: '#fff', borderLeft: '1px solid #ccc' } : { height: '100%', background: '#fff' }">
+                        :style="!isQtWebView() ? { height: '100%', minWidth: '800px', background: '#fff', borderLeft: '1px solid #ccc' } : { height: '100%', background: '#fff' }">
                         <Spin size="large" fix v-if="keyLoading && isQtWebView()">
                             <span style="color: firebrick; font-size: 16px;">正在读取: {{ currentLoadingKey }}</span>
                         </Spin>
@@ -134,26 +134,24 @@
                                     </div>
                                     <div v-else style="margin-top: 4px; height: 100%">
                                         <Row type="flex">
-                                            <Col span="16">
+                                            <Col span="18">
                                             <Table :highlightRow="true" @on-row-click="getRowData" ref="currentRowTable"
-                                                border height="370" :columns="getColumns(data.type)"
-                                                :data="formatItem(data.type, data.data)" />
+                                                border height="470" :columns="getColumns(data.type)"
+                                                :data="formatItem(data.type, data.data, data.current, data.size)" />
                                             </Col>
-                                            <Col span="8">
-                                            <Card style="height:370px;border-left: none;" dis-hover>
+                                            <Col span="6">
+                                            <Card style="height:470px;border-left: none;" dis-hover>
                                                 <p slot="title">
                                                     操作
                                                 </p>
-                                                <ButtonGroup style="width: 100%;">
-                                                    <Button style="width: 33%">
-                                                        <Icon type="chevron-left"></Icon>
-                                                        上一页
-                                                    </Button>
-                                                    <Button style="float:right;width: 33%">
-                                                        下一页
-                                                        <Icon type="chevron-right"></Icon>
-                                                    </Button>
-                                                </ButtonGroup>
+                                                <div style="text-align: center;">
+                                                    <Alert v-if="data.count > data.size" type="warning">共有{{ data.count
+                                                    }}条,本次仅返回{{ data.size }}条</Alert>
+                                                    <Page :current="data.current" :page-size="data.size" :total="data.count"
+                                                        :transfer="true" @on-change="(page) => changePage(page, data)"
+                                                        simple>
+                                                    </Page>
+                                                </div>
                                                 <br />
                                                 <br />
                                                 <Button long @click="addRow(key, data)">插入行</Button>
@@ -590,6 +588,9 @@ export default {
         }
     },
     methods: {
+        changePage(page, data) {
+            data.current = page
+        },
         showMoveKeyModal(key) {
             this.moveKey.modal = true
             this.moveKey.key = key
@@ -943,7 +944,6 @@ export default {
                 rowIndex = this.currentSelectRowData.index
                 newRowKey = this.currentSelectRowData.key
                 newRowValue = this.currentSelectRowData.value
-                // console.log('this.currentSelectRowData', this.currentSelectRowData)
                 if (!newRowValue) {
                     this.$Message.error('请设置要操作Key / Value')
                     return
@@ -1072,7 +1072,6 @@ export default {
             let node = nodes[0]
 
             const childs = this.$refs[node.title].at(0).$el.parentElement.childNodes
-            console.log(childs)
             for (let i in childs) {
                 try {
                     childs[i].style.backgroundColor = '#fff'
@@ -1127,7 +1126,10 @@ export default {
             this.currentKey = key
             this.currentSelectRowData = {}
         },
-        formatItem(type, data) {
+        formatItem(type, data, page) {
+            if (!page) page = 1
+            const size = 50
+            const offset = (page - 1) * size
             let res = []
             const strlen = 80
             switch (type) {
@@ -1176,7 +1178,7 @@ export default {
                         }
                     }
             }
-            return res.slice(0, 200)
+            return res.slice(offset, offset + size)
         },
         getColumns(type) {
             let cols = []
@@ -1194,7 +1196,7 @@ export default {
                             key: 'key'
                         },
                         {
-                            title: '值 (性能考虑,默认显示200条,请使用查询)',
+                            title: '值',
                             key: 'value'
                         }
                     ]
@@ -1225,7 +1227,7 @@ export default {
                             align: 'center'
                         },
                         {
-                            title: '值 (性能考虑,默认显示200条,请使用查询)',
+                            title: '值',
                             width: 400,
                             key: 'value'
                         },
@@ -1245,7 +1247,7 @@ export default {
                             align: 'center'
                         },
                         {
-                            title: '值 (性能考虑,默认显示200条,请使用查询)',
+                            title: '值',
                             key: 'value'
                         }
                     ]
