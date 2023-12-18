@@ -8,7 +8,7 @@ require (
 	github.com/kataras/basicauth v0.0.1
 	github.com/rs/cors v1.7.0
 	github.com/xiusin/logger v0.0.10-0.20220103084022-9cb8378d9b03
-	golang.org/x/sys v0.10.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
 )
 
 require (
@@ -23,7 +23,7 @@ require (
 	github.com/jchv/go-winloader v0.0.0-20210323001710-152514a7f070 // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
-	golang.org/x/crypto v0.0.0-20210322153248-0c34fe9e7dc2 // indirect
-	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
+	golang.org/x/crypto v0.17.0 // indirect
+	golang.org/x/term v0.15.0 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200615113413-eeeca48fe776 // indirect
 )
