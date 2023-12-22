@@ -115,7 +115,7 @@ import { PieChart, LineChart } from 'echarts/charts'
 import { GridComponent, LegendComponent, TitleComponent, TooltipComponent } from 'echarts/components'
 import VChart from 'vue-echarts'
 import ServerInfo from './serverInfo'
-import SlowLog from './SlowLog'
+import SlowLog from './slowLog'
 import Api from '../../api'
 
 use([
