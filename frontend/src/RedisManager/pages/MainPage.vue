@@ -46,30 +46,33 @@
     <div class="layout">
         <Layout>
             <Header style="padding: 0 10px;" v-if="!isQtWebView()">
-                <Button @click="showLoginModal()" size="small" icon="ios-download-outline" type="primary">连接服务器</Button>
+                <Button @click="showLoginModal()" size="small" icon="ios-download-outline"
+                    type="primary">Connection</Button>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <Button size="small" v-if="currentConnectionId !== ''" icon="ios-swap" type="success"
                     @click="openPubSubTab()">
-                    发布订阅
+                    PubSub
                 </Button>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <Button size="small" v-if="currentConnectionId !== ''" icon="md-laptop" type="warning"
                     @click="showCliModal">CLI
                 </Button>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <Button size="small" v-if="currentConnectionId !== ''" icon="md-alert" type="info"
-                    @click="openInfoTab()">服务信息
+                    @click="openInfoTab()">Info
                 </Button>
             </Header>
 
             <Layout :style="{ height: '100%' }">
                 <Sider hide-trigger :style="getSiderStyle()" v-if="!isQtWebView()">
-                    <Tree :data="connectionTreeList" :load-data="loadData" empty-text="暂无连接服务器"
+                    <Tree :data="connectionTreeList" :load-data="loadData" empty-text="No Connection"
                         @on-select-change="selectChange">
                     </Tree>
                 </Sider>
                 <Content class="key-list"
                     :style="{ background: '#fff', width: '300px', maxWidth: '300px', minWidth: '300px', 'overflow-y': 'auto', 'overflow-x': 'hidden', 'position': 'relative' }">
-                    <Input placeholder="过滤规则: *" v-model="keyFilter" style="width: 100%;">
+                    <Input placeholder="filter rule: *" clearable @on-enter="clickEvent(currentDbNode)" v-model="keyFilter"
+                        style="width: 100%;">
                     <Icon @click="clickEvent(currentDbNode)" type="ios-search" slot="suffix" style="cursor: pointer" />
                     </Input>
                     <div style='height: calc(100% - 72px); overflow-y: auto; overflow-x: hidden;'>
@@ -94,7 +97,7 @@
                     <Content
                         :style="!isQtWebView() ? { height: '100%', minWidth: '800px', background: '#fff', borderLeft: '1px solid #ccc' } : { height: '100%', background: '#fff' }">
                         <Spin size="large" fix v-if="keyLoading && isQtWebView()">
-                            <span style="color: firebrick; font-size: 16px;">正在读取: {{ currentLoadingKey }}</span>
+                            <span style="color: firebrick; font-size: 16px;">loading: {{ currentLoadingKey }}</span>
                         </Spin>
                         <div v-if="currentConnectionId && currentDbIndex > -1 && typeof tabs[getTabsKey()] !== 'undefined' && !isEmptyObj(tabs[getTabsKey()]['keys'])"
                             :style="{ height: '100%' }">
@@ -112,11 +115,11 @@
                                         </Col>
                                         <Col span="12" style="text-align: right;">
                                         <ButtonGroup>
-                                            <Button :loading="buttonLoading" @click="removeKey(key)">删除</Button>
-                                            <Button :loading="buttonLoading" @click="flushKey(key)">刷新</Button>
-                                            <Button :loading="buttonLoading" @click="renameKey(key)">重命名</Button>
-                                            <Button :loading="buttonLoading" @click="setTTL(key, data)">重置TTL</Button>
-                                            <Button :loading="buttonLoading" @click="showMoveKeyModal(key)">移动到</Button>
+                                            <Button :loading="buttonLoading" @click="removeKey(key)">Delete</Button>
+                                            <Button :loading="buttonLoading" @click="flushKey(key)">Reflush</Button>
+                                            <Button :loading="buttonLoading" @click="renameKey(key)">Rename</Button>
+                                            <Button :loading="buttonLoading" @click="setTTL(key, data)">TTL</Button>
+                                            <Button :loading="buttonLoading" @click="showMoveKeyModal(key)">Move</Button>
                                         </ButtonGroup>
                                         </Col>
                                     </Row>
@@ -127,7 +130,7 @@
                                             <Col span="24" style="text-align: right">
 
                                             <Button style="float: right" size="small" type="info"
-                                                @click="updateValue(key, data, 'value')" :loading="buttonLoading">保存
+                                                @click="updateValue(key, data, 'value')" :loading="buttonLoading">Save
                                             </Button>
                                             </Col>
                                         </Row>
@@ -142,7 +145,7 @@
                                             <Col span="6">
                                             <Card style="height:470px;border-left: none;" dis-hover>
                                                 <p slot="title">
-                                                    操作
+                                                    Operation
                                                 </p>
                                                 <div style="text-align: center;">
                                                     <Alert v-if="data.count > data.size" type="warning">共有{{ data.count
@@ -154,12 +157,12 @@
                                                 </div>
                                                 <br />
                                                 <br />
-                                                <Button long @click="addRow(key, data)">插入行</Button>
+                                                <Button long @click="addRow(key, data)">Insert Row</Button>
                                                 <br />
                                                 <br />
-                                                <Button long @click="removeRow(key, data)">删除行</Button>
+                                                <Button long @click="removeRow(key, data)">Delete Row</Button>
                                                 <br /><br />
-                                                <Input placeholder="列表中查询..." v-model="searchKey"></Input>
+                                                <Input placeholder="Search..." v-model="searchKey"></Input>
                                             </Card>
                                             </Col>
                                         </Row>
@@ -168,7 +171,7 @@
                                                 :options="editorOpt" />
                                             <Button style="float: right" size="small"
                                                 @click="updateValue(key, data, 'updateRowValue')"
-                                                :loading="buttonLoading">保存
+                                                :loading="buttonLoading">Save
                                             </Button>
                                         </div>
                                     </div>
@@ -179,7 +182,7 @@
                             <img draggable="false" src="static/redis.svg" style="width: 20%; margin-top: 100px;" />
 
                             <p style="font-size: 16px; font-weight: bold;  margin-top:100px;color: #000;">
-                                RedisDesktop - 现代化RedisGUI软件
+                                RedisDesktop - A modern redis management tool
                             </p>
                         </div>
 
@@ -255,12 +258,12 @@
             <div slot="footer">
                 <Row :gutter="24">
                     <Col span="8" style="text-align: left">
-                    <Button type="info" size="small" :loading="modal_loading" @click="connectionTestHandler()">测试连接</Button>
+                    <Button type="info" size="small" :loading="modal_loading" @click="connectionTestHandler()">Test</Button>
                     </Col>
                     <Col span="16">
                     <Button type="primary" size="small" :loading="modal_loading"
-                        @click="connectionSaveHandler()">确定</Button>
-                    <Button type="error" size="small" @click="connectionModal = false">取消</Button>
+                        @click="connectionSaveHandler()">OK</Button>
+                    <Button type="error" size="small" @click="connectionModal = false">Cancel</Button>
                     </Col>
                 </Row>
             </div>
@@ -269,12 +272,15 @@
         <Modal v-model="ttlModal" width="360">
             <p slot="header" style="color:#f60;">
                 <Icon type="ios-information-circle"></Icon>
-                <span>设置 {{ ttlValue.key }} TTL</span>
+                <span>Set TTL</span>
             </p>
             <div>
                 <Form :label-width="80">
+                    <FormItem label="KEY:">
+                        <Input :value="ttlValue.key" readonly></Input>
+                    </FormItem>
                     <FormItem label="TTL:">
-                        <Input v-model="ttlValue.data.ttl" placeholder="设置TTL时间, -1为永久有效"></Input>
+                        <Input v-model="ttlValue.data.ttl"></Input>
                     </FormItem>
                 </Form>
             </div>
@@ -282,7 +288,7 @@
                 <Row :gutter="24">
                     <Col span="24">
                     <Button type="primary" style="float: right" size="small" :loading="modal_loading"
-                        @click="updateValue(ttlValue.key, ttlValue.data, 'ttl')">确定
+                        @click="updateValue(ttlValue.key, ttlValue.data, 'ttl')">OK
                     </Button>
                     </Col>
                 </Row>
@@ -292,14 +298,14 @@
         <Modal v-model="renameModal" width="360">
             <p slot="header" style="color:#f60;">
                 <Icon type="ios-information-circle"></Icon>
-                <span>重命名key</span>
+                <span>Rename KEY</span>
             </p>
             <div>
                 <Form :label-width="80">
-                    <FormItem label="原名称:">
+                    <FormItem label="Old Name:">
                         <Input v-model="renameValue.old" readonly></Input>
                     </FormItem>
-                    <FormItem label="新名称:">
+                    <FormItem label="New Name:">
                         <Input v-model="renameValue.new" placeholder=""></Input>
                     </FormItem>
                 </Form>
@@ -308,7 +314,7 @@
                 <Row :gutter="24">
                     <Col span="24">
                     <Button type="primary" style="float: right" size="small" :loading="modal_loading"
-                        @click="renameKey(renameValue)">确定
+                        @click="renameKey(renameValue)">OK
                     </Button>
                     </Col>
                 </Row>
@@ -318,14 +324,14 @@
         <Modal v-model="addKeyModal" width="650">
             <p slot="header" style="color:#f60;">
                 <Icon type="ios-information-circle"></Icon>
-                <span>添加新键</span>
+                <span>Add</span>
             </p>
             <div>
                 <Form :label-width="50">
-                    <FormItem label="键名:">
+                    <FormItem label="KEY:">
                         <Input v-model="newValue.key" placeholder=""></Input>
                     </FormItem>
-                    <FormItem label="类型:">
+                    <FormItem label="TYPE:">
                         <RadioGroup v-model="newKeyType" type="button">
                             <Radio label="string"></Radio>
                             <Radio label="list"></Radio>
@@ -337,16 +343,16 @@
                             <Radio label="RediSearch" disabled></Radio>
                         </RadioGroup>
                     </FormItem>
-                    <FormItem label="分值:" v-if="newKeyType === 'zset'">
+                    <FormItem label="SCORE:" v-if="newKeyType === 'zset'">
                         <Input v-model="newValue.keyorscore" placeholder=""></Input>
                     </FormItem>
-                    <FormItem label="键:" v-if="newKeyType === 'hash'">
+                    <FormItem label="HASH KEY:" v-if="newKeyType === 'hash'">
                         <Input v-model="newValue.keyorscore" placeholder=""></Input>
                     </FormItem>
                     <FormItem label="ID:" v-if="newKeyType === 'stream'">
                         <Input v-model="newValue.keyorscore" placeholder="*(自动生成)"></Input>
                     </FormItem>
-                    <FormItem label="值:">
+                    <FormItem label="VALUE:">
                         <Input v-model="newValue.data" type="textarea" :autosize="{ minRows: 5, maxRows: 5 }"></Input>
                     </FormItem>
                 </Form>
@@ -354,7 +360,7 @@
             <div slot="footer">
                 <Row :gutter="24">
                     <Col span="24">
-                    <Button type="primary" style="float: right" size="small" :loading="buttonLoading" @click="addNewKey">确定
+                    <Button type="primary" style="float: right" size="small" :loading="buttonLoading" @click="addNewKey">OK
                     </Button>
                     </Col>
                 </Row>
@@ -364,7 +370,7 @@
         <Modal v-model="addRowModal" width="360">
             <p slot="header" style="color:#f60;">
                 <Icon type="ios-information-circle"></Icon>
-                <span>{{ rowValue.key }} 添加行操作</span>
+                <span>{{ rowValue.key }} Insert Row</span>
             </p>
             <div>
                 <Input v-model="rowValue.newRowKey" style="margin-bottom: 5px" v-if="rowValue.data.type === 'hash'"
@@ -379,20 +385,20 @@
                 <Row :gutter="24">
                     <Col span="24">
                     <Button type="primary" style="float: right" size="small" :loading="modal_loading"
-                        @click="updateValue(rowValue.key, rowValue, 'addrow')">确定
+                        @click="updateValue(rowValue.key, rowValue, 'addrow')">OK
                     </Button>
                     </Col>
                 </Row>
             </div>
         </Modal>
 
-        <Modal v-model="confirmModal" title="操作提醒" @on-ok="confirmModalEvent">
+        <Modal v-model="confirmModal" title="Tip" @on-ok="confirmModalEvent">
             <p>{{ confirmModalText }}</p>
             <div slot="footer">
                 <Row :gutter="24">
                     <Col>
-                    <Button type="error" size="small" @click="confirmModal = false">取消</Button>
-                    <Button type="primary" size="small" @click="confirmModalEvent">确定</Button>
+                    <Button type="error" size="small" @click="confirmModal = false">Cancel</Button>
+                    <Button type="primary" size="small" @click="confirmModalEvent">OK</Button>
                     </Col>
                 </Row>
             </div>
@@ -1191,12 +1197,12 @@ export default {
                             align: 'center'
                         },
                         {
-                            title: '键',
+                            title: 'KEY',
                             width: 160,
                             key: 'key'
                         },
                         {
-                            title: '值',
+                            title: 'VALUE',
                             key: 'value'
                         }
                     ]
@@ -1214,7 +1220,7 @@ export default {
                             key: 'key'
                         },
                         {
-                            title: '内容 (field1 value1 [fieldN valueN]...)',
+                            title: 'CONTENT (field1 value1 [fieldN valueN]...)',
                             key: 'value'
                         }
                     ]
@@ -1227,7 +1233,7 @@ export default {
                             align: 'center'
                         },
                         {
-                            title: '值',
+                            title: 'VALUE',
                             width: 400,
                             key: 'value'
                         },
@@ -1247,7 +1253,7 @@ export default {
                             align: 'center'
                         },
                         {
-                            title: '值',
+                            title: 'VALUE',
                             key: 'value'
                         }
                     ]

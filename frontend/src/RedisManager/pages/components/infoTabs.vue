@@ -1,12 +1,12 @@
 <template>
     <Tabs v-model="tab" :animated="false" style="height: 100%; width: calc(100% - 205px)">
-        <TabPane label="服务器信息" name="first" style="height: 100%; overflow-y: auto;">
+        <TabPane label="Info" name="first" style="height: 100%; overflow-y: auto;">
             <div class='serverInfo'>
                 <Row :gutter="3">
                     <Col span="4">
                     <div>
                         <Card :bordered="false">
-                            <p slot="title">版本</p>
+                            <p slot="title">Version</p>
                             <p>{{ info.version }}</p>
                         </Card>
                     </div>
@@ -14,7 +14,7 @@
                     <Col span="4">
                     <div>
                         <Card :bordered="false">
-                            <p slot="title">内存使用</p>
+                            <p slot="title">Memory</p>
                             <p>{{ info.memory }}</p>
                         </Card>
                     </div>
@@ -22,7 +22,7 @@
                     <Col span="4">
                     <div>
                         <Card :bordered="false">
-                            <p slot="title">客户端数</p>
+                            <p slot="title">Client</p>
                             <p>{{ info.clientNum }}</p>
                         </Card>
                     </div>
@@ -30,7 +30,7 @@
                     <Col span="4">
                     <div>
                         <Card :bordered="false">
-                            <p slot="title">Key总数</p>
+                            <p slot="title">KEY</p>
                             <p>{{ info.keyNum }}</p>
                         </Card>
                     </div>
@@ -38,7 +38,7 @@
                     <Col span="4">
                     <div>
                         <Card :bordered="false">
-                            <p slot="title">CPU占用</p>
+                            <p slot="title">Cpu Rate</p>
                             <p>{{ info.cpuRate }}</p>
                         </Card>
                     </div>
@@ -46,7 +46,7 @@
                     <Col span="4">
                     <div>
                         <Card :bordered="false">
-                            <p slot="title">命中率</p>
+                            <p slot="title">Hit Ratio</p>
                             <p>{{ info.ratio }}</p>
                         </Card>
                     </div>
@@ -55,14 +55,14 @@
             </div>
             <server-info :serverInfo="serverInfo" />
         </TabPane>
-        <TabPane label="配置信息" name="second" style="height: 100%">
+        <TabPane label="Config" name="second" style="height: 100%">
             <Table size="small" :columns="serverConfigColumns" :data="serverConfig" :stripe="true" :border="true"
                 style="height: 100%"></Table>
         </TabPane>
-        <TabPane label="慢日志" name="three" style="height: 100%">
+        <TabPane label="SlowLog" name="three" style="height: 100%">
             <slow-log :slow-logs="slowLogs" />
         </TabPane>
-        <TabPane label="客户端" name="four" style="height: 100%; overflow-y: auto;">
+        <TabPane label="Clients" name="four" style="height: 100%; overflow-y: auto;">
             <div style="clear: both;">
                 <Table size="small" :columns="clientColumns" :data="clientData" :stripe="true" :border="true"
                     style="height: 100%">
@@ -76,7 +76,7 @@
                 </div>
             </div>
         </TabPane>
-        <TabPane label="图表" name="five" style="height: 100%; overflow-y: auto;">
+        <TabPane label="Charts" name="five" style="height: 100%; overflow-y: auto;">
             <Row :gutter="1" class="chartBox">
                 <Col span="12">
                 <div style="width: 100%; height: 300px">
@@ -241,43 +241,43 @@ export default {
             serverConfig: [],
             serverConfigColumns: [
                 {
-                    title: '配置项',
+                    title: 'KEY',
                     key: 'key',
                     width: 250
                 },
                 {
-                    title: '值',
+                    title: 'VALUE',
                     key: 'value'
                 }
             ],
             clientColumns: [
                 {
-                    title: '客户端地址',
+                    title: 'IP',
                     key: 'addr',
                     sortable: true,
                     width: 170
                 },
                 {
-                    title: '名称',
+                    title: 'NAME',
                     sortable: true,
                     key: 'name'
                 },
                 {
-                    title: '数据库ID',
+                    title: 'DB INDEX',
                     sortable: true,
                     key: 'db'
                 },
                 {
-                    title: '最近命令',
+                    title: 'COMMAND',
                     key: 'cmd'
                 },
                 {
-                    title: '连接时长(s)',
+                    title: 'Active Time(s)',
                     sortable: true,
                     key: 'age'
                 },
                 {
-                    title: '空闲时长(s)',
+                    title: 'Idle Time(s)',
                     sortable: true,
                     key: 'idle'
                 },
@@ -298,7 +298,7 @@ export default {
                                     this.stopInterval = !this.stopInterval
                                 }
                             }
-                        }, this.stopInterval ? '开始刷新' : '停止刷新')
+                        }, this.stopInterval ? 'Refresh' : 'Stop')
                     },
                     key: 'action',
                     fixed: 'right',
