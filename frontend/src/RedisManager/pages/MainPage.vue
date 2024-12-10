@@ -246,6 +246,10 @@
                         <Input v-model="formItem.port" placeholder="请输入IP端口"></Input>
                     </FormItem>
 
+                    <FormItem label="账号:">
+                        <Input v-model="formItem.username" placeholder="授权账号(可选， redis版本小于6.0，不支持此参数)"></Input>
+                    </FormItem>
+
                     <FormItem label="密码:">
                         <Input v-model="formItem.auth" placeholder="授权密码(可选)"></Input>
                     </FormItem>
@@ -509,7 +513,7 @@ export default {
             currentDbIndex: -1,
             currentSelectRowData: {}, // 用于行列选择
             currentHandleNodeData: {}, // 用于基于当前操作数据的节点
-            formItem: { title: '新服务器', ip: '127.0.0.1', port: '6379', auth: '', readonly: false },
+            formItem: { title: '新服务器', ip: '127.0.0.1', port: '6379', auth: '', readonly: false, username: '' },
             ttlModal: false,
             ttlValue: { 'data': {}, 'key': '' },
             rowValue: { 'data': {}, 'key': '', 'score': 100, 'newRowKey': '', 'newRowValue': '' },

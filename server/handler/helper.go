@@ -17,6 +17,7 @@ type connection struct {
 	Ip       string `json:"ip"`
 	Port     string `json:"port"`
 	Auth     string `json:"auth"`
+	Username string `json:"username"`
 	Readonly bool   `json:"readonly,omitempty"`
 }
 
@@ -63,9 +64,7 @@ func ThrowIf(cond interface{}, msg ...string) {
 			panic(errors.New(msg[0]))
 		}
 	case error:
-		if cond != nil {
-			panic(cond)
-		}
+		panic(cond)
 	default:
 		panic(errors.New("ThrowIf only support types: error,bool: " + reflect.TypeOf(cond).String()))
 	}

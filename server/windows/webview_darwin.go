@@ -1,7 +1,7 @@
 package windows
 
 import (
-	"github.com/webview/webview"
+	"github.com/webview/webview_go"
 )
 
 func InitWebview(url string) {

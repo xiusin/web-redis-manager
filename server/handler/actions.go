@@ -73,7 +73,7 @@ func RedisManagerGetInfo(data RequestData) string {
 func RedisManagerConnectionTest(data RequestData) string {
 	var config connection
 	config.Ip = data["ip"].(string)
-	config.Title = data["title"].(string)
+	config.Username = data["username"].(string)
 	config.Port = data["port"].(string)
 	config.Auth = data["auth"].(string)
 
@@ -81,12 +81,16 @@ func RedisManagerConnectionTest(data RequestData) string {
 	ThrowIf(err)
 	defer client.Close()
 	if config.Auth != "" {
-		_, err := client.Do("AUTH", config.Auth)
-		ThrowIf(err)
-	} else {
-		_, err := client.Do("PING")
+		if config.Username != "" {
+			_, err = client.Do("AUTH", config.Username, config.Auth)
+		} else {
+			_, err = client.Do("AUTH", config.Auth)
+		}
 		ThrowIf(err)
 	}
+
+	_, err = client.Do("PING")
+	ThrowIf(err)
 	return JSON(ResponseData{SuccessCode, "连接成功", nil})
 }
 
@@ -96,6 +100,7 @@ func RedisManagerConfigSave(data RequestData) string {
 	config.Title = data["title"].(string)
 	config.Port = data["port"].(string)
 	config.Auth = data["auth"].(string)
+	config.Username = data["username"].(string)
 	config.Readonly, _ = strconv.ParseBool(data["readonly"].(string))
 	totalConnection = totalConnection + 1
 	config.ID = int64(totalConnection)
@@ -407,10 +412,12 @@ func getRedisClient(data RequestData, getSelectedIndexClient bool, getKey bool) 
 				conn, err = redis.Dial("tcp", config.Ip+":"+config.Port)
 				ThrowIf(err)
 				if config.Auth != "" {
-					if _, err := conn.Do("AUTH", config.Auth); err != nil {
-						conn.Close()
-						panic(err)
+					if config.Username != "" {
+						_, err = conn.Do("AUTH", config.Username, config.Auth)
+					} else {
+						_, err = conn.Do("AUTH", config.Auth)
 					}
+					ThrowIf(err)
 				}
 				conn.Do("CLIENT", "SETNAME", fmt.Sprintf("RDM:(%d):CLIENT(%d)", config.ID, rand.Intn(19999)))
 				return conn, nil
@@ -537,7 +544,7 @@ func RedisManagerConnectionServer(data RequestData) string {
 			filter = "*"
 		}
 
-		repl, err := client.Do("SCAN", nextCur, "MATCH", filter, "COUNT", 200)
+		repl, err := client.Do("SCAN", nextCur, "MATCH", filter, "COUNT", 3000)
 		if err != nil {
 			return JSON(ResponseData{FailedCode, err.Error(), nil})
 		}

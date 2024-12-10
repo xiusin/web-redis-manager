@@ -4,18 +4,85 @@
             "path": "."
         }
     ],
+    "extensions": {
+        "recommendations": [
+            "alefragnani.project-manager", // 项目管理
+            "GuodongSun.vscode-git-cruise", // git 历史管理
+            "maciejdems.add-to-gitignore", // 添加到忽略
+            "donjayamanne.githistory", // 文件历史记录
+            "JanBn.git-last-commit-message", // 快速提交
+            "k--kato.intellij-idea-keybindings", // idea 快捷键
+            "anweber.vscode-httpyac", // http 接口测试
+            "saber2pr.file-git-history", // 文件历史记录
+            "mk12.better-git-line-blame", // git blame
+            "alefragnani.Bookmarks", // 书签
+            "MS-CEINTL.vscode-language-pack-zh-hans", // 中文
+            "streetsidesoftware.code-spell-checker", // 拼写检查
+            "jgclark.vscode-todo-highlight", // 高亮todo
+            "be5invis.vscode-icontheme-nomo-dark", // icon图标
+            "eenaree.webstorm-new-dark", // 主题
+            "golang.go", // golang
+            "ohanedan.lowlight-go-errors", // 错误低亮
+            "whosydd.go-tags", // 为结构体快捷增加标签
+            "farnetani.ddl-to-go-struct", // 将DDL转换为结构体
+            "usernamehw.errorlens", // 错误提示
+            "wero.go-struct-tag", // 为结构体增加标签
+            "maracko.json-to-go", // 将json转换为结构体
+            "chadalen.vscode-jetbrains-icon-theme",
+            "zerefdev.todo-highlighter",
+            "whosydd.go-impl",
+        ]
+    },
     "settings": {
-        "cSpell.words": [
-            "addkey",
-            "keyspace",
-            "removekey",
-            "removerow",
-            "requirepass",
-            "Strs",
-            "updatekey",
-            "upgrader",
-            "slowlog",
-            "keyorscore"
+        "editor.quickSuggestions": {
+            "strings": true
+        },
+        "editor.suggest.showWords": true,
+        "editor.lineHeight": 1.5,
+        "gopls": {
+            "analyses": {
+                "composites": false // 忽略指定优化警告
+            },
+            "ui.semanticTokens": true,
+        },
+        "files.exclude": {
+            "**/.git": true,
+            "**/.svn": true,
+            "**/.hg": true,
+            "**/CVS": true,
+            "**/.DS_Store": true,
+            "**/Thumbs.db": true,
+            "docs": true,
+            "deployments": true,
+            "configs/recom_cc.yml": true,
+            "scripts": true,
+            "Makefile": true,
+            "Jenkinsfile": true,
+            ".golangci.yml": true,
+            "go.sum": true,
+            "**/__debug_bin*": true
+        },
+        "errorLens.enabledDiagnosticLevels": [
+            "error",
+            "warning",
+        ],
+        "go.lintTool": "revive", // 选择lint
+        "cSpell.ignoreWords": [
+            "ifnull"
+        ],
+        "editor.fontSize": 12,
+        "go.testTimeout": "120s",
+    },
+    "launch": {
+        "version": "0.2.0",
+        "configurations": [
+            {
+                "name": "调试项目",
+                "type": "go",
+                "request": "launch",
+                "mode": "auto",
+                "program": "${workspaceFolder}/server/main.go"
+            },
         ]
     }
 }
