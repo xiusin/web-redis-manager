@@ -1,6 +1,6 @@
 module github.com/xiusin/rdm/server
 
-go 1.23
+go 1.24.0
 
 require (
 	github.com/Tim-Paik/webview2 v0.1.9
@@ -9,7 +9,7 @@ require (
 	github.com/kataras/basicauth v0.0.1
 	github.com/rs/cors v1.7.0
 	github.com/xiusin/logger v0.0.10-0.20220103084022-9cb8378d9b03
-	golang.org/x/sys v0.28.0 // indirect
+	golang.org/x/sys v0.38.0 // indirect
 )
 
 require github.com/webview/webview_go v0.0.0-20240220051247-56f456ca3a43
@@ -21,7 +21,7 @@ require (
 	github.com/jchv/go-winloader v0.0.0-20210711035445-715c2860da7e // indirect
 	github.com/mattn/go-colorable v0.1.12 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
-	golang.org/x/crypto v0.31.0 // indirect
-	golang.org/x/term v0.27.0 // indirect
+	golang.org/x/crypto v0.45.0 // indirect
+	golang.org/x/term v0.37.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
